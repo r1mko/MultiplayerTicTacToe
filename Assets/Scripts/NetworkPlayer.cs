@@ -65,6 +65,12 @@ public class NetworkPlayer : NetworkBehaviour
             return;
         }
 
+        if (BoardManager.Singltone.IsGameDraw())
+        {
+            GameOver();
+            UIManager.Singletone.SetDrawText("It's a draw!");
+            return;
+        }
 
         if (IsServer)
         {

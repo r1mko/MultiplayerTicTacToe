@@ -29,6 +29,10 @@ public class UIManager : MonoBehaviour
         currentPlayerTextID.text = $"Won: {text}";
     }
 
+    public void SetDrawText(string text)
+    {
+        currentPlayerTextID.text = text;
+    }
     public void ShowRestartButton()
     {
         restartButton.gameObject.SetActive(true);

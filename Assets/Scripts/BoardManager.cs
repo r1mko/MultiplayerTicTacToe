@@ -1,4 +1,4 @@
-using System.Collections;
+п»їusing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
@@ -14,7 +14,7 @@ public class BoardManager : MonoBehaviour
     }
 
     Cell[,] buttons = new Cell[3, 3];
-    private void Start() //метод срабатывает как будет создан объект. типа start, но синхронизирован, а не локален
+    private void Start() //РјРµС‚РѕРґ СЃСЂР°Р±Р°С‚С‹РІР°РµС‚ РєР°Рє Р±СѓРґРµС‚ СЃРѕР·РґР°РЅ РѕР±СЉРµРєС‚. С‚РёРїР° start, РЅРѕ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅ, Р° РЅРµ Р»РѕРєР°Р»РµРЅ
     {
         Debug.Log($"Count of buttons.length is {buttons.Length}");
 
@@ -53,7 +53,7 @@ public class BoardManager : MonoBehaviour
     {
         int indexPlayer = buttons[row, column].IndexPlayer;
 
-        //проверяем столбцы
+        //РїСЂРѕРІРµСЂСЏРµРј СЃС‚РѕР»Р±С†С‹
         if (buttons[0, column].IsSameCell(indexPlayer) &&
             buttons[1, column].IsSameCell(indexPlayer) &&
             buttons[2, column].IsSameCell(indexPlayer))
@@ -61,7 +61,7 @@ public class BoardManager : MonoBehaviour
             return true;
         }
 
-        //проверяем ряды
+        //РїСЂРѕРІРµСЂСЏРµРј СЂСЏРґС‹
         else if (buttons[row, 0].IsSameCell(indexPlayer) &&
                  buttons[row, 1].IsSameCell(indexPlayer) &&
                  buttons[row, 2].IsSameCell(indexPlayer))
@@ -69,7 +69,7 @@ public class BoardManager : MonoBehaviour
             return true;
         }
 
-        //проверяем первую диагональ
+        //РїСЂРѕРІРµСЂСЏРµРј РїРµСЂРІСѓСЋ РґРёР°РіРѕРЅР°Р»СЊ
         else if (buttons[0, 0].IsSameCell(indexPlayer) &&
                  buttons[1, 1].IsSameCell(indexPlayer) &&
                  buttons[2, 2].IsSameCell(indexPlayer))
@@ -77,7 +77,7 @@ public class BoardManager : MonoBehaviour
             return true;
         }
 
-        //проверяем вторую диагональ
+        //РїСЂРѕРІРµСЂСЏРµРј РІС‚РѕСЂСѓСЋ РґРёР°РіРѕРЅР°Р»СЊ
         else if (buttons[0, 2].IsSameCell(indexPlayer) &&
                  buttons[1, 1].IsSameCell(indexPlayer) &&
                  buttons[2, 0].IsSameCell(indexPlayer))
@@ -88,21 +88,20 @@ public class BoardManager : MonoBehaviour
         return false;
     }
 
-    private bool IsGameDraw()
+    public bool IsGameDraw()
     {
         for (int i = 0; i < 3; i++)
         {
             for (int j = 0; j < 3; j++)
             {
-                if (buttons[i, j].GetComponentInChildren<TextMeshProUGUI>().text != "X" &&
-                    buttons[i, j].GetComponentInChildren<TextMeshProUGUI>().text != "O")
+                if (!buttons[i, j].IsFillCell)
                 {
-                    Debug.Log("Проверяем у нас ничья? Нет");
+                    Debug.Log("РџСЂРѕРІРµСЂСЏРµРј Сѓ РЅР°СЃ РЅРёС‡СЊСЏ? РќРµС‚");
                     return false;
                 }
             }
         }
-        Debug.Log("Проверяем у нас ничья? Да");
+        Debug.Log("РџСЂРѕРІРµСЂСЏРµРј Сѓ РЅР°СЃ РЅРёС‡СЊСЏ? Р”Р°");
         return true;
     }
 
