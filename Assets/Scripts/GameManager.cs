@@ -19,6 +19,11 @@ public class GameManager : MonoBehaviour
 
     public bool IsOurTurn()
     {
-        return NetworkPlayer.Singletone.CurrentPlayerTurnID == NetworkPlayer.Singletone.NetworkManager.LocalClientId;
+        return NetworkPlayer.Singletone.CurrentPlayerTurnID == (int)NetworkPlayer.Singletone.NetworkManager.LocalClientId;
+    }
+
+    public void Restart()
+    {
+        TurnIndex = 0;
     }
 }

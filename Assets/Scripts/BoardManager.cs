@@ -36,43 +36,51 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    public void FillCell(int row, int col)
+    public void BlockAllButtons()
     {
-        buttons[row, col].Fill();
+        foreach (var item in buttons)
+        {
+            item.Block();
+        }
+    }
+
+    public void FillCell(int row, int col, int currentPlayerIndex)
+    {
+        buttons[row, col].Fill(currentPlayerIndex);
     }
 
     public bool IsWon(int row, int column)
     {
-        TextMeshProUGUI clickedButtonText = buttons[row, column].GetComponentInChildren<TextMeshProUGUI>();
+        int indexPlayer = buttons[row, column].IndexPlayer;
 
         //проверяем столбцы
-        if (buttons[0, column].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text &&
-            buttons[1, column].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text &&
-            buttons[2, column].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text)
+        if (buttons[0, column].IsSameCell(indexPlayer) &&
+            buttons[1, column].IsSameCell(indexPlayer) &&
+            buttons[2, column].IsSameCell(indexPlayer))
         {
             return true;
         }
 
         //проверяем ряды
-        else if (buttons[row, 0].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text &&
-                 buttons[row, 1].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text &&
-                 buttons[row, 2].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text)
+        else if (buttons[row, 0].IsSameCell(indexPlayer) &&
+                 buttons[row, 1].IsSameCell(indexPlayer) &&
+                 buttons[row, 2].IsSameCell(indexPlayer))
         {
             return true;
         }
 
         //проверяем первую диагональ
-        else if (buttons[0, 0].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text &&
-                 buttons[1, 1].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text &&
-                 buttons[2, 2].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text)
+        else if (buttons[0, 0].IsSameCell(indexPlayer) &&
+                 buttons[1, 1].IsSameCell(indexPlayer) &&
+                 buttons[2, 2].IsSameCell(indexPlayer))
         {
             return true;
         }
 
         //проверяем вторую диагональ
-        else if (buttons[0, 2].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text &&
-                 buttons[1, 1].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text &&
-                 buttons[2, 0].GetComponentInChildren<TextMeshProUGUI>().text == clickedButtonText.text)
+        else if (buttons[0, 2].IsSameCell(indexPlayer) &&
+                 buttons[1, 1].IsSameCell(indexPlayer) &&
+                 buttons[2, 0].IsSameCell(indexPlayer))
         {
             return true;
         }
@@ -98,5 +106,12 @@ public class BoardManager : MonoBehaviour
         return true;
     }
 
-
+    public void ClearAndBloackCells()
+    {
+        foreach (var item in buttons)
+        {
+            item.Clear();
+            item.Unblock();
+        }
+    }
 }
