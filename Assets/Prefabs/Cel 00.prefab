@@ -139,6 +139,8 @@ MonoBehaviour:
   fillView:
   - {fileID: 8851303910633277561}
   - {fileID: 4190767020216448834}
+  preDestroyColor: {r: 0.81960785, g: 0.30980393, b: 0.33333334, a: 0.9019608}
+  defaultColor: {r: 0.02745098, g: 0.02745098, b: 0.02745098, a: 0.9019608}
 --- !u!1 &4190767020216448834
 GameObject:
   m_ObjectHideFlags: 0

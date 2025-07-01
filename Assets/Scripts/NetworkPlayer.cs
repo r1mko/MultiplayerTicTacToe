@@ -1,4 +1,4 @@
-using System.Collections;
+п»їusing System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityUtils;
@@ -11,17 +11,19 @@ public class NetworkPlayer : NetworkBehaviour
 
     private int startOffSet;
 
+    private CellHistoryManager cellHistoryManager;
 
 
     private void Awake()
     {
         Singletone = this;
+        cellHistoryManager = new CellHistoryManager();
         NetworkManager.OnClientConnectedCallback += ClientConnected;
     }
 
     private void ClientConnected(ulong clientID)
     {
-        Debug.Log($"[NetworkPlayer] Вызвали метод ClientConnected. ID: {clientID}. Сервер ли у нас {IsServer}, Хост ли у нас {IsHost}");
+        Debug.Log($"[NetworkPlayer] Р’С‹Р·РІР°Р»Рё РјРµС‚РѕРґ ClientConnected. ID: {clientID}. РЎРµСЂРІРµСЂ Р»Рё Сѓ РЅР°СЃ {IsServer}, РҐРѕСЃС‚ Р»Рё Сѓ РЅР°СЃ {IsHost}");
         CheckTwoPlayers();
     }
 
@@ -48,7 +50,12 @@ public class NetworkPlayer : NetworkBehaviour
     {
         var randomIndex = Random.Range(0, NetworkManager.ConnectedClientsIds.Count);
         UpdateOffSetRpc(randomIndex);
-        Debug.Log($"[NetworkPlayer] Вызвали PrepareGame. randomIndex равен {randomIndex}");
+        Debug.Log($"[NetworkPlayer] Р’С‹Р·РІР°Р»Рё PrepareGame. randomIndex СЂР°РІРµРЅ {randomIndex}");
+    }
+
+    private void NetworkPrepareGame()
+    {
+        cellHistoryManager.Clear();
     }
 
     [Rpc(SendTo.Everyone)]
@@ -57,6 +64,7 @@ public class NetworkPlayer : NetworkBehaviour
         Debug.Log($"[NetworkPlayer] Row {row}, col {col}");
         BoardManager.Singltone.FillCell(row, col, CurrentPlayerTurnID);
         GameManager.Singltone.NextTurn();
+        cellHistoryManager.Add(BoardManager.Singltone.GetCell(row, col),CurrentPlayerTurnID);
 
         if (BoardManager.Singltone.IsWon(row,col))
         {
@@ -101,6 +109,7 @@ public class NetworkPlayer : NetworkBehaviour
         {
             PrepareGame();
         }
+        NetworkPrepareGame();
     }
 
     [Rpc(SendTo.Everyone)]

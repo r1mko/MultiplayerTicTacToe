@@ -36,12 +36,26 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    public Cell GetCell(int row, int col)
+    {
+        return buttons[row, col];
+    }
+
     public void BlockAllButtons()
     {
         foreach (var item in buttons)
         {
             item.Block();
         }
+    }
+
+    public void OnClickCell(int row, int col, Cell cell)
+    {
+        if (!GameManager.Singltone.IsOurTurn())
+        {
+            return;
+        }
+        NetworkPlayer.Singletone.OnClickRpc(row, col);
     }
 
     public void FillCell(int row, int col, int currentPlayerIndex)
