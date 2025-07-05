@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks;
+п»їusing Cysharp.Threading.Tasks;
 using NaughtyAttributes;
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ public class SessionManager : Singleton<SessionManager>
     public bool AutoStart;
 
     private ISession activeSession;
-    private CancellationTokenSource pollCts; //показ сессий и его остановка чтобы не было бесконечных циклов
+    private CancellationTokenSource pollCts; //РїРѕРєР°Р· СЃРµСЃСЃРёР№ Рё РµРіРѕ РѕСЃС‚Р°РЅРѕРІРєР° С‡С‚РѕР±С‹ РЅРµ Р±С‹Р»Рѕ Р±РµСЃРєРѕРЅРµС‡РЅС‹С… С†РёРєР»РѕРІ
 
     private ISession ActiveSession
     {
@@ -25,7 +25,7 @@ public class SessionManager : Singleton<SessionManager>
         {
             if (activeSession == value) return;
 
-            StopPolling(); // Останавливаем предыдущий опрос
+            StopPolling(); // РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј РїСЂРµРґС‹РґСѓС‰РёР№ РѕРїСЂРѕСЃ
 
             activeSession = value;
             StartPolling().Forget();
@@ -40,26 +40,26 @@ public class SessionManager : Singleton<SessionManager>
 
         try
         {
-            while (!pollCts.IsCancellationRequested)
+            while (!pollCts.IsCancellationRequested && ActiveSession == null) //СЃРјРѕС‚СЂРёРј РµСЃС‚СЊ Р»Рё СѓР¶Рµ СЃРµСЃСЃРёСЏ Рё РЅРµ РѕСЃС‚Р°РЅРѕРІР»РµРЅ Р»Рё С†
             {
                 var sessionStatusText = UIManager.Singletone.sessionInfoText;
                 var sessions = await QuerySessions();
 
                 if (sessions.Count > 0)
                 {
-                    sessionStatusText.text = $"Доступно сессий: {sessions.Count}\nПрисоединяйтесь!";
+                    sessionStatusText.text = $"Р”РѕСЃС‚СѓРїРЅРѕ СЃРµСЃСЃРёР№: {sessions.Count}\nРџСЂРёСЃРѕРµРґРёРЅСЏР№С‚РµСЃСЊ!";
                 }
                 else
                 {
-                    sessionStatusText.text = "Нет активных сессий";
+                    sessionStatusText.text = "РќРµС‚ Р°РєС‚РёРІРЅС‹С… СЃРµСЃСЃРёР№";
                 }
 
-                await UniTask.Delay(TimeSpan.FromSeconds(5), cancellationToken: pollCts.Token);
+                await UniTask.Delay(TimeSpan.FromSeconds(7), cancellationToken: pollCts.Token);
             }
         }
         catch (OperationCanceledException)
         {
-            // Игнорируем — это ожидаемое поведение
+            // РРіРЅРѕСЂРёСЂСѓРµРј вЂ” СЌС‚Рѕ РѕР¶РёРґР°РµРјРѕРµ РїРѕРІРµРґРµРЅРёРµ
         }
     }
 
@@ -73,6 +73,35 @@ public class SessionManager : Singleton<SessionManager>
         }
     }
 
+    private void UpdateSessionUI()
+    {
+        var sessionStatusText = UIManager.Singletone.sessionInfoText;
+        if (sessionStatusText == null) return;
+
+        if (ActiveSession != null)
+        {
+            if (ActiveSession.IsHost)
+            {
+                // Р•СЃР»Рё РјС‹ С…РѕСЃС‚РёРј Рё РїРѕРєР° РѕРґРёРЅ вЂ” "РѕР¶РёРґР°РµРј"
+                if (ActiveSession.Players.Count == 1)
+                {
+                    sessionStatusText.text = "РЎРѕР·РґР°Р»Рё СЃРµСЃСЃРёСЋ, РѕР¶РёРґР°РµРј...";
+                }
+                else
+                {
+                    sessionStatusText.text = $"РРіСЂРѕРєРё РїСЂРёСЃРѕРµРґРёРЅРёР»РёСЃСЊ: {ActiveSession.Players.Count}/{ActiveSession.MaxPlayers}";
+                }
+            }
+            else
+            {
+                sessionStatusText.text = "Р’С‹ РїСЂРёСЃРѕРµРґРёРЅРёР»РёСЃСЊ Рє СЃРµСЃСЃРёРё!";
+            }
+        }
+        else
+        {
+            // Р­С‚Рѕ СЃРѕСЃС‚РѕСЏРЅРёРµ РІРЅРµ СЃРµСЃСЃРёРё вЂ” РїСѓСЃС‚СЊ СЂР°Р±РѕС‚Р°РµС‚ StartPolling
+        }
+    }
 
 
     async void Start()
@@ -81,22 +110,22 @@ public class SessionManager : Singleton<SessionManager>
         {
             if (UnityServices.State != ServicesInitializationState.Initialized)
             {
-                await UnityServices.InitializeAsync(); // Инициализация Unity Gaming Services
+                await UnityServices.InitializeAsync(); // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ Unity Gaming Services
             }
             else
             {
-                Debug.Log("UnityServices уже инициализированы.");
+                Debug.Log("UnityServices СѓР¶Рµ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°РЅС‹.");
             }
 
-            // Проверяем, авторизован ли игрок.
+            // РџСЂРѕРІРµСЂСЏРµРј, Р°РІС‚РѕСЂРёР·РѕРІР°РЅ Р»Рё РёРіСЂРѕРє.
             if (!AuthenticationService.Instance.IsSignedIn)
             {
-                await AuthenticationService.Instance.SignInAnonymouslyAsync(); // Анонимная авторизация игрока
+                await AuthenticationService.Instance.SignInAnonymouslyAsync(); // РђРЅРѕРЅРёРјРЅР°СЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ РёРіСЂРѕРєР°
                 Debug.Log($"Sign in anonymously succeeded! PlayerID: {AuthenticationService.Instance.PlayerId}");
             }
 
-            // Начинаем опрос сессий сразу после авторизации
-            ActiveSession = null; // явно указываем, что нет активной сессии
+            // РќР°С‡РёРЅР°РµРј РѕРїСЂРѕСЃ СЃРµСЃСЃРёР№ СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ Р°РІС‚РѕСЂРёР·Р°С†РёРё
+            ActiveSession = null; // СЏРІРЅРѕ СѓРєР°Р·С‹РІР°РµРј, С‡С‚Рѕ РЅРµС‚ Р°РєС‚РёРІРЅРѕР№ СЃРµСЃСЃРёРё
             StartPolling().Forget();
 
         }
@@ -109,7 +138,7 @@ public class SessionManager : Singleton<SessionManager>
 
 
     /// <summary>
-    /// Получает пользовательские свойства (например, имя игрока).
+    /// РџРѕР»СѓС‡Р°РµС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёРµ СЃРІРѕР№СЃС‚РІР° (РЅР°РїСЂРёРјРµСЂ, РёРјСЏ РёРіСЂРѕРєР°).
     /// </summary>
     public async UniTask<Dictionary<string, PlayerProperty>> GetPlayerProperties()
     {
@@ -132,6 +161,14 @@ public class SessionManager : Singleton<SessionManager>
     {
         try
         {
+            StopPolling();
+
+            var sessionStatusText = UIManager.Singletone.sessionInfoText;
+            if (sessionStatusText != null)
+            {
+                sessionStatusText.text = "РЎРѕР·РґР°С‘Рј СЃРµСЃСЃРёСЋ...";
+            }
+
             var playerProperties = await GetPlayerProperties();
 
             var options = new SessionOptions
@@ -141,12 +178,13 @@ public class SessionManager : Singleton<SessionManager>
                 IsPrivate = false,
                 PlayerProperties = playerProperties,
                 Name = $"{UnityEngine.Random.Range(0, 10000)}"
-            }.WithRelayNetwork("europe-north1"); // или WithDistributedAuthorityNetwork() для распределённого авторитета
+            }.WithRelayNetwork("europe-north1");
 
             ActiveSession = await MultiplayerService.Instance.CreateSessionAsync(options);
-            Debug.Log($"Session {ActiveSession.Id} created! Join code: {ActiveSession.Code} Properties.Count:{ActiveSession.Properties.Count}");
 
+            UpdateSessionUI();
 
+            Debug.Log($"Session {ActiveSession.Id} created! Join code: {ActiveSession.Code}");
         }
         catch (Exception e)
         {
@@ -161,7 +199,7 @@ public class SessionManager : Singleton<SessionManager>
             ActiveSession = await MultiplayerService.Instance.JoinSessionByIdAsync(sessionId);
             Debug.Log($"Session {ActiveSession.Id} joined! Properties.Count:{ActiveSession.Properties.Count}");
 
-            // Если это клиент (не хост), запускаем цикл heartbeat
+            // Р•СЃР»Рё СЌС‚Рѕ РєР»РёРµРЅС‚ (РЅРµ С…РѕСЃС‚), Р·Р°РїСѓСЃРєР°РµРј С†РёРєР» heartbeat
             if (!ActiveSession.IsHost)
             {
                 HeartbeatLoop().Forget();
@@ -227,7 +265,7 @@ public class SessionManager : Singleton<SessionManager>
             }
             catch (Exception e)
             {
-                // Ошибка при выходе из сессии не критична – просто логируем её
+                // РћС€РёР±РєР° РїСЂРё РІС‹С…РѕРґРµ РёР· СЃРµСЃСЃРёРё РЅРµ РєСЂРёС‚РёС‡РЅР° вЂ“ РїСЂРѕСЃС‚Рѕ Р»РѕРіРёСЂСѓРµРј РµС‘
                 Debug.LogWarning(e);
             }
             finally
@@ -244,12 +282,12 @@ public class SessionManager : Singleton<SessionManager>
             var sessions = await QuerySessions();
             if (sessions.Count > 0)
             {
-                // Подключаемся к первой найденной сессии
+                // РџРѕРґРєР»СЋС‡Р°РµРјСЃСЏ Рє РїРµСЂРІРѕР№ РЅР°Р№РґРµРЅРЅРѕР№ СЃРµСЃСЃРёРё
                 await JoinSessionById(sessions[0].Id).AsCompletedTask();
             }
             else
             {
-                // Если сессий не найдено – создаём новую
+                // Р•СЃР»Рё СЃРµСЃСЃРёР№ РЅРµ РЅР°Р№РґРµРЅРѕ вЂ“ СЃРѕР·РґР°С‘Рј РЅРѕРІСѓСЋ
                 await StartSessionAsHost().AsCompletedTask();
             }
         }
@@ -323,9 +361,9 @@ public class SessionManager : Singleton<SessionManager>
     }
 
     /// <summary>
-    /// Обрабатывает возникшие ошибки – выводит сообщение и переключает сцену на MENU.
+    /// РћР±СЂР°Р±Р°С‚С‹РІР°РµС‚ РІРѕР·РЅРёРєС€РёРµ РѕС€РёР±РєРё вЂ“ РІС‹РІРѕРґРёС‚ СЃРѕРѕР±С‰РµРЅРёРµ Рё РїРµСЂРµРєР»СЋС‡Р°РµС‚ СЃС†РµРЅСѓ РЅР° MENU.
     /// </summary>
-    /// <param name="ex">Исключение, которое произошло.</param>
+    /// <param name="ex">РСЃРєР»СЋС‡РµРЅРёРµ, РєРѕС‚РѕСЂРѕРµ РїСЂРѕРёР·РѕС€Р»Рѕ.</param>
     public async UniTask HandleError(Exception ex)
     {
         Debug.LogWarning($"[SessionManager] Error occurred: {ex.Message}\n{ex.StackTrace}");
@@ -334,49 +372,49 @@ public class SessionManager : Singleton<SessionManager>
     //HEATBEAT
 
     /// <summary>
-    /// Циклически выполняет проверку подключения к серверу/хосту.
+    /// Р¦РёРєР»РёС‡РµСЃРєРё РІС‹РїРѕР»РЅСЏРµС‚ РїСЂРѕРІРµСЂРєСѓ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє СЃРµСЂРІРµСЂСѓ/С…РѕСЃС‚Сѓ.
     /// </summary>
     private async UniTask HeartbeatLoop()
     {
-        Debug.Log("Heartbeat запущен.");
+        Debug.Log("Heartbeat Р·Р°РїСѓС‰РµРЅ.");
         while (ActiveSession != null)
         {
             try
             {
-                // Имитируем отправку heartbeat на сервер
+                // РРјРёС‚РёСЂСѓРµРј РѕС‚РїСЂР°РІРєСѓ heartbeat РЅР° СЃРµСЂРІРµСЂ
                 await PingServer();
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"Ошибка heartbeat: {ex.Message}");
+                Debug.LogWarning($"РћС€РёР±РєР° heartbeat: {ex.Message}");
                 NotifyServerDisconnected();
                 break;
             }
-            // Интервал между проверками (например, 5 секунд)
+            // РРЅС‚РµСЂРІР°Р» РјРµР¶РґСѓ РїСЂРѕРІРµСЂРєР°РјРё (РЅР°РїСЂРёРјРµСЂ, 5 СЃРµРєСѓРЅРґ)
             await UniTask.Delay(TimeSpan.FromSeconds(5));
         }
-        Debug.Log("Heartbeat завершён.");
+        Debug.Log("Heartbeat Р·Р°РІРµСЂС€С‘РЅ.");
     }
 
     /// <summary>
-    /// Имитация отправки запроса на сервер. Здесь можно реализовать реальную логику проверки.
+    /// РРјРёС‚Р°С†РёСЏ РѕС‚РїСЂР°РІРєРё Р·Р°РїСЂРѕСЃР° РЅР° СЃРµСЂРІРµСЂ. Р—РґРµСЃСЊ РјРѕР¶РЅРѕ СЂРµР°Р»РёР·РѕРІР°С‚СЊ СЂРµР°Р»СЊРЅСѓСЋ Р»РѕРіРёРєСѓ РїСЂРѕРІРµСЂРєРё.
     /// </summary>
     private async UniTask PingServer()
     {
-        // Для демонстрации просто ждём 100 мс.
+        // Р”Р»СЏ РґРµРјРѕРЅСЃС‚СЂР°С†РёРё РїСЂРѕСЃС‚Рѕ Р¶РґС‘Рј 100 РјСЃ.
         await UniTask.Delay(100);
 
-        // Если необходимо, можно добавить условие проверки, например:
+        // Р•СЃР»Рё РЅРµРѕР±С…РѕРґРёРјРѕ, РјРѕР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ СѓСЃР»РѕРІРёРµ РїСЂРѕРІРµСЂРєРё, РЅР°РїСЂРёРјРµСЂ:
         // if (ActiveSession == null || !ActiveSession.IsConnected)
-        //     throw new Exception("Сервер не отвечает");
+        //     throw new Exception("РЎРµСЂРІРµСЂ РЅРµ РѕС‚РІРµС‡Р°РµС‚");
     }
 
     /// <summary>
-    /// Уведомляет клиента о том, что сервер или хост отключились.
+    /// РЈРІРµРґРѕРјР»СЏРµС‚ РєР»РёРµРЅС‚Р° Рѕ С‚РѕРј, С‡С‚Рѕ СЃРµСЂРІРµСЂ РёР»Рё С…РѕСЃС‚ РѕС‚РєР»СЋС‡РёР»РёСЃСЊ.
     /// </summary>
     private void NotifyServerDisconnected()
     {
-        Debug.LogWarning("Сервер/Хост отключились. Возврат в меню.");
-        // Здесь можно добавить дополнительную логику уведомления пользователя (например, показать UI-диалог)
+        Debug.LogWarning("РЎРµСЂРІРµСЂ/РҐРѕСЃС‚ РѕС‚РєР»СЋС‡РёР»РёСЃСЊ. Р’РѕР·РІСЂР°С‚ РІ РјРµРЅСЋ.");
+        // Р—РґРµСЃСЊ РјРѕР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅСѓСЋ Р»РѕРіРёРєСѓ СѓРІРµРґРѕРјР»РµРЅРёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ (РЅР°РїСЂРёРјРµСЂ, РїРѕРєР°Р·Р°С‚СЊ UI-РґРёР°Р»РѕРі)
     }
 }

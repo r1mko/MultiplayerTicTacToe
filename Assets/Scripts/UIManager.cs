@@ -14,6 +14,7 @@ public class UIManager : MonoBehaviour
     {
         Singletone = this;
         restartButton.onClick.AddListener(OnRestart);
+        HideRestartButton();
     }
 
     private void OnRestart()

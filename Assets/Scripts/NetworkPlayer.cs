@@ -42,6 +42,7 @@ public class NetworkPlayer : NetworkBehaviour
 
         if (NetworkManager.ConnectedClientsIds.Count == 2)
         {
+            UpdateUIRpc();
             PrepareGame();
         }
     }
@@ -124,5 +125,11 @@ public class NetworkPlayer : NetworkBehaviour
         startOffSet = clientID;
         UpdateCurrentPlayerID(clientID);
         UIManager.Singletone.HideRestartButton();
+    }
+
+    [Rpc(SendTo.Everyone)]
+    private void UpdateUIRpc()
+    {
+        UIManager.Singletone.sessionInfoText.gameObject.SetActive(false);
     }
 }
