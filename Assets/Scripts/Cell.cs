@@ -67,7 +67,7 @@ public class Cell: MonoBehaviour
 
     private IEnumerator BlinkAnimation()
     {
-        float duration = 0.5f; // Время одного полного цикла "мигания" (туда-обратно)
+        float duration = 2f; // Время одного полного цикла "мигания" (туда-обратно)
         float halfDuration = duration / 2f;
 
         while (true)
