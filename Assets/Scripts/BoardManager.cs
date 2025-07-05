@@ -6,11 +6,14 @@ using UnityEngine.UI;
 using TMPro;
 public class BoardManager : MonoBehaviour
 {
+    [SerializeField] private GameObject board;
+
     public static BoardManager Singltone;
 
     private void Awake()
     {
         Singltone = this;
+        board.SetActive(true);
     }
 
     Cell[,] buttons = new Cell[3, 3];

@@ -3,6 +3,7 @@ using NaughtyAttributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Multiplayer;
@@ -15,18 +16,64 @@ public class SessionManager : Singleton<SessionManager>
     public bool AutoStart;
 
     private ISession activeSession;
+    private CancellationTokenSource pollCts; //показ сессий и его остановка чтобы не было бесконечных циклов
 
     private ISession ActiveSession
     {
         get => activeSession;
         set
         {
+            if (activeSession == value) return;
+
+            StopPolling(); // Останавливаем предыдущий опрос
+
             activeSession = value;
+            StartPolling().Forget();
+
             Debug.Log($"Active session: {activeSession}");
         }
     }
 
-    
+    private async UniTaskVoid StartPolling()
+    {
+        pollCts = new CancellationTokenSource();
+
+        try
+        {
+            while (!pollCts.IsCancellationRequested)
+            {
+                var sessionStatusText = UIManager.Singletone.sessionInfoText;
+                var sessions = await QuerySessions();
+
+                if (sessions.Count > 0)
+                {
+                    sessionStatusText.text = $"Доступно сессий: {sessions.Count}\nПрисоединяйтесь!";
+                }
+                else
+                {
+                    sessionStatusText.text = "Нет активных сессий";
+                }
+
+                await UniTask.Delay(TimeSpan.FromSeconds(5), cancellationToken: pollCts.Token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Игнорируем — это ожидаемое поведение
+        }
+    }
+
+    private void StopPolling()
+    {
+        if (pollCts != null)
+        {
+            pollCts.Cancel();
+            pollCts.Dispose();
+            pollCts = null;
+        }
+    }
+
+
 
     async void Start()
     {
@@ -47,10 +94,10 @@ public class SessionManager : Singleton<SessionManager>
                 await AuthenticationService.Instance.SignInAnonymouslyAsync(); // Анонимная авторизация игрока
                 Debug.Log($"Sign in anonymously succeeded! PlayerID: {AuthenticationService.Instance.PlayerId}");
             }
-            else
-            {
-                Debug.Log("Игрок уже авторизован, повторная авторизация не требуется.");
-            }
+
+            // Начинаем опрос сессий сразу после авторизации
+            ActiveSession = null; // явно указываем, что нет активной сессии
+            StartPolling().Forget();
 
         }
         catch (Exception e)
@@ -217,25 +264,25 @@ public class SessionManager : Singleton<SessionManager>
         return false;
     }
 
-    public async UniTaskVoid FindSessionOrStartWithBot()
-    {
-        try
-        {
-            var sessions = await QuerySessions();
-            var possibleSessions = new List<ISessionInfo>();
+    //public async UniTaskVoid FindSessionOrStartWithBot()
+    //{
+    //    try
+    //    {
+    //        var sessions = await QuerySessions();
+    //        var possibleSessions = new List<ISessionInfo>();
 
 
-            if (possibleSessions.Count > 0)
-            {
-                var targetSession = possibleSessions[UnityEngine.Random.Range(0, possibleSessions.Count)];
-                await JoinSessionById(targetSession.Id).AsCompletedTask();
-            }
-        }
-        catch (Exception e)
-        {
-            await HandleError(e);
-        }
-    }
+    //        if (possibleSessions.Count > 0)
+    //        {
+    //            var targetSession = possibleSessions[UnityEngine.Random.Range(0, possibleSessions.Count)];
+    //            await JoinSessionById(targetSession.Id).AsCompletedTask();
+    //        }
+    //    }
+    //    catch (Exception e)
+    //    {
+    //        await HandleError(e);
+    //    }
+    //}
 
     [Button]
     public void FindAndJoinSessionButton()
@@ -331,6 +378,5 @@ public class SessionManager : Singleton<SessionManager>
     {
         Debug.LogWarning("Сервер/Хост отключились. Возврат в меню.");
         // Здесь можно добавить дополнительную логику уведомления пользователя (например, показать UI-диалог)
-        SceneManager.LoadScene("Menu");
     }
 }

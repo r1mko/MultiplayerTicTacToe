@@ -5,6 +5,8 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager Singletone;
+    public TMP_Text sessionInfoText;
+
     [SerializeField] private TMP_Text currentPlayerTextID;
     [SerializeField] private Button restartButton;
 

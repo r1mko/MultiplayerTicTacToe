@@ -162,6 +162,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25f39db13a6fae74da9b88a60c397263, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  board: {fileID: 4307540391768803751}
 --- !u!223 &2851367288205508246
 Canvas:
   m_ObjectHideFlags: 0
@@ -260,7 +261,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2031470396956816276, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Name
-      value: Cel 00 (2)
+      value: Cell 3
       objectReference: {fileID: 0}
     - target: {fileID: 2440442048095919103, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Pivot.x
@@ -362,7 +363,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2031470396956816276, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Name
-      value: Cel 00 (7)
+      value: Cell 8
       objectReference: {fileID: 0}
     - target: {fileID: 2440442048095919103, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Pivot.x
@@ -464,7 +465,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2031470396956816276, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Name
-      value: Cel 00 (1)
+      value: Cell 2
       objectReference: {fileID: 0}
     - target: {fileID: 2440442048095919103, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Pivot.x
@@ -566,7 +567,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2031470396956816276, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Name
-      value: Cel 00 (4)
+      value: Cell 5
       objectReference: {fileID: 0}
     - target: {fileID: 2440442048095919103, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Pivot.x
@@ -668,7 +669,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2031470396956816276, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Name
-      value: Cel 00 (5)
+      value: Cell 6
       objectReference: {fileID: 0}
     - target: {fileID: 2440442048095919103, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Pivot.x
@@ -770,7 +771,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2031470396956816276, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Name
-      value: Cel 00
+      value: Cell 1
       objectReference: {fileID: 0}
     - target: {fileID: 2440442048095919103, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Pivot.x
@@ -872,7 +873,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2031470396956816276, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Name
-      value: Cel 00 (6)
+      value: Cell 7
       objectReference: {fileID: 0}
     - target: {fileID: 2440442048095919103, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Pivot.x
@@ -974,7 +975,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2031470396956816276, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Name
-      value: Cel 00 (3)
+      value: Cell 4
       objectReference: {fileID: 0}
     - target: {fileID: 2440442048095919103, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Pivot.x
@@ -1076,7 +1077,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2031470396956816276, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Name
-      value: Cel 00 (8)
+      value: Cell 9
       objectReference: {fileID: 0}
     - target: {fileID: 2440442048095919103, guid: 8c13e8fbecd1b1e459ad6eb50027183b, type: 3}
       propertyPath: m_Pivot.x
