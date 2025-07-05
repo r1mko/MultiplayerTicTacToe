@@ -87,19 +87,7 @@ public class SessionManager : Singleton<SessionManager>
                 {
                     sessionStatusText.text = "Создали сессию, ожидаем...";
                 }
-                else
-                {
-                    sessionStatusText.text = $"Игроки присоединились: {ActiveSession.Players.Count}/{ActiveSession.MaxPlayers}";
-                }
             }
-            else
-            {
-                sessionStatusText.text = "Вы присоединились к сессии!";
-            }
-        }
-        else
-        {
-            // Это состояние вне сессии — пусть работает StartPolling
         }
     }
 
