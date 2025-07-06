@@ -113,7 +113,7 @@ public class SessionManager : Singleton<SessionManager>
         }
         catch (Exception e)
         {
-            await HandleError(e);
+            HandleError(e);
         }
     }
 
@@ -132,7 +132,7 @@ public class SessionManager : Singleton<SessionManager>
         }
         catch (Exception e)
         {
-            await HandleError(e);
+            HandleError(e);
             return new Dictionary<string, PlayerProperty>();
         }
     }
@@ -165,7 +165,7 @@ public class SessionManager : Singleton<SessionManager>
         }
         catch (Exception e)
         {
-            await HandleError(e);
+            HandleError(e);
         }
     }
 
@@ -185,7 +185,7 @@ public class SessionManager : Singleton<SessionManager>
         }
         catch (Exception e)
         {
-            await HandleError(e);
+            HandleError(e);
         }
     }
 
@@ -198,7 +198,7 @@ public class SessionManager : Singleton<SessionManager>
         }
         catch (Exception e)
         {
-            await HandleError(e);
+            HandleError(e);
         }
     }
 
@@ -213,7 +213,7 @@ public class SessionManager : Singleton<SessionManager>
         }
         catch (Exception e)
         {
-            await HandleError(e);
+            HandleError(e);
         }
     }
 
@@ -227,7 +227,7 @@ public class SessionManager : Singleton<SessionManager>
         }
         catch (Exception e)
         {
-            await HandleError(e);
+            HandleError(e);
             return new List<ISessionInfo>();
         }
     }
@@ -274,7 +274,7 @@ public class SessionManager : Singleton<SessionManager>
         }
         catch (Exception e)
         {
-            await HandleError(e);
+            HandleError(e);
         }
     }
 
@@ -317,7 +317,7 @@ public class SessionManager : Singleton<SessionManager>
         }
         catch (Exception e)
         {
-            await HandleError(e);
+            HandleError(e);
         }
     }
 
@@ -325,7 +325,7 @@ public class SessionManager : Singleton<SessionManager>
     /// Обрабатывает возникшие ошибки – выводит сообщение и переключает сцену на MENU.
     /// </summary>
     /// <param name="ex">Исключение, которое произошло.</param>
-    public async UniTask HandleError(Exception ex)
+    public void HandleError(Exception ex)
     {
         Debug.LogWarning($"[SessionManager] Error occurred: {ex.Message}\n{ex.StackTrace}");
     }
