@@ -130,6 +130,6 @@ public class NetworkPlayer : NetworkBehaviour
     [Rpc(SendTo.Everyone)]
     private void UpdateUIRpc()
     {
-        UIManager.Singletone.sessionInfoText.gameObject.SetActive(false);
+        UIManager.Singletone.HideActiveSessionInfo();
     }
 }

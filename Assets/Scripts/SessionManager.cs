@@ -40,9 +40,9 @@ public class SessionManager : Singleton<SessionManager>
 
         try
         {
-            while (!pollCts.IsCancellationRequested && ActiveSession == null) //смотрим есть ли уже сессия и не остановлен ли ц
+            while (!pollCts.IsCancellationRequested && ActiveSession == null) //смотрим есть ли уже сессия и не остановлен ли
             {
-                var sessionStatusText = UIManager.Singletone.sessionInfoText;
+                var sessionStatusText = UIManager.Singletone.sessionInfoText; //улучшить вывод текста созданием метода внутри UI менеджера
                 var sessions = await QuerySessions();
 
                 if (sessions.Count > 0)
