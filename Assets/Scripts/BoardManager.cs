@@ -13,11 +13,11 @@ public class BoardManager : MonoBehaviour
     private void Awake()
     {
         Singltone = this;
-        board.SetActive(true);
+        ShowBoard();
     }
 
     Cell[,] buttons = new Cell[3, 3];
-    private void Start() //метод срабатывает как будет создан объект. типа start, но синхронизирован, а не локален
+    private void Start()
     {
         Debug.Log($"Count of buttons.length is {buttons.Length}");
 
@@ -37,6 +37,8 @@ public class BoardManager : MonoBehaviour
 
             }
         }
+        BlockAllButtons();
+        //HideBoard(); //позже добавим
     }
 
     public Cell GetCell(int row, int col)
@@ -122,12 +124,21 @@ public class BoardManager : MonoBehaviour
         return true;
     }
 
-    public void ClearAndBloackCells()
+    public void ClearAndUnbloackCells()
     {
         foreach (var item in buttons)
         {
             item.Clear();
             item.Unblock();
         }
+    }
+
+    public void ShowBoard()
+    {
+        board.SetActive(true);
+    }
+    public void HideBoard()
+    {
+        board.SetActive(false);
     }
 }

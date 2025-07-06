@@ -104,7 +104,7 @@ public class NetworkPlayer : NetworkBehaviour
 
     public void RestartGame()
     {
-        BoardManager.Singltone.ClearAndBloackCells();
+        BoardManager.Singltone.ClearAndUnbloackCells();
         GameManager.Singltone.Restart();
         if (IsServer)
         {
@@ -131,5 +131,8 @@ public class NetworkPlayer : NetworkBehaviour
     private void UpdateUIRpc()
     {
         UIManager.Singletone.HideActiveSessionInfo();
+        UIManager.Singletone.ShowMoveInfo();
+        BoardManager.Singltone.ClearAndUnbloackCells();
+        //BoardManager.Singltone.ShowBoard(); //позже добавим
     }
 }

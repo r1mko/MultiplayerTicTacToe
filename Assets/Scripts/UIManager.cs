@@ -22,6 +22,7 @@ public class UIManager : MonoBehaviour
         HideRestartButton();
         ShowNavigationPanel();
         ShowActiveSessionInfo();
+        HideMoveInfo();
     }
 
     private void OnRestart()
@@ -88,6 +89,16 @@ public class UIManager : MonoBehaviour
     public void SetSessionInfoText(string info)
     {
         sessionInfoText.text = info;
+    }
+
+    public void ShowMoveInfo()
+    {
+        currentPlayerTextID.gameObject.SetActive(true);
+    }
+
+    public void HideMoveInfo()
+    {
+        currentPlayerTextID.gameObject.SetActive(false);
     }
 
     private void OnDestroy()
