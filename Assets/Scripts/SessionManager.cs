@@ -42,16 +42,14 @@ public class SessionManager : Singleton<SessionManager>
         {
             while (!pollCts.IsCancellationRequested && ActiveSession == null) //смотрим есть ли уже сессия и не остановлен ли
             {
-                var sessionStatusText = UIManager.Singletone.sessionInfoText; //улучшить вывод текста созданием метода внутри UI менеджера
                 var sessions = await QuerySessions();
-
                 if (sessions.Count > 0)
                 {
-                    sessionStatusText.text = $"Доступно сессий: {sessions.Count}\nПрисоединяйтесь!";
+                    UIManager.Singletone.SetSessionInfoText($"Доступно сессий: {sessions.Count}\nПрисоединяйтесь!");
                 }
                 else
                 {
-                    sessionStatusText.text = "Нет активных сессий";
+                    UIManager.Singletone.SetSessionInfoText("Нет активных сессий");
                 }
 
                 await UniTask.Delay(TimeSpan.FromSeconds(7), cancellationToken: pollCts.Token);
@@ -75,17 +73,13 @@ public class SessionManager : Singleton<SessionManager>
 
     private void UpdateSessionUI()
     {
-        var sessionStatusText = UIManager.Singletone.sessionInfoText;
-        if (sessionStatusText == null) return;
-
         if (ActiveSession != null)
         {
             if (ActiveSession.IsHost)
             {
-                // Если мы хостим и пока один — "ожидаем"
                 if (ActiveSession.Players.Count == 1)
                 {
-                    sessionStatusText.text = "Создали сессию, ожидаем...";
+                    UIManager.Singletone.SetSessionInfoText("Создали сессию, ожидаем...");
                 }
             }
         }
@@ -151,14 +145,9 @@ public class SessionManager : Singleton<SessionManager>
         {
             StopPolling();
 
-            var sessionStatusText = UIManager.Singletone.sessionInfoText;
-            if (sessionStatusText != null)
-            {
-                sessionStatusText.text = "Создаём сессию...";
-            }
+            UIManager.Singletone.SetSessionInfoText("Создаём сессию...");
 
             var playerProperties = await GetPlayerProperties();
-
             var options = new SessionOptions
             {
                 MaxPlayers = 2,
@@ -267,6 +256,10 @@ public class SessionManager : Singleton<SessionManager>
     {
         try
         {
+            StopPolling();
+
+            UIManager.Singletone.SetSessionInfoText("Подключаемся к сессии...");
+
             var sessions = await QuerySessions();
             if (sessions.Count > 0)
             {
@@ -289,26 +282,6 @@ public class SessionManager : Singleton<SessionManager>
     {
         return false;
     }
-
-    //public async UniTaskVoid FindSessionOrStartWithBot()
-    //{
-    //    try
-    //    {
-    //        var sessions = await QuerySessions();
-    //        var possibleSessions = new List<ISessionInfo>();
-
-
-    //        if (possibleSessions.Count > 0)
-    //        {
-    //            var targetSession = possibleSessions[UnityEngine.Random.Range(0, possibleSessions.Count)];
-    //            await JoinSessionById(targetSession.Id).AsCompletedTask();
-    //        }
-    //    }
-    //    catch (Exception e)
-    //    {
-    //        await HandleError(e);
-    //    }
-    //}
 
     [Button]
     public void FindAndJoinSessionButton()

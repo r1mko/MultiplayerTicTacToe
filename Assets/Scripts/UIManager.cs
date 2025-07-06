@@ -7,8 +7,8 @@ public class UIManager : MonoBehaviour
     public static UIManager Singletone;
     public TMP_Text sessionInfoText;
 
-    [SerializeField] private GameObject navigationPanel;
     [SerializeField] private TMP_Text currentPlayerTextID;
+    [SerializeField] private GameObject navigationPanel;
     [SerializeField] private Button restartButton;
     [SerializeField] private Button hostButton;
     [SerializeField] private Button clientButton;
@@ -84,6 +84,12 @@ public class UIManager : MonoBehaviour
     {
         sessionInfoText.gameObject.SetActive(false);
     }
+
+    public void SetSessionInfoText(string info)
+    {
+        sessionInfoText.text = info;
+    }
+
     private void OnDestroy()
     {
         restartButton.onClick.RemoveAllListeners();
