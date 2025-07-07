@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -42,14 +42,29 @@ public class UIManager : MonoBehaviour
         SessionManager.Instance.FindAndJoinSessionButton();
     }
 
-    public void UpdateCurrentPlayer(int id)
+    public void UpdateCurrentPlayerText()
     {
-        currentPlayerTextID.text = $"Turn Index: {id}";
+        if (GameManager.Singltone.IsOurTurn())
+        {
+            currentPlayerTextID.text = "Ваш ход";
+        }
+        else
+        {
+            currentPlayerTextID.text = "Ход противника";
+        }
+
     }
 
-    public void SetWinText(string text)
+    public void SetWinText()
     {
-        currentPlayerTextID.text = $"Won: {text}";
+        if (GameManager.Singltone.IsOurTurn())
+        {
+            currentPlayerTextID.text = "Вы победили!";
+        }
+        else
+        {
+            currentPlayerTextID.text = "Вы проиграли!";
+        }
     }
 
     public void SetDrawText(string text)

@@ -30,7 +30,7 @@ public class NetworkPlayer : NetworkBehaviour
     private void UpdateCurrentPlayerID(int clientID)
     {
         CurrentPlayerTurnID = (int)NetworkManager.ConnectedClientsIds[clientID];
-        UIManager.Singletone.UpdateCurrentPlayer(clientID);
+        UIManager.Singletone.UpdateCurrentPlayerText();
     }
 
     private void CheckTwoPlayers()
@@ -70,14 +70,14 @@ public class NetworkPlayer : NetworkBehaviour
         if (BoardManager.Singltone.IsWon(row,col))
         {
             GameOver();
-            UIManager.Singletone.SetWinText(CurrentPlayerTurnID.ToString());
+            UIManager.Singletone.SetWinText();
             return;
         }
 
         if (BoardManager.Singltone.IsGameDraw())
         {
             GameOver();
-            UIManager.Singletone.SetDrawText("It's a draw!");
+            UIManager.Singletone.SetDrawText("Ничья");
             return;
         }
 
