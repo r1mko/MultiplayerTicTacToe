@@ -5,6 +5,12 @@ using UnityUtils;
 
 public class NetworkPlayer : NetworkBehaviour
 {
+    public enum ResultType
+    {
+        Win,
+        Lose
+    }
+
     public static NetworkPlayer Singletone;
 
     public int CurrentPlayerTurnID;
@@ -12,12 +18,14 @@ public class NetworkPlayer : NetworkBehaviour
     private int startOffSet;
 
     private CellHistoryManager cellHistoryManager;
+    private WinLoseHistory winLoseHistory;
 
 
     private void Awake()
     {
         Singletone = this;
         cellHistoryManager = new CellHistoryManager();
+        winLoseHistory = new WinLoseHistory();
         NetworkManager.OnClientConnectedCallback += ClientConnected;
     }
 
@@ -59,6 +67,36 @@ public class NetworkPlayer : NetworkBehaviour
         cellHistoryManager.Clear();
     }
 
+    private void UpdateHistory(ResultType result)
+    {
+        switch (result)
+        {
+            case ResultType.Win:
+                winLoseHistory.wins++;
+                break;
+            case ResultType.Lose:
+                winLoseHistory.loses++;
+                break;
+        }
+    }
+    private void GameOver()
+    {
+        UIManager.Singletone.ShowRestartButton();
+        BoardManager.Singltone.BlockAllButtons();
+    }
+
+    public void RestartGame()
+    {
+        BoardManager.Singltone.ClearAndUnbloackCells();
+        GameManager.Singltone.Restart();
+        if (IsServer)
+        {
+            PrepareGame();
+        }
+        NetworkPrepareGame();
+    }
+
+    //rpc region
     [Rpc(SendTo.Everyone)]
     public void OnClickRpc(int row, int col)
     {
@@ -70,6 +108,8 @@ public class NetworkPlayer : NetworkBehaviour
         if (BoardManager.Singltone.IsWon(row,col))
         {
             GameOver();
+            UpdateHistory(GameManager.Singltone.IsOurTurn() ? ResultType.Win : ResultType.Lose);
+            UIManager.Singletone.SetWinLoseCountText(winLoseHistory.wins, winLoseHistory.loses);
             UIManager.Singletone.SetWinText();
             return;
         }
@@ -96,23 +136,6 @@ public class NetworkPlayer : NetworkBehaviour
         UpdateCurrentPlayerID(clientID);
     }
 
-    private void GameOver()
-    {
-        BoardManager.Singltone.BlockAllButtons();
-        UIManager.Singletone.ShowRestartButton();
-    }
-
-    public void RestartGame()
-    {
-        BoardManager.Singltone.ClearAndUnbloackCells();
-        GameManager.Singltone.Restart();
-        if (IsServer)
-        {
-            PrepareGame();
-        }
-        NetworkPrepareGame();
-    }
-
     [Rpc(SendTo.Everyone)]
     public void RestartGameRpc()
     {
@@ -132,6 +155,7 @@ public class NetworkPlayer : NetworkBehaviour
     {
         UIManager.Singletone.HideActiveSessionInfo();
         UIManager.Singletone.ShowMoveInfo();
+        UIManager.Singletone.ShowWinLoseCountInfo();
         BoardManager.Singltone.ClearAndUnbloackCells();
         //BoardManager.Singltone.ShowBoard(); //позже добавим
     }

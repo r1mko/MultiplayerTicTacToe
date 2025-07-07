@@ -5,8 +5,8 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager Singletone;
-    public TMP_Text sessionInfoText;
-
+    [SerializeField] private TMP_Text sessionInfoText;
+    [SerializeField] private TMP_Text winLoseText;
     [SerializeField] private TMP_Text currentPlayerTextID;
     [SerializeField] private GameObject navigationPanel;
     [SerializeField] private Button restartButton;
@@ -23,6 +23,7 @@ public class UIManager : MonoBehaviour
         ShowNavigationPanel();
         ShowActiveSessionInfo();
         HideMoveInfo();
+        HideWinLoseCountInfo();
     }
 
     private void OnRestart()
@@ -114,6 +115,21 @@ public class UIManager : MonoBehaviour
     public void HideMoveInfo()
     {
         currentPlayerTextID.gameObject.SetActive(false);
+    }
+
+    public void ShowWinLoseCountInfo()
+    {
+        winLoseText.gameObject.SetActive(true);
+    }
+
+    public void HideWinLoseCountInfo()
+    {
+        winLoseText.gameObject.SetActive(false);
+    }
+
+    public void SetWinLoseCountText(int win, int lose)
+    {
+        winLoseText.text = $"Победы: {win}\nПоражения: {lose}";
     }
 
     private void OnDestroy()
