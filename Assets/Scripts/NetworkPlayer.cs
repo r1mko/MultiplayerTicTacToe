@@ -13,12 +13,14 @@ public class NetworkPlayer : NetworkBehaviour
 
     private CellHistoryManager cellHistoryManager;
 
+
     private void Awake()
     {
         Singletone = this;
         cellHistoryManager = new CellHistoryManager();
         NetworkManager.OnClientConnectedCallback += ClientConnected;
     }
+
     private void ClientConnected(ulong clientID)
     {
         Debug.Log($"[NetworkPlayer] Вызвали метод ClientConnected. ID: {clientID}. Сервер ли у нас {IsServer}, Хост ли у нас {IsHost}");
@@ -57,25 +59,6 @@ public class NetworkPlayer : NetworkBehaviour
         cellHistoryManager.Clear();
     }
 
-    private void GameOver()
-    {
-        BoardManager.Singltone.BlockAllButtons();
-        UIManager.Singletone.ShowRestartButton();
-    }
-
-    public void RestartGame()
-    {
-        BoardManager.Singltone.ClearAndUnbloackCells();
-        GameManager.Singltone.Restart();
-        if (IsServer)
-        {
-            PrepareGame();
-        }
-        NetworkPrepareGame();
-    }
-
-    //rpc region
-
     [Rpc(SendTo.Everyone)]
     public void OnClickRpc(int row, int col)
     {
@@ -111,6 +94,23 @@ public class NetworkPlayer : NetworkBehaviour
     private void UpdateCurrentPlayerIDRpc(int clientID)
     {
         UpdateCurrentPlayerID(clientID);
+    }
+
+    private void GameOver()
+    {
+        BoardManager.Singltone.BlockAllButtons();
+        UIManager.Singletone.ShowRestartButton();
+    }
+
+    public void RestartGame()
+    {
+        BoardManager.Singltone.ClearAndUnbloackCells();
+        GameManager.Singltone.Restart();
+        if (IsServer)
+        {
+            PrepareGame();
+        }
+        NetworkPrepareGame();
     }
 
     [Rpc(SendTo.Everyone)]
