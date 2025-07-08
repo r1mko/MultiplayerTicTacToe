@@ -5,12 +5,6 @@ using UnityUtils;
 
 public class NetworkPlayer : NetworkBehaviour
 {
-    public enum ResultType
-    {
-        Win,
-        Lose
-    }
-
     public static NetworkPlayer Singletone;
 
     public int CurrentPlayerTurnID;
@@ -67,18 +61,6 @@ public class NetworkPlayer : NetworkBehaviour
         cellHistoryManager.Clear();
     }
 
-    private void UpdateHistory(ResultType result)
-    {
-        switch (result)
-        {
-            case ResultType.Win:
-                winLoseHistory.wins++;
-                break;
-            case ResultType.Lose:
-                winLoseHistory.loses++;
-                break;
-        }
-    }
     private void GameOver()
     {
         UIManager.Singletone.ShowRestartButton();
@@ -108,8 +90,7 @@ public class NetworkPlayer : NetworkBehaviour
         if (BoardManager.Singltone.IsWon(row,col))
         {
             GameOver();
-            UpdateHistory(GameManager.Singltone.IsOurTurn() ? ResultType.Win : ResultType.Lose);
-            UIManager.Singletone.SetWinLoseCountText(winLoseHistory.wins, winLoseHistory.loses);
+            GameManager.Singltone.SetWin(CurrentPlayerTurnID);
             UIManager.Singletone.SetWinText();
             return;
         }

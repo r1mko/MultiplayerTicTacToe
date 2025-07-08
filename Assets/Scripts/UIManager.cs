@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,7 +7,8 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager Singletone;
     [SerializeField] private TMP_Text sessionInfoText;
-    [SerializeField] private TMP_Text winLoseText;
+    [SerializeField] private TMP_Text winXText;
+    [SerializeField] private TMP_Text winOText;
     [SerializeField] private TMP_Text currentPlayerTextID;
     [SerializeField] private GameObject navigationPanel;
     [SerializeField] private Button restartButton;
@@ -119,18 +121,21 @@ public class UIManager : MonoBehaviour
 
     public void ShowWinLoseCountInfo()
     {
-        winLoseText.gameObject.SetActive(true);
+        winXText.gameObject.SetActive(true);
+        winOText.gameObject.SetActive(true);
     }
 
     public void HideWinLoseCountInfo()
     {
-        winLoseText.gameObject.SetActive(false);
+        winOText.gameObject.SetActive(false);
     }
 
-    public void SetWinLoseCountText(int win, int lose)
+    public void SetWinLoseCountText(int[] winArray)
     {
-        winLoseText.text = $"Победы: {win}\nПоражения: {lose}";
+        winXText.text = $"X: {winArray[0]}";
+        winOText.text = $"O: {winArray[1]}";
     }
+
 
     private void OnDestroy()
     {
