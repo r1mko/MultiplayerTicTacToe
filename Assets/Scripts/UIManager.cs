@@ -11,6 +11,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text winOText;
     [SerializeField] private TMP_Text currentPlayerTextID;
     [SerializeField] private GameObject navigationPanel;
+    [SerializeField] private GameObject smileScreen;
     [SerializeField] private Button restartButton;
     [SerializeField] private Button hostButton;
     [SerializeField] private Button clientButton;
@@ -26,6 +27,7 @@ public class UIManager : MonoBehaviour
         ShowActiveSessionInfo();
         HideMoveInfo();
         HideWinLoseCountInfo();
+        HideSmileScreen();
     }
 
     private void OnRestart()
@@ -136,6 +138,15 @@ public class UIManager : MonoBehaviour
         winOText.text = $"O: {winArray[1]}";
     }
 
+    public void ShowSmileScreen()
+    {
+        smileScreen.SetActive(true);
+    }
+
+    public void HideSmileScreen()
+    {
+        smileScreen.SetActive(false);
+    }
 
     private void OnDestroy()
     {

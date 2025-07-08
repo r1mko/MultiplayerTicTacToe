@@ -12,14 +12,12 @@ public class NetworkPlayer : NetworkBehaviour
     private int startOffSet;
 
     private CellHistoryManager cellHistoryManager;
-    private WinLoseHistory winLoseHistory;
 
 
     private void Awake()
     {
         Singletone = this;
         cellHistoryManager = new CellHistoryManager();
-        winLoseHistory = new WinLoseHistory();
         NetworkManager.OnClientConnectedCallback += ClientConnected;
     }
 
@@ -112,6 +110,14 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
+    public void OnClickSmileRpc(int smileID)
+    {
+        Debug.Log("Вызываем рпс метод для показа смайлов ");
+        SmileController.Singltone.SpawnSmile(smileID);
+    }
+
+
+    [Rpc(SendTo.Everyone)]
     private void UpdateCurrentPlayerIDRpc(int clientID)
     {
         UpdateCurrentPlayerID(clientID);
@@ -137,6 +143,7 @@ public class NetworkPlayer : NetworkBehaviour
         UIManager.Singletone.HideActiveSessionInfo();
         UIManager.Singletone.ShowMoveInfo();
         UIManager.Singletone.ShowWinLoseCountInfo();
+        UIManager.Singletone.ShowSmileScreen();
         BoardManager.Singltone.ClearAndUnbloackCells();
         //BoardManager.Singltone.ShowBoard(); //позже добавим
     }
