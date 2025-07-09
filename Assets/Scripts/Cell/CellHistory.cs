@@ -24,20 +24,20 @@ public class CellHistoryManager
                 return;
             }
 
-            Cell thirdCell = item.Value[2];
-            if (thirdCell != null)
+            if (item.Value[2] != null)
             {
-                thirdCell.PreDestroy();
+                item.Value[2].PreDestroy();
             }
+
             if (item.Value.Count == 4)
             {
                 if (item.Value[3] != null)
                 {
                     item.Value[3].Clear();
                     item.Value[3].Unblock();
-                    item.Value.RemoveAt(3);
                 }
-            }
+                item.Value.RemoveAt(3);
+            }            
         }
     }
 
