@@ -44,6 +44,7 @@ public class NetworkPlayer : NetworkBehaviour
         {
             UpdateUIRpc();
             PrepareGame();
+            StartGameRpc();
         }
     }
 
@@ -75,6 +76,16 @@ public class NetworkPlayer : NetworkBehaviour
         }
         NetworkPrepareGame();
     }
+
+    public void StartTimer()
+    {
+        if (!GameManager.Singltone.IsOurTurn())
+        {
+            return;
+        }
+        TimerController.Singltone.StartTime();
+    }
+
 
     //rpc region
     [Rpc(SendTo.Everyone)]
@@ -110,6 +121,12 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
+    public void StartGameRpc()
+    {
+        StartTimer();
+    }
+
+    [Rpc(SendTo.Everyone)]
     public void OnClickSmileRpc(int smileID)
     {
         Debug.Log("Вызываем рпс метод для показа смайлов ");
@@ -121,6 +138,7 @@ public class NetworkPlayer : NetworkBehaviour
     private void UpdateCurrentPlayerIDRpc(int clientID)
     {
         UpdateCurrentPlayerID(clientID);
+        StartTimer();
     }
 
     [Rpc(SendTo.Everyone)]
