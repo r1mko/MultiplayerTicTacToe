@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager Singletone;
+    [SerializeField] private TMP_Text timerText;
     [SerializeField] private TMP_Text sessionInfoText;
     [SerializeField] private TMP_Text winXText;
     [SerializeField] private TMP_Text winOText;
@@ -28,6 +29,7 @@ public class UIManager : MonoBehaviour
         HideMoveInfo();
         HideWinLoseCountInfo();
         HideSmileScreen();
+        HideTimerText();
     }
 
     private void OnRestart()
@@ -146,6 +148,21 @@ public class UIManager : MonoBehaviour
     public void HideSmileScreen()
     {
         smileScreen.SetActive(false);
+    }
+
+    public void SetTimerText(double time)
+    {
+        timerText.text = time.ToString();
+    }
+
+    public void HideTimerText()
+    {
+        timerText.gameObject.SetActive(false);
+    }
+
+    public void ShowTimerText()
+    {
+        timerText.gameObject.SetActive(true);
     }
 
     private void OnDestroy()

@@ -83,7 +83,16 @@ public class NetworkPlayer : NetworkBehaviour
         {
             return;
         }
+        TimerController.Singltone.EndTime();
         TimerController.Singltone.StartTime();
+    }
+
+    private void ServerSelectNextPlayer()
+    {
+        var playersCount = NetworkManager.ConnectedClientsIds.Count;
+        var currentPlayerIndex = (GameManager.Singltone.TurnIndex + startOffSet) % playersCount;
+        Debug.Log($"[NetworkPlayer] Переключаемся на игрока под индексом: {currentPlayerIndex}");
+        UpdateCurrentPlayerIDRpc(currentPlayerIndex);
     }
 
 
@@ -95,6 +104,8 @@ public class NetworkPlayer : NetworkBehaviour
         BoardManager.Singltone.FillCell(row, col, CurrentPlayerTurnID);
         GameManager.Singltone.NextTurn();
         cellHistoryManager.Add(BoardManager.Singltone.GetCell(row, col),CurrentPlayerTurnID);
+
+        TimerController.Singltone.EndTime();
 
         if (BoardManager.Singltone.IsWon(row,col))
         {
@@ -113,10 +124,19 @@ public class NetworkPlayer : NetworkBehaviour
 
         if (IsServer)
         {
-            var playersCounts = NetworkManager.ConnectedClientsIds.Count;
-            var currentPlayer = (GameManager.Singltone.TurnIndex + startOffSet) % playersCounts;
-            UpdateCurrentPlayerIDRpc(currentPlayer);
-            Debug.Log($"[NetworkPlayer] CurrentPlayer {currentPlayer}");
+            ServerSelectNextPlayer();
+        }
+    }
+
+    [Rpc(SendTo.Everyone)]
+    public void MoveToNextPlayerRpc()
+    {
+        cellHistoryManager.SkipTurn(CurrentPlayerTurnID);
+        GameManager.Singltone.NextTurn();
+
+        if (IsServer)
+        {
+            ServerSelectNextPlayer();
         }
     }
 
@@ -145,6 +165,7 @@ public class NetworkPlayer : NetworkBehaviour
     public void RestartGameRpc()
     {
         RestartGame();
+        StartTimer();
     }
 
     [Rpc(SendTo.Everyone)]

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class CellHistoryManager
@@ -24,15 +24,26 @@ public class CellHistoryManager
                 return;
             }
 
-            item.Value[2].PreDestroy();
-
+            Cell thirdCell = item.Value[2];
+            if (thirdCell != null)
+            {
+                thirdCell.PreDestroy();
+            }
             if (item.Value.Count == 4)
             {
-                item.Value[3].Clear();
-                item.Value[3].Unblock();
-                item.Value.RemoveAt(3);
+                if (item.Value[3] != null)
+                {
+                    item.Value[3].Clear();
+                    item.Value[3].Unblock();
+                    item.Value.RemoveAt(3);
+                }
             }
         }
+    }
+
+    public void SkipTurn(int playerID)
+    {
+        Add(null, playerID); 
     }
 
     public void Clear()

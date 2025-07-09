@@ -1,4 +1,4 @@
-using Unity.Netcode;
+п»їusing Unity.Netcode;
 using UnityEngine;
 
 public class TimerController : MonoBehaviour
@@ -25,13 +25,14 @@ public class TimerController : MonoBehaviour
         isActive = true;
         startTime = NetworkManager.Singleton.ServerTime.Time;
         endTime = startTime + duration;
-        Debug.Log($"<color=green>[TimerController] Вызвали метод StartTime. startTime: {startTime}, endTime: {endTime}</color>");
+
+        UIManager.Singletone.ShowTimerText();
     }
 
     public void EndTime()
     {
         isActive = false;
-        Debug.Log("[TimerController] Вызвали метод EndTime");
+        UIManager.Singletone.HideTimerText();
     }
 
     private void Update()
@@ -40,9 +41,16 @@ public class TimerController : MonoBehaviour
         {
             return;
         }
-        if (NetworkManager.Singleton.ServerTime.Time >= endTime)
+
+        
+        double remainingTime = endTime - NetworkManager.Singleton.ServerTime.Time;
+        if (remainingTime <= 0)
         {
+            NetworkPlayer.Singletone.MoveToNextPlayerRpc();
             EndTime();
+            return;
         }
+        int secondsRemaining = Mathf.FloorToInt((float)remainingTime);
+        UIManager.Singletone.SetTimerText(secondsRemaining);
     }
 }
