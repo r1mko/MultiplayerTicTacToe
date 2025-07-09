@@ -1,4 +1,4 @@
-using System;
+п»їusing System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,8 +10,6 @@ public class SmileController : MonoBehaviour
 
     [SerializeField] private SmileScreen smileScreen;
 
-    private Action<int> OnSendSmile;
-
     private void Awake()
     {
         Singltone = this;
@@ -19,22 +17,22 @@ public class SmileController : MonoBehaviour
 
     private void Start()
     {
-        OnSendSmile += SendSmile;
-        smileScreen.Init(OnSendSmile);
+        EventManager.Subscribe<SendSmileEvent>(SendSmile);
     }
+
+    private void SendSmile(SendSmileEvent obj)
+    {
+        NetworkPlayer.Singletone.OnClickSmileRpc(obj.Index);
+        Debug.Log("Р’С‹Р·РІР°Р»Рё РјРµС‚РѕРґ SendSmile, РѕС‚РїСЂР°РІРёР»Рё РІ РЅРµС‚РІРѕСЂРє РїР»РµРµСЂ");
+    }
+
     public void SpawnSmile(int index)
     {
         var spawnedSmile = Instantiate(smilePrefabs[index], smileScreen.GetParentPlace());
     }
 
-    public void SendSmile(int index)
-    {
-        Debug.Log("Вызвали метод SendSmile, отправили в нетворк плеер");
-        NetworkPlayer.Singletone.OnClickSmileRpc(index);
-    }
-
     private void OnDestroy()
     {
-        OnSendSmile -= SendSmile;
+        EventManager.Unsubscribe<SendSmileEvent>(SendSmile);
     }
 }

@@ -7,15 +7,10 @@ public class SmileScreen: MonoBehaviour
 {
     [SerializeField] private Transform spawnPlace;
     [SerializeField] List<SmileButton> smileButtonList;
-    private Action OnDisableButtonsAction;
 
-    public void Init(Action<int> action)
+    private void Start()
     {
-        OnDisableButtonsAction += StartSmileCooldown;
-        foreach (var item in smileButtonList)
-        {
-            item.Init(action, OnDisableButtonsAction);
-        }
+        EventManager.Subscribe<OnDisableSmileButtonsEvent>((a)=>StartSmileCooldown());
     }
 
     private void StartSmileCooldown()
@@ -54,6 +49,6 @@ public class SmileScreen: MonoBehaviour
 
     private void OnDestroy()
     {
-        OnDisableButtonsAction -= StartSmileCooldown;
+        EventManager.Unsubscribe<OnDisableSmileButtonsEvent>((a) => StartSmileCooldown());
     }
 }
