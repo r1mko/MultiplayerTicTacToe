@@ -17,6 +17,10 @@ public class TimerController : MonoBehaviour
 
     public void StartTime()
     {
+        if (isActive || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            return;
+        }
 
         if (isActive)
         {
@@ -42,7 +46,12 @@ public class TimerController : MonoBehaviour
             return;
         }
 
-        
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            EndTime();
+            return;
+        }
+
         double remainingTime = endTime - NetworkManager.Singleton.ServerTime.Time;
         if (remainingTime <= 0)
         {
