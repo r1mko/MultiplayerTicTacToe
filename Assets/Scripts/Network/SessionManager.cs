@@ -155,7 +155,7 @@ public class SessionManager : Singleton<SessionManager>
                 IsPrivate = false,
                 PlayerProperties = playerProperties,
                 Name = $"{UnityEngine.Random.Range(0, 10000)}"
-            }.WithRelayNetwork("europe-north1");
+            }.WithRelayNetwork("europe-central2");
 
             ActiveSession = await MultiplayerService.Instance.CreateSessionAsync(options);
 
