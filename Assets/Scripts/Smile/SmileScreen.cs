@@ -5,12 +5,18 @@ using System.Collections;
 
 public class SmileScreen: MonoBehaviour
 {
-    [SerializeField] private Transform spawnPlace;
+    [SerializeField] private Transform ourSpawnPlace;
+    [SerializeField] private Transform opSpawnPlace;
     [SerializeField] List<SmileButton> smileButtonList;
 
     private void Start()
     {
-        EventManager.Subscribe<OnDisableSmileButtonsEvent>((a)=>StartSmileCooldown());
+        EventManager.Subscribe<OnDisableSmileButtonsEvent>(HandleDisableSmileButtons);
+    }
+
+    private void HandleDisableSmileButtons(OnDisableSmileButtonsEvent e)
+    {
+        StartSmileCooldown();
     }
 
     private void StartSmileCooldown()
@@ -18,9 +24,14 @@ public class SmileScreen: MonoBehaviour
         StartCoroutine(SmileCooldown());
     }
 
-    public Transform GetParentPlace()
+    public Transform GetOurParentPlace()
     {
-        return spawnPlace;
+        return ourSpawnPlace;
+    }
+
+    public Transform GetOpParentPlace()
+    {
+        return opSpawnPlace; 
     }
 
     private void AllButtonDisable()
@@ -49,6 +60,6 @@ public class SmileScreen: MonoBehaviour
 
     private void OnDestroy()
     {
-        EventManager.Unsubscribe<OnDisableSmileButtonsEvent>((a) => StartSmileCooldown());
+        EventManager.Unsubscribe<OnDisableSmileButtonsEvent>(HandleDisableSmileButtons);
     }
 }

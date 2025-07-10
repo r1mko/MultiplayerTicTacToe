@@ -19,7 +19,7 @@ public class SmileButton : MonoBehaviour
     private void SendSmile()
     {
         Debug.Log("Вызвали метод SendSmile. Инвок OnSendSmile сработал");
-        EventManager.Trigger(new SendSmileEvent(index));
+        EventManager.Trigger(new LocalSmileSentEvent(index));
         EventManager.Trigger(new OnDisableSmileButtonsEvent());
     }
 

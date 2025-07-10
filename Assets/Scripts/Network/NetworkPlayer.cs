@@ -147,12 +147,17 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
-    public void OnClickSmileRpc(int smileID)
+    public void SendSmileClientRpc(int smileID, ulong senderId)
     {
-        Debug.Log("Вызываем рпс метод для показа смайлов ");
-        SmileController.Singltone.SpawnSmile(smileID);
-    }
+        if (senderId == NetworkManager.Singleton.LocalClientId)
+        {
+            Debug.Log($"[ClientRpc] Это мой собственный смайл — пропускаем.");
+            return;
+        }
 
+        Debug.Log($"[ClientRpc] Получили смайл от игрока: {senderId}");
+        EventManager.Trigger(new EnemySmileReceivedEvent(smileID));
+    }
 
     [Rpc(SendTo.Everyone)]
     private void UpdateCurrentPlayerIDRpc(int clientID)

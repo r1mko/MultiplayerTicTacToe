@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 public class SmileController : MonoBehaviour
@@ -17,22 +18,38 @@ public class SmileController : MonoBehaviour
 
     private void Start()
     {
-        EventManager.Subscribe<SendSmileEvent>(SendSmile);
+        EventManager.Subscribe<LocalSmileSentEvent>(OnLocalSmileSent);
+        EventManager.Subscribe<EnemySmileReceivedEvent>(OnEnemySmileReceived);
     }
 
-    private void SendSmile(SendSmileEvent obj)
+    private void OnLocalSmileSent(LocalSmileSentEvent e)
     {
-        NetworkPlayer.Singletone.OnClickSmileRpc(obj.Index);
-        Debug.Log("Вызвали метод SendSmile, отправили в нетворк плеер");
+        SpawnSmile(e.Index, isLocal: true);
+
+        if (NetworkManager.Singleton == null)
+        {
+            Debug.LogWarning("NetworkManager не инициализирован!");
+            return;
+        }
+
+        NetworkPlayer.Singletone.SendSmileClientRpc(e.Index, NetworkManager.Singleton.LocalClientId);
     }
 
-    public void SpawnSmile(int index)
+    private void OnEnemySmileReceived(EnemySmileReceivedEvent e)
     {
-        var spawnedSmile = Instantiate(smilePrefabs[index], smileScreen.GetParentPlace());
+        Debug.Log($"[Smile] Получили смайл от противника: {e.Index}");
+        SpawnSmile(e.Index, isLocal: false);
+    }
+
+    public void SpawnSmile(int index, bool isLocal)
+    {
+        Transform spawnPlace = isLocal ? smileScreen.GetOurParentPlace() : smileScreen.GetOpParentPlace();
+        var spawnedSmile = Instantiate(smilePrefabs[index], spawnPlace);
     }
 
     private void OnDestroy()
     {
-        EventManager.Unsubscribe<SendSmileEvent>(SendSmile);
+        EventManager.Unsubscribe<LocalSmileSentEvent>(OnLocalSmileSent);
+        EventManager.Unsubscribe<EnemySmileReceivedEvent>(OnEnemySmileReceived);
     }
 }
