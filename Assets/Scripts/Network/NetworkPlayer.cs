@@ -31,6 +31,7 @@ public class NetworkPlayer : NetworkBehaviour
     {
         CurrentPlayerTurnID = (int)NetworkManager.ConnectedClientsIds[clientID];
         UIManager.Singletone.UpdateCurrentPlayerText();
+        StartTimer();
     }
 
     private void CheckTwoPlayers()
@@ -52,7 +53,6 @@ public class NetworkPlayer : NetworkBehaviour
     {
         var randomIndex = Random.Range(0, NetworkManager.ConnectedClientsIds.Count);
         UpdateOffSetRpc(randomIndex);
-        Debug.Log($"[NetworkPlayer] Вызвали PrepareGame. randomIndex равен {randomIndex}");
     }
 
     private void NetworkPrepareGame()
@@ -74,6 +74,7 @@ public class NetworkPlayer : NetworkBehaviour
         {
             PrepareGame();
         }
+
         NetworkPrepareGame();
     }
 
@@ -91,7 +92,6 @@ public class NetworkPlayer : NetworkBehaviour
     {
         var playersCount = NetworkManager.ConnectedClientsIds.Count;
         var currentPlayerIndex = (GameManager.Singltone.TurnIndex + startOffSet) % playersCount;
-        Debug.Log($"[NetworkPlayer] Переключаемся на игрока под индексом: {currentPlayerIndex}");
         UpdateCurrentPlayerIDRpc(currentPlayerIndex);
     }
 
@@ -100,7 +100,6 @@ public class NetworkPlayer : NetworkBehaviour
     [Rpc(SendTo.Everyone)]
     public void OnClickRpc(int row, int col)
     {
-        Debug.Log($"[NetworkPlayer] Row {row}, col {col}");
         BoardManager.Singltone.FillCell(row, col, CurrentPlayerTurnID);
         GameManager.Singltone.NextTurn();
         cellHistoryManager.Add(BoardManager.Singltone.GetCell(row, col),CurrentPlayerTurnID);
@@ -155,7 +154,6 @@ public class NetworkPlayer : NetworkBehaviour
             return;
         }
 
-        Debug.Log($"[ClientRpc] Получили смайл от игрока: {senderId}");
         EventManager.Trigger(new EnemySmileReceivedEvent(smileID));
     }
 
@@ -170,7 +168,6 @@ public class NetworkPlayer : NetworkBehaviour
     public void RestartGameRpc()
     {
         RestartGame();
-        StartTimer();
     }
 
     [Rpc(SendTo.Everyone)]
