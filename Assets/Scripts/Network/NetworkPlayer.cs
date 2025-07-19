@@ -13,6 +13,14 @@ public class NetworkPlayer : NetworkBehaviour
         NetworkManager.OnClientConnectedCallback += ClientConnected;
     }
 
+    public bool IsMultiplayer()
+    {
+
+        return NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
+
+        
+    }
+
     private void ClientConnected(ulong clientID)
     {
         Debug.Log($"[NetworkPlayer] Вызвали метод ClientConnected. ID: {clientID}. Сервер ли у нас {IsServer}, Хост ли у нас {IsHost}");

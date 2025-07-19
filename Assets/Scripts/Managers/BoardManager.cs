@@ -62,7 +62,7 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        if (NetworkPlayer.Singletone.IsMultiplayer())
         {
             NetworkPlayer.Singletone.OnClickRpc(row, coll);
         }

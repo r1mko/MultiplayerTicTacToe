@@ -17,6 +17,11 @@ public class BotController : MonoBehaviour
             return;
         }
 
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            return;
+        }
+
         if (botTurnCoroutine != null)
         {
             return;
