@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,12 +17,14 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button restartButton;
     [SerializeField] private Button hostButton;
     [SerializeField] private Button clientButton;
+    [SerializeField] private Button singlePlayerButton;
 
     private void Awake()
     {
         Singletone = this;
         restartButton.onClick.AddListener(OnRestart);
         hostButton.onClick.AddListener(OnHost);
+        singlePlayerButton.onClick.AddListener(OnSingle);
         clientButton.onClick.AddListener(OnClient);
         HideRestartButton();
         ShowNavigationPanel();
@@ -32,9 +35,14 @@ public class UIManager : MonoBehaviour
         HideTimerText();
     }
 
+    private void OnSingle()
+    {
+        GameManager.Singltone.StartGame();
+    }
+
     private void OnRestart()
     {
-        NetworkPlayer.Singletone.RestartGameRpc();
+        GameManager.Singltone.RestartGame();
     }
 
     private void OnHost()
@@ -170,5 +178,6 @@ public class UIManager : MonoBehaviour
         restartButton.onClick.RemoveAllListeners();
         hostButton.onClick.RemoveAllListeners();
         clientButton.onClick.RemoveAllListeners();
+        singlePlayerButton.onClick.RemoveAllListeners();
     }
 }

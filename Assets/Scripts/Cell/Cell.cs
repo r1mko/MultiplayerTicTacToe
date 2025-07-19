@@ -16,6 +16,9 @@ public class Cell: MonoBehaviour
     private int _indexPlayer;
     private bool _isFillCell;
 
+    public int row;
+    public int coll;
+
     public int IndexPlayer => _indexPlayer;
     public bool IsFillCell => _isFillCell;
     
@@ -146,11 +149,13 @@ public class Cell: MonoBehaviour
         }
     }
 
-    public void Init(int row, int col)
+    public void Init(int row, int coll)
     {
+        this.row = row;
+        this.coll = coll;
         Clear();
         Unblock();
-        cellButton.onClick.AddListener(() => BoardManager.Singltone.OnClickCell(row, col, this));
+        cellButton.onClick.AddListener(() => BoardManager.Singltone.OnClickCell(row, coll, this));
     }
 
 

@@ -54,13 +54,23 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    public void OnClickCell(int row, int col, Cell cell)
+    public void OnClickCell(int row, int coll, Cell cell)
     {
+        Debug.Log($"Вызвали onClickCell row: {row} coll: {coll} is our turn? {GameManager.Singltone.IsOurTurn()}");
         if (!GameManager.Singltone.IsOurTurn())
         {
             return;
         }
-        NetworkPlayer.Singletone.OnClickRpc(row, col);
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            NetworkPlayer.Singletone.OnClickRpc(row, coll);
+        }
+        else
+        {
+            GameManager.Singltone.OnClick(row, coll);
+        }
+
     }
 
     public void FillCell(int row, int col, int currentPlayerIndex)
@@ -140,5 +150,32 @@ public class BoardManager : MonoBehaviour
     public void HideBoard()
     {
         board.SetActive(false);
+    }
+
+    public bool TryGetEmptyCell(out Cell cell)
+    {
+        List<Cell> emptyCells = new List<Cell>();
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                if (!buttons[i, j].IsFillCell)
+                {
+                    emptyCells.Add(buttons[i, j]);
+                }
+            }
+        }
+
+        if (emptyCells.Count > 0)
+        {
+            cell = emptyCells[Random.Range(0, emptyCells.Count)];
+            return true;
+        }
+        else
+        {
+            cell = null;
+            return false;
+        }
     }
 }
