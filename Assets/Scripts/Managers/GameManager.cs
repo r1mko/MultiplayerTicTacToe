@@ -13,11 +13,11 @@ public class GameManager : MonoBehaviour
     public int TurnIndex;
 
     private bool isPlaying;
-    public bool IsPlaying=>isPlaying;
+    public bool IsPlaying => isPlaying;
 
     private CellHistoryManager cellHistoryManager;
 
-    private int[] wins = new int[]{0,0};
+    private int[] wins = new int[] { 0, 0 };
 
 
     private void Awake()
@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour
         }
         UpdateUI();
         PrepareGame();
-        StartTimer();
+        //StartTimer();
     }
 
     public void UpdateCurrentPlayerID(int clientID)
@@ -42,7 +42,7 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[GameManager]2. Вызвали UpdateCurrentPlayerID {clientID}");
         CurrentPlayerTurnID = clientID;
         UIManager.Singletone.UpdateCurrentPlayerText();
-        StartTimer();
+        //StartTimer();
     }
     public void NextTurn()
     {
@@ -57,6 +57,7 @@ public class GameManager : MonoBehaviour
     public void Restart()
     {
         TurnIndex = 0;
+        BoardManager.Singltone.ClearAndUnbloackCells();
     }
 
     public void SetWin(int winnerID)
@@ -72,23 +73,15 @@ public class GameManager : MonoBehaviour
 
         if (NetworkPlayer.Singletone.IsMultiplayer())
         {
-            if (offSet.HasValue)
+            if (NetworkPlayer.Singletone.IsServer)
             {
-                startOffSet = offSet.Value;
-                NetworkPlayer.Singletone.UpdateCurrentPlayerIDRpc(startOffSet);
+                startOffSet = UnityEngine.Random.Range(0, NetworkManager.Singleton.ConnectedClientsIds.Count);
+                NetworkPlayer.Singletone.UpdateOffSetRpc(startOffSet);
             }
             else
             {
-                if (NetworkPlayer.Singletone.IsServer)
-                {
-                    startOffSet = UnityEngine.Random.Range(0, NetworkManager.Singleton.ConnectedClientsIds.Count);
-                    NetworkPlayer.Singletone.UpdateOffSetRpc(startOffSet);
-                }
-                else
-                {
-                    Debug.LogWarning("PrepareGame вызван на клиенте без offSet");
-                    return;
-                }
+                Debug.LogWarning("PrepareGame вызван на клиенте без offSet");
+                return;
             }
         }
         else
@@ -110,30 +103,34 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
-        BoardManager.Singltone.ClearAndUnbloackCells();
-        Restart();
-
         if (NetworkPlayer.Singletone.IsMultiplayer())
         {
+            Debug.Log("Проверка мультиплеера");
             NetworkPlayer.Singletone.RestartGameRpc();
         }
-
-        PrepareGame();
-    }
-
-    public void StartTimer()
-    {
-        if (IsOurTurn())
+        else
         {
-            return;
+            Restart();
+            PrepareGame();
         }
 
-        TimerController.Singltone.EndTime();
-        TimerController.Singltone.StartTime();
+
     }
+
+    //public void StartTimer()
+    //{
+    //    if (IsOurTurn())
+    //    {
+    //        return;
+    //    }
+
+    //    TimerController.Singltone.EndTime();
+    //    TimerController.Singltone.StartTime();
+    //}
 
     private void ServerSelectNextPlayer()
     {
+        Debug.Log("[GameManager] Вызвали ServerSelectNextPlayer метод");
         var playersCount = 2;
         var currentPlayerIndex = (GameManager.Singltone.TurnIndex + startOffSet) % playersCount;
         UpdateCurrentPlayerID(currentPlayerIndex);

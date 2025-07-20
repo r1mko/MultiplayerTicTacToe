@@ -60,7 +60,7 @@ public class NetworkPlayer : NetworkBehaviour
     public void StartGameRpc()
     {
         Debug.Log("[NetworkPlayer] Вызвали метод StartGameRpc");
-        GameManager.Singltone.StartTimer();
+       // GameManager.Singltone.StartTimer();
         GameManager.Singltone.UpdateUI(); //вызывается 2 раза у хоста
     }
 
@@ -77,15 +77,9 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
-    public void UpdateCurrentPlayerIDRpc(int clientID)
-    {
-        GameManager.Singltone.UpdateCurrentPlayerID(clientID);
-        GameManager.Singltone.StartTimer();
-    }
-
-    [Rpc(SendTo.Everyone)]
     public void RestartGameRpc()
     {
+        GameManager.Singltone.Restart();
         if (IsServer)
         {
             var randomIndex = Random.Range(0, NetworkManager.ConnectedClientsIds.Count);
@@ -96,12 +90,6 @@ public class NetworkPlayer : NetworkBehaviour
     [Rpc(SendTo.Everyone)]
     public void PrepareGameRpc(int offSet)
     {
-        if (IsServer)
-        {
-            ulong clientId = NetworkManager.ConnectedClientsIds[offSet];
-            UpdateCurrentPlayerIDRpc((int)clientId);
-        }
-
         GameManager.Singltone.PrepareGame(offSet);
     }
 
@@ -109,6 +97,7 @@ public class NetworkPlayer : NetworkBehaviour
     public void UpdateOffSetRpc(int clientID)
     {
         GameManager.Singltone.UpdateOffSet(clientID);
+        Debug.Log("[NetworkPlayer] Вызвали метод UpdateOffSetRpc");
     }
 
     [Rpc(SendTo.Everyone)]

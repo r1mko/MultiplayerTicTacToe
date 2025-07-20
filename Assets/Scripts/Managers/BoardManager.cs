@@ -136,6 +136,7 @@ public class BoardManager : MonoBehaviour
 
     public void ClearAndUnbloackCells()
     {
+        Debug.Log("[BoardManager] Вызвали ClearAndUnbloackCells");
         foreach (var item in buttons)
         {
             item.Clear();
