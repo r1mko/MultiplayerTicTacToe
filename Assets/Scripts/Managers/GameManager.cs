@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour
         }
         UpdateUI();
         PrepareGame();
-        //StartTimer();
+        StartTimer();
     }
 
     public void UpdateCurrentPlayerID(int clientID)
@@ -42,7 +42,7 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[GameManager]2. Вызвали UpdateCurrentPlayerID {clientID}");
         CurrentPlayerTurnID = clientID;
         UIManager.Singletone.UpdateCurrentPlayerText();
-        //StartTimer();
+        StartTimer();
     }
     public void NextTurn()
     {
@@ -51,6 +51,7 @@ public class GameManager : MonoBehaviour
 
     public bool IsOurTurn()
     {
+        Debug.Log($"Проверяем наш ли ход currentturnID {CurrentPlayerTurnID}");
         return CurrentPlayerTurnID == (int)NetworkPlayer.Singletone.NetworkManager.LocalClientId;
     }
 
@@ -113,26 +114,34 @@ public class GameManager : MonoBehaviour
             Restart();
             PrepareGame();
         }
-
-
     }
 
-    //public void StartTimer()
-    //{
-    //    if (IsOurTurn())
-    //    {
-    //        return;
-    //    }
+    public void StartTimer() //нужно будет разобраться с isourturn. в сингл игре не должен работать так
+    {
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            if (IsOurTurn())
+            {
+                return;
+            }
+        }
+        else
+        {
+            if (!IsOurTurn())
+            {
+                return;
+            }
+        }
 
-    //    TimerController.Singltone.EndTime();
-    //    TimerController.Singltone.StartTime();
-    //}
+        TimerController.Singletone.EndTime();
+        TimerController.Singletone.StartTime();
+    }
 
     private void ServerSelectNextPlayer()
     {
         Debug.Log("[GameManager] Вызвали ServerSelectNextPlayer метод");
         var playersCount = 2;
-        var currentPlayerIndex = (GameManager.Singltone.TurnIndex + startOffSet) % playersCount;
+        var currentPlayerIndex = (TurnIndex + startOffSet) % playersCount;
         UpdateCurrentPlayerID(currentPlayerIndex);
     }
 
@@ -142,7 +151,7 @@ public class GameManager : MonoBehaviour
         NextTurn();
         cellHistoryManager.Add(BoardManager.Singltone.GetCell(row, col), CurrentPlayerTurnID);
 
-        TimerController.Singltone.EndTime();
+        TimerController.Singletone.EndTime();
 
         if (BoardManager.Singltone.IsWon(row, col))
         {

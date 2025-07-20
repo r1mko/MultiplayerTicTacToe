@@ -166,11 +166,13 @@ public class UIManager : MonoBehaviour
     public void HideTimerText()
     {
         timerText.gameObject.SetActive(false);
+        Debug.Log("Вызвали скрытие таймера");
     }
 
     public void ShowTimerText()
     {
         timerText.gameObject.SetActive(true);
+        Debug.Log("Вызвали отображение таймера");
     }
 
     private void OnDestroy()
