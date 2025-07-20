@@ -15,10 +15,7 @@ public class NetworkPlayer : NetworkBehaviour
 
     public bool IsMultiplayer()
     {
-
         return NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
-
-        
     }
 
     private void ClientConnected(ulong clientID)
@@ -29,6 +26,7 @@ public class NetworkPlayer : NetworkBehaviour
             GameManager.Singltone.StartGame();
         }
     }
+
 
     private bool CheckTwoPlayers()
     {
@@ -61,7 +59,9 @@ public class NetworkPlayer : NetworkBehaviour
     [Rpc(SendTo.Everyone)]
     public void StartGameRpc()
     {
+        Debug.Log("[NetworkPlayer] Вызвали метод StartGameRpc");
         GameManager.Singltone.StartTimer();
+        GameManager.Singltone.UpdateUI(); //вызывается 2 раза у хоста
     }
 
     [Rpc(SendTo.Everyone)]
@@ -77,7 +77,7 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
-    private void UpdateCurrentPlayerIDRpc(int clientID)
+    public void UpdateCurrentPlayerIDRpc(int clientID)
     {
         GameManager.Singltone.UpdateCurrentPlayerID(clientID);
         GameManager.Singltone.StartTimer();
@@ -86,11 +86,27 @@ public class NetworkPlayer : NetworkBehaviour
     [Rpc(SendTo.Everyone)]
     public void RestartGameRpc()
     {
-        GameManager.Singltone.RestartGame();
+        if (IsServer)
+        {
+            var randomIndex = Random.Range(0, NetworkManager.ConnectedClientsIds.Count);
+            PrepareGameRpc(randomIndex);
+        }
     }
 
     [Rpc(SendTo.Everyone)]
-    private void UpdateOffSetRpc(int clientID)
+    public void PrepareGameRpc(int offSet)
+    {
+        if (IsServer)
+        {
+            ulong clientId = NetworkManager.ConnectedClientsIds[offSet];
+            UpdateCurrentPlayerIDRpc((int)clientId);
+        }
+
+        GameManager.Singltone.PrepareGame(offSet);
+    }
+
+    [Rpc(SendTo.Everyone)]
+    public void UpdateOffSetRpc(int clientID)
     {
         GameManager.Singltone.UpdateOffSet(clientID);
     }

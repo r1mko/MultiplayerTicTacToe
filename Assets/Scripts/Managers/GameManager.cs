@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -28,6 +28,10 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            NetworkPlayer.Singletone.StartGameRpc();
+        }
         UpdateUI();
         PrepareGame();
         StartTimer();
@@ -35,6 +39,7 @@ public class GameManager : MonoBehaviour
 
     public void UpdateCurrentPlayerID(int clientID)
     {
+        Debug.Log($"[GameManager]2. Вызвали UpdateCurrentPlayerID {clientID}");
         CurrentPlayerTurnID = clientID;
         UIManager.Singletone.UpdateCurrentPlayerText();
         StartTimer();
@@ -60,12 +65,40 @@ public class GameManager : MonoBehaviour
         UIManager.Singletone.SetWinLoseCountText(wins);
     }
 
-    public void PrepareGame()
+    public void PrepareGame(int? offSet = null)
     {
-        var randomIndex = UnityEngine.Random.Range(0, 2);
-        UpdateOffSet(randomIndex);
+        TurnIndex = 0;
         cellHistoryManager.Clear();
+
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            if (offSet.HasValue)
+            {
+                startOffSet = offSet.Value;
+                NetworkPlayer.Singletone.UpdateCurrentPlayerIDRpc(startOffSet);
+            }
+            else
+            {
+                if (NetworkPlayer.Singletone.IsServer)
+                {
+                    startOffSet = UnityEngine.Random.Range(0, NetworkManager.Singleton.ConnectedClientsIds.Count);
+                    NetworkPlayer.Singletone.UpdateOffSetRpc(startOffSet);
+                }
+                else
+                {
+                    Debug.LogWarning("PrepareGame вызван на клиенте без offSet");
+                    return;
+                }
+            }
+        }
+        else
+        {
+            startOffSet = UnityEngine.Random.Range(0, 2);
+            UpdateOffSet(startOffSet);
+        }
+
         isPlaying = true;
+        BoardManager.Singltone.ClearAndUnbloackCells();
     }
 
     private void GameOver()
@@ -79,10 +112,13 @@ public class GameManager : MonoBehaviour
     {
         BoardManager.Singltone.ClearAndUnbloackCells();
         Restart();
-        //if (IsServer)
+
+        if (NetworkPlayer.Singletone.IsMultiplayer())
         {
-            PrepareGame();
+            NetworkPlayer.Singletone.RestartGameRpc();
         }
+
+        PrepareGame();
     }
 
     public void StartTimer()
@@ -91,6 +127,7 @@ public class GameManager : MonoBehaviour
         {
             return;
         }
+
         TimerController.Singltone.EndTime();
         TimerController.Singltone.StartTime();
     }
@@ -121,7 +158,7 @@ public class GameManager : MonoBehaviour
         if (BoardManager.Singltone.IsGameDraw())
         {
             GameOver();
-            UIManager.Singletone.SetDrawText("�����");
+            UIManager.Singletone.SetDrawText("Ничья");
             return;
         }
 
@@ -134,7 +171,7 @@ public class GameManager : MonoBehaviour
     public void MoveToNextPlayer()
     {
         cellHistoryManager.SkipTurn(CurrentPlayerTurnID);
-        GameManager.Singltone.NextTurn();
+        NextTurn();
 
         //if (IsServer)
         {
@@ -144,6 +181,7 @@ public class GameManager : MonoBehaviour
 
     public void UpdateOffSet(int clientID)
     {
+        Debug.Log($"[GameManager]1. Вызвали UpdateOffSet {clientID}");
         startOffSet = clientID;
         UpdateCurrentPlayerID(clientID);
         UIManager.Singletone.HideRestartButton();
@@ -151,6 +189,7 @@ public class GameManager : MonoBehaviour
 
     public void UpdateUI()
     {
+        Debug.Log("[GameManager] Вызываем обновление меню");
         UIManager.Singletone.HideActiveSessionInfo();
         UIManager.Singletone.ShowMoveInfo();
         UIManager.Singletone.ShowWinLoseCountInfo();
