@@ -114,24 +114,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void StartTimer() //нужно будет разобраться с isourturn. в сингл игре не должен работать так
+    public void StartTimer()
     {
-        if (NetworkPlayer.Singletone.IsMultiplayer())
+        if (!IsOurTurn())
         {
-            if (!IsOurTurn())
-            {
-                return;
-            }
-        }
-        else
-        {
-            if (!IsOurTurn())
-            {
-                return;
-            }
+            return;
         }
 
-        TimerController.Singletone.EndTime();
         TimerController.Singletone.StartTime();
     }
 
@@ -176,8 +165,8 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            PassMoveToNextPlayer();
             HandleSkipTurn();
+            PassMoveToNextPlayer();
         }
     }
 
