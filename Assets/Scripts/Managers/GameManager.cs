@@ -80,7 +80,6 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("PrepareGame вызван на клиенте без offSet");
                 return;
             }
         }
@@ -105,7 +104,6 @@ public class GameManager : MonoBehaviour
     {
         if (NetworkPlayer.Singletone.IsMultiplayer())
         {
-            Debug.Log("Проверка мультиплеера");
             NetworkPlayer.Singletone.RestartGameRpc();
         }
         else
@@ -119,7 +117,7 @@ public class GameManager : MonoBehaviour
     {
         if (NetworkPlayer.Singletone.IsMultiplayer())
         {
-            if (IsOurTurn())
+            if (!IsOurTurn())
             {
                 return;
             }
@@ -136,9 +134,8 @@ public class GameManager : MonoBehaviour
         TimerController.Singletone.StartTime();
     }
 
-    private void PassMoveToNextPlayer()
+    public void PassMoveToNextPlayer()
     {
-        Debug.Log("[GameManager] Вызвали PassTurnToNextPlayer метод");
         var playersCount = 2;
         var currentPlayerIndex = (TurnIndex + startOffSet) % playersCount;
         UpdateCurrentPlayerID(currentPlayerIndex);
@@ -167,26 +164,30 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        //if (IsServer)
-        {
-            PassMoveToNextPlayer();
-        }
+        PassMoveToNextPlayer();
     }
 
     public void PlayerSkipMove()
     {
-        cellHistoryManager.SkipTurn(CurrentPlayerTurnID);
-        NextTurn();
-
-        //if (IsServer)
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            NetworkPlayer.Singletone.MoveToNextPlayerRpc();
+        }
+        else
         {
             PassMoveToNextPlayer();
+            HandleSkipTurn();
         }
+    }
+
+    public void HandleSkipTurn()
+    {
+        cellHistoryManager.SkipTurn(CurrentPlayerTurnID);
+        NextTurn();
     }
 
     public void UpdateOffSet(int clientID)
     {
-        Debug.Log($"[GameManager]1. Вызвали UpdateOffSet {clientID}");
         startOffSet = clientID;
         UpdateCurrentPlayerID(clientID);
         UIManager.Singletone.HideRestartButton();
@@ -194,7 +195,6 @@ public class GameManager : MonoBehaviour
 
     public void UpdateUI()
     {
-        Debug.Log("[GameManager] Вызываем обновление меню");
         UIManager.Singletone.HideActiveSessionInfo();
         UIManager.Singletone.ShowMoveInfo();
         UIManager.Singletone.ShowWinLoseCountInfo();

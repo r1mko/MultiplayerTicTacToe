@@ -7,17 +7,17 @@ public class BotController : MonoBehaviour
 
     void Update()
     {
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            return;
+        }
+
         if (!GameManager.Singletone.IsPlaying)
         {
             return;
         }
 
         if (GameManager.Singletone.IsOurTurn())
-        {
-            return;
-        }
-
-        if (NetworkPlayer.Singletone.IsMultiplayer())
         {
             return;
         }

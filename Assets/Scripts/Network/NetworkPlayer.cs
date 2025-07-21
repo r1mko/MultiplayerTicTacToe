@@ -20,7 +20,6 @@ public class NetworkPlayer : NetworkBehaviour
 
     private void ClientConnected(ulong clientID)
     {
-        Debug.Log($"[NetworkPlayer] Вызвали метод ClientConnected. ID: {clientID}. Сервер ли у нас {IsServer}, Хост ли у нас {IsHost}");
         if (CheckTwoPlayers())
         {
             GameManager.Singletone.StartGame();
@@ -53,14 +52,15 @@ public class NetworkPlayer : NetworkBehaviour
     [Rpc(SendTo.Everyone)]
     public void MoveToNextPlayerRpc()
     {
-       GameManager.Singletone.PlayerSkipMove();
+        Debug.Log("[NetworkPlayer] Вызвали метод MoveToNextPlayerRpc");
+        GameManager.Singletone.HandleSkipTurn();
+        GameManager.Singletone.PassMoveToNextPlayer();
     }
 
     [Rpc(SendTo.Everyone)]
     public void StartGameRpc()
     {
         Debug.Log("[NetworkPlayer] Вызвали метод StartGameRpc");
-       // GameManager.Singltone.StartTimer();
         GameManager.Singletone.UpdateUI(); //вызывается 2 раза у хоста
     }
 
@@ -69,7 +69,6 @@ public class NetworkPlayer : NetworkBehaviour
     {
         if (senderId == NetworkManager.Singleton.LocalClientId)
         {
-            Debug.Log($"[ClientRpc] Это мой собственный смайл — пропускаем.");
             return;
         }
 
@@ -97,12 +96,5 @@ public class NetworkPlayer : NetworkBehaviour
     public void UpdateOffSetRpc(int clientID)
     {
         GameManager.Singletone.UpdateOffSet(clientID);
-        Debug.Log("[NetworkPlayer] Вызвали метод UpdateOffSetRpc");
-    }
-
-    [Rpc(SendTo.Everyone)]
-    private void UpdateUIRpc()
-    {
-        GameManager.Singletone.UpdateUI();
     }
 }
