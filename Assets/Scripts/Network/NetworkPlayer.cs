@@ -58,13 +58,6 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
-    public void StartGameRpc()
-    {
-        Debug.Log("[NetworkPlayer] Вызвали метод StartGameRpc");
-        GameManager.Singletone.UpdateUI(); //вызывается 2 раза у хоста
-    }
-
-    [Rpc(SendTo.Everyone)]
     public void SendSmileClientRpc(int smileID, ulong senderId)
     {
         if (senderId == NetworkManager.Singleton.LocalClientId)
@@ -76,20 +69,33 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
-    public void RestartGameRpc()
+    public void StartGameRpc()
     {
-        GameManager.Singletone.Restart();
+        Debug.Log("[NetworkPlayer] Вызвали метод StartGameRpc");
+        GameManager.Singletone.UpdateUI();
         if (IsServer)
         {
-            var randomIndex = Random.Range(0, NetworkManager.ConnectedClientsIds.Count);
-            PrepareGameRpc(randomIndex);
+            PrepareGameRpc();
         }
     }
 
     [Rpc(SendTo.Everyone)]
-    public void PrepareGameRpc(int offSet)
+    public void RestartGameRpc()
     {
-        GameManager.Singletone.PrepareGame(offSet);
+        Debug.Log("[NetworkPlayer] Вызвали метод RestartGameRpc");
+
+        if (IsServer)
+        {
+            PrepareGameRpc();
+            GameManager.Singletone.Restart();
+        }
+    }
+
+    [Rpc(SendTo.Everyone)]
+    public void PrepareGameRpc()
+    {
+        GameManager.Singletone.PrepareGame();
+        BoardManager.Singltone.ClearAndUnbloackCells();
     }
 
     [Rpc(SendTo.Everyone)]

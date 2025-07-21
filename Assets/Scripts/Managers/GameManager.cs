@@ -32,8 +32,12 @@ public class GameManager : MonoBehaviour
         {
             NetworkPlayer.Singletone.StartGameRpc();
         }
-        UpdateUI();
-        PrepareGame();
+        else
+        {
+            UpdateUI();
+            PrepareGame();
+        }
+
         StartTimer();
     }
 
@@ -57,7 +61,7 @@ public class GameManager : MonoBehaviour
     public void Restart()
     {
         TurnIndex = 0;
-        BoardManager.Singltone.ClearAndUnbloackCells();
+        Debug.Log("[GameManager] Вызвали Restart метод, сбросили индекс");
     }
 
     public void SetWin(int winnerID)
@@ -66,7 +70,7 @@ public class GameManager : MonoBehaviour
         UIManager.Singletone.SetWinLoseCountText(wins);
     }
 
-    public void PrepareGame(int? offSet = null)
+    public void PrepareGame()
     {
         TurnIndex = 0;
         cellHistoryManager.Clear();
@@ -78,19 +82,16 @@ public class GameManager : MonoBehaviour
                 startOffSet = UnityEngine.Random.Range(0, NetworkManager.Singleton.ConnectedClientsIds.Count);
                 NetworkPlayer.Singletone.UpdateOffSetRpc(startOffSet);
             }
-            else
-            {
-                return;
-            }
         }
         else
         {
             startOffSet = UnityEngine.Random.Range(0, 2);
             UpdateOffSet(startOffSet);
+            BoardManager.Singltone.ClearAndUnbloackCells();
         }
 
         isPlaying = true;
-        BoardManager.Singltone.ClearAndUnbloackCells();
+
     }
 
     private void GameOver()
@@ -199,7 +200,7 @@ public class GameManager : MonoBehaviour
         UIManager.Singletone.ShowMoveInfo();
         UIManager.Singletone.ShowWinLoseCountInfo();
         UIManager.Singletone.ShowSmileScreen();
-        BoardManager.Singltone.ClearAndUnbloackCells();
+        Debug.Log($"[GameManager] Вызвали UpdateUI");
     }
 
 }

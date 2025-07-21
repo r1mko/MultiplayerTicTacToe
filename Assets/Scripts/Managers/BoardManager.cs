@@ -19,8 +19,6 @@ public class BoardManager : MonoBehaviour
     Cell[,] buttons = new Cell[3, 3];
     private void Start()
     {
-        Debug.Log($"Count of buttons.length is {buttons.Length}");
-
         var cells = GetComponentsInChildren<Cell>();
         int n = 0;
         for (int i = 0; i < 3; i++)
@@ -38,7 +36,6 @@ public class BoardManager : MonoBehaviour
             }
         }
         BlockAllButtons();
-        //HideBoard(); //позже добавим
     }
 
     public Cell GetCell(int row, int col)
@@ -125,12 +122,10 @@ public class BoardManager : MonoBehaviour
             {
                 if (!buttons[i, j].IsFillCell)
                 {
-                    Debug.Log("Проверяем у нас ничья? Нет");
                     return false;
                 }
             }
         }
-        Debug.Log("Проверяем у нас ничья? Да");
         return true;
     }
 
