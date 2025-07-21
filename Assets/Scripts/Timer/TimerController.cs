@@ -45,7 +45,7 @@ public class TimerController : MonoBehaviour
         double remainingTime = endTime - GetTime();
         if (remainingTime <= 0)
         {
-            NetworkPlayer.Singletone.MoveToNextPlayerRpc();
+            GameManager.Singletone.PlayerSkipMove();
             EndTime();
             return;
         }

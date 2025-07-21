@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Singltone;
+    public static GameManager Singletone;
 
     public int CurrentPlayerTurnID;
     private int startOffSet;
@@ -22,7 +22,7 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        Singltone = this;
+        Singletone = this;
         cellHistoryManager = new CellHistoryManager();
     }
 
@@ -39,7 +39,7 @@ public class GameManager : MonoBehaviour
 
     public void UpdateCurrentPlayerID(int clientID)
     {
-        Debug.Log($"[GameManager]2. Вызвали UpdateCurrentPlayerID {clientID}");
+        Debug.Log($"[GameManager] Вызвали UpdateCurrentPlayerID {clientID}");
         CurrentPlayerTurnID = clientID;
         UIManager.Singletone.UpdateCurrentPlayerText();
         StartTimer();
@@ -51,7 +51,6 @@ public class GameManager : MonoBehaviour
 
     public bool IsOurTurn()
     {
-        Debug.Log($"Проверяем наш ли ход currentturnID {CurrentPlayerTurnID}");
         return CurrentPlayerTurnID == (int)NetworkPlayer.Singletone.NetworkManager.LocalClientId;
     }
 
@@ -137,9 +136,9 @@ public class GameManager : MonoBehaviour
         TimerController.Singletone.StartTime();
     }
 
-    private void ServerSelectNextPlayer()
+    private void PassMoveToNextPlayer()
     {
-        Debug.Log("[GameManager] Вызвали ServerSelectNextPlayer метод");
+        Debug.Log("[GameManager] Вызвали PassTurnToNextPlayer метод");
         var playersCount = 2;
         var currentPlayerIndex = (TurnIndex + startOffSet) % playersCount;
         UpdateCurrentPlayerID(currentPlayerIndex);
@@ -170,18 +169,18 @@ public class GameManager : MonoBehaviour
 
         //if (IsServer)
         {
-            ServerSelectNextPlayer();
+            PassMoveToNextPlayer();
         }
     }
 
-    public void MoveToNextPlayer()
+    public void PlayerSkipMove()
     {
         cellHistoryManager.SkipTurn(CurrentPlayerTurnID);
         NextTurn();
 
         //if (IsServer)
         {
-            ServerSelectNextPlayer();
+            PassMoveToNextPlayer();
         }
     }
 

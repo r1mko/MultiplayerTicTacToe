@@ -7,12 +7,12 @@ public class BotController : MonoBehaviour
 
     void Update()
     {
-        if (!GameManager.Singltone.IsPlaying)
+        if (!GameManager.Singletone.IsPlaying)
         {
             return;
         }
 
-        if (GameManager.Singltone.IsOurTurn())
+        if (GameManager.Singletone.IsOurTurn())
         {
             return;
         }
@@ -35,7 +35,7 @@ public class BotController : MonoBehaviour
         yield return new WaitForSeconds(Random.Range(1, 3));
         if (BoardManager.Singltone.TryGetEmptyCell(out Cell cell))
         {
-            GameManager.Singltone.OnClick(cell.row, cell.coll);
+            GameManager.Singletone.OnClick(cell.row, cell.coll);
         }
         botTurnCoroutine = null;
     }

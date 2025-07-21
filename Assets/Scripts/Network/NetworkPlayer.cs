@@ -23,7 +23,7 @@ public class NetworkPlayer : NetworkBehaviour
         Debug.Log($"[NetworkPlayer] Вызвали метод ClientConnected. ID: {clientID}. Сервер ли у нас {IsServer}, Хост ли у нас {IsHost}");
         if (CheckTwoPlayers())
         {
-            GameManager.Singltone.StartGame();
+            GameManager.Singletone.StartGame();
         }
     }
 
@@ -47,13 +47,13 @@ public class NetworkPlayer : NetworkBehaviour
     [Rpc(SendTo.Everyone)]
     public void OnClickRpc(int row, int col)
     {
-        GameManager.Singltone.OnClick(row, col);
+        GameManager.Singletone.OnClick(row, col);
     }
 
     [Rpc(SendTo.Everyone)]
     public void MoveToNextPlayerRpc()
     {
-       GameManager.Singltone.MoveToNextPlayer();
+       GameManager.Singletone.PlayerSkipMove();
     }
 
     [Rpc(SendTo.Everyone)]
@@ -61,7 +61,7 @@ public class NetworkPlayer : NetworkBehaviour
     {
         Debug.Log("[NetworkPlayer] Вызвали метод StartGameRpc");
        // GameManager.Singltone.StartTimer();
-        GameManager.Singltone.UpdateUI(); //вызывается 2 раза у хоста
+        GameManager.Singletone.UpdateUI(); //вызывается 2 раза у хоста
     }
 
     [Rpc(SendTo.Everyone)]
@@ -79,7 +79,7 @@ public class NetworkPlayer : NetworkBehaviour
     [Rpc(SendTo.Everyone)]
     public void RestartGameRpc()
     {
-        GameManager.Singltone.Restart();
+        GameManager.Singletone.Restart();
         if (IsServer)
         {
             var randomIndex = Random.Range(0, NetworkManager.ConnectedClientsIds.Count);
@@ -90,19 +90,19 @@ public class NetworkPlayer : NetworkBehaviour
     [Rpc(SendTo.Everyone)]
     public void PrepareGameRpc(int offSet)
     {
-        GameManager.Singltone.PrepareGame(offSet);
+        GameManager.Singletone.PrepareGame(offSet);
     }
 
     [Rpc(SendTo.Everyone)]
     public void UpdateOffSetRpc(int clientID)
     {
-        GameManager.Singltone.UpdateOffSet(clientID);
+        GameManager.Singletone.UpdateOffSet(clientID);
         Debug.Log("[NetworkPlayer] Вызвали метод UpdateOffSetRpc");
     }
 
     [Rpc(SendTo.Everyone)]
     private void UpdateUIRpc()
     {
-        GameManager.Singltone.UpdateUI();
+        GameManager.Singletone.UpdateUI();
     }
 }

@@ -37,12 +37,13 @@ public class UIManager : MonoBehaviour
 
     private void OnSingle()
     {
-        GameManager.Singltone.StartGame();
+        HideNavigationPanel();
+        GameManager.Singletone.StartGame();
     }
 
     private void OnRestart()
     {
-        GameManager.Singltone.RestartGame();
+        GameManager.Singletone.RestartGame();
     }
 
     private void OnHost()
@@ -59,7 +60,7 @@ public class UIManager : MonoBehaviour
 
     public void UpdateCurrentPlayerText()
     {
-        if (GameManager.Singltone.IsOurTurn())
+        if (GameManager.Singletone.IsOurTurn())
         {
             currentPlayerTextID.text = "Ваш ход";
         }
@@ -72,7 +73,7 @@ public class UIManager : MonoBehaviour
 
     public void SetWinText()
     {
-        if (GameManager.Singltone.IsOurTurn())
+        if (GameManager.Singletone.IsOurTurn())
         {
             currentPlayerTextID.text = "Вы победили!";
         }
