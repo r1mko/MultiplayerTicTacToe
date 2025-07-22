@@ -10,13 +10,14 @@ public class BoardManager : MonoBehaviour
 
     public static BoardManager Singltone;
 
+    Cell[,] buttons = new Cell[3, 3];
+
     private void Awake()
     {
         Singltone = this;
         ShowBoard();
     }
 
-    Cell[,] buttons = new Cell[3, 3];
     private void Start()
     {
         var cells = GetComponentsInChildren<Cell>();
@@ -131,7 +132,6 @@ public class BoardManager : MonoBehaviour
 
     public void ClearAndUnbloackCells()
     {
-        Debug.Log("[BoardManager] Вызвали ClearAndUnbloackCells");
         foreach (var item in buttons)
         {
             item.Clear();
@@ -173,5 +173,29 @@ public class BoardManager : MonoBehaviour
             cell = null;
             return false;
         }
+    }
+
+    public int[,] GetBoardState()
+    {
+        int size = 3;
+        int[,] board = new int[size, size];
+
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                Cell cell = buttons[i, j];
+                if (cell.IsFillCell)
+                {
+                    board[i, j] = cell.IndexPlayer;
+                }
+                else
+                {
+                    board[i, j] = -1; // Свободная клетка
+                }
+            }
+        }
+
+        return board;
     }
 }

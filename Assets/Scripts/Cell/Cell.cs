@@ -133,6 +133,11 @@ public class Cell: MonoBehaviour
         }
     }
 
+    public bool IsEmpty()
+    {
+        return !_isFillCell;
+    }
+
     public bool IsSameCell(int indexPlayer)
     {
         if (!IsFillCell)

@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
     public bool IsPlaying => isPlaying;
 
     private CellHistoryManager cellHistoryManager;
+    public CellHistoryManager CellHistoryManager => cellHistoryManager;
 
     private int[] wins = new int[] { 0, 0 };
 
@@ -43,7 +44,7 @@ public class GameManager : MonoBehaviour
 
     public void UpdateCurrentPlayerID(int clientID)
     {
-        Debug.Log($"[GameManager] Вызвали UpdateCurrentPlayerID {clientID}");
+        //Debug.Log($"[GameManager] Вызвали UpdateCurrentPlayerID {clientID}");
         CurrentPlayerTurnID = clientID;
         UIManager.Singletone.UpdateCurrentPlayerText();
         StartTimer();
@@ -58,10 +59,19 @@ public class GameManager : MonoBehaviour
         return CurrentPlayerTurnID == (int)NetworkPlayer.Singletone.NetworkManager.LocalClientId;
     }
 
+    public bool IsBotTurn()
+    {
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+            return !IsOurTurn();
+
+        // В одиночной игре: бот — всегда игрок 1
+        return CurrentPlayerTurnID == 1;
+    }
+
     public void Restart()
     {
         TurnIndex = 0;
-        Debug.Log("[GameManager] Вызвали Restart метод, сбросили индекс");
+        //Debug.Log("[GameManager] Вызвали Restart метод, сбросили индекс");
     }
 
     public void SetWin(int winnerID)
@@ -189,7 +199,7 @@ public class GameManager : MonoBehaviour
         UIManager.Singletone.ShowMoveInfo();
         UIManager.Singletone.ShowWinLoseCountInfo();
         UIManager.Singletone.ShowSmileScreen();
-        Debug.Log($"[GameManager] Вызвали UpdateUI");
+        //Debug.Log($"[GameManager] Вызвали UpdateUI");
     }
 
 }
