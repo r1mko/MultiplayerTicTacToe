@@ -21,7 +21,15 @@ public class Cell: MonoBehaviour
 
     public int IndexPlayer => _indexPlayer;
     public bool IsFillCell => _isFillCell;
-    
+
+    private bool _isMarkedForDestruction = false;
+    public bool IsMarkedForDestruction => _isMarkedForDestruction;
+
+    public void MarkForDestruction(bool mark)
+    {
+        _isMarkedForDestruction = mark;
+    }
+
     public void Clear()
     {
         HideAll();
