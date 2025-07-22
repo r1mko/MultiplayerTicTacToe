@@ -124,8 +124,8 @@ public class BotController : MonoBehaviour
             yield break;
         }
 
-        // === 9. УГЛЫ (предпочтительно с угрозой) ===
-        bestCell = GetBestThreateningCorner(playerID, out reason);
+        // === 9. УГЛЫ (с учётом безопасности от вилки) ===
+        bestCell = GetBestThreateningCorner(playerID, opponentID, out reason);
         if (bestCell != null)
         {
             Debug.Log($"[Бот] {reason}");
@@ -135,7 +135,7 @@ public class BotController : MonoBehaviour
         }
 
         // === 10. СТОРОНЫ ===
-        bestCell = GetBestAvailableCorner(out reason);
+        bestCell = GetBestAvailableSide(out reason);
         if (bestCell != null)
         {
             Debug.Log($"[Бот] {reason}");
@@ -746,12 +746,13 @@ public class BotController : MonoBehaviour
         return null;
     }
 
-    private Cell GetBestThreateningCorner(int playerID, out string reason)
+    private Cell GetBestThreateningCorner(int playerID, int opponentID, out string reason)
     {
         reason = "";
         int[,] corners = { { 0, 0 }, { 0, 2 }, { 2, 0 }, { 2, 2 } };
-        List<(int r, int c)> threateningCorners = new List<(int, int)>();
-        List<(int r, int c)> safeCorners = new List<(int, int)>();
+        List<(int r, int c)> safeThreateningCorners = new List<(int, int)>();
+        List<(int r, int c)> safeNormalCorners = new List<(int, int)>();
+        List<(int r, int c)> allAvailableCorners = new List<(int, int)>();
 
         for (int i = 0; i < 4; i++)
         {
@@ -760,41 +761,127 @@ public class BotController : MonoBehaviour
             Cell cell = BoardManager.Singltone.GetCell(r, c);
             if (cell == null || !cell.IsEmpty()) continue;
 
-            // Проверим, создаёт ли ход в этот угол угрозу победы
+            allAvailableCorners.Add((r, c));
+
             var board = BoardManager.Singltone.GetBoardState();
             board[r, c] = playerID;
 
-            if (IsWinningOnBoard(board, r, c, playerID))
+            bool createsThreat = IsWinningOnBoard(board, r, c, playerID) && IsWinStable(r, c, playerID);
+
+            if (createsThreat && IsMoveIntoCornerSafe(r, c, playerID, opponentID))
             {
-                threateningCorners.Add((r, c));
+                safeThreateningCorners.Add((r, c));
+            }
+            else if (IsMoveIntoCornerSafe(r, c, playerID, opponentID))
+            {
+                safeNormalCorners.Add((r, c));
             }
             else
             {
-                safeCorners.Add((r, c));
+                Debug.Log($"[Бот] Угол ({r},{c}) пропущен: создаёт риск вилки.");
             }
         }
 
-        // Сначала — угрожающие углы
-        if (threateningCorners.Count > 0)
+        // 1. Приоритет: безопасный угол с угрозой
+        if (safeThreateningCorners.Count > 0)
         {
-            // Перемешиваем, чтобы не всегда выбирать первый
-            ShuffleList(threateningCorners);
-            var (r, c) = threateningCorners[0];
-            reason = $"УГРОЗА ИЗ УГЛА: ставим в ({r},{c}) — создаём немедленную угрозу победы.";
+            ShuffleList(safeThreateningCorners);
+            var (r, c) = safeThreateningCorners[0];
+            reason = $"УГРОЗА ИЗ УГЛА: ставим в ({r},{c}) — создаём угрозу, не рискуя вилкой.";
             return BoardManager.Singltone.GetCell(r, c);
         }
 
-        // Иначе — рандомный безопасный угол
-        if (safeCorners.Count > 0)
+        // 2. Безопасный угол без угрозы
+        if (safeNormalCorners.Count > 0)
         {
-            ShuffleList(safeCorners);
-            var (r, c) = safeCorners[0];
-            reason = $"Угол: ставим в ({r},{c}) — сильная позиция.";
+            ShuffleList(safeNormalCorners);
+            var (r, c) = safeNormalCorners[0];
+            reason = $"Угол: ставим в ({r},{c}) — безопасная сильная позиция.";
+            return BoardManager.Singltone.GetCell(r, c);
+        }
+
+        // 3. Если нет безопасных — выбираем рандомный из доступных
+        if (allAvailableCorners.Count > 0)
+        {
+            ShuffleList(allAvailableCorners);
+            var (r, c) = allAvailableCorners[0];
+            reason = $"РИСКОВАННЫЙ УГОЛ: вынуждены поставить в ({r},{c}) — других ходов нет.";
             return BoardManager.Singltone.GetCell(r, c);
         }
 
         reason = "";
         return null;
+    }
+
+    private bool IsMoveIntoCornerSafe(int r, int c, int playerID, int opponentID)
+    {
+        // Симулируем: мы поставили в угол
+        var board = BoardManager.Singltone.GetBoardState();
+        board[r, c] = playerID;
+
+        // Сколько угроз победы создаёт игрок, если поставит в центр?
+        Cell center = BoardManager.Singltone.GetCell(1, 1);
+        if (center.IsEmpty() && board[1, 1] == -1)
+        {
+            board[1, 1] = opponentID;
+            int threatCount = CountThreats(board, opponentID);
+            board[1, 1] = -1; // откат
+
+            if (threatCount >= 2)
+            {
+                Debug.Log($"[Бот] ОПАСНЫЙ УГОЛ: постановка в ({r},{c}) позволяет игроку создать вилку через центр.");
+                return false;
+            }
+        }
+
+        // Проверим другие ключевые клетки (например, сторону)
+        int[] sidesR = { 0, 1, 1, 2 };
+        int[] sidesC = { 1, 0, 2, 1 };
+        for (int i = 0; i < 4; i++)
+        {
+            int sr = sidesR[i], sc = sidesC[i];
+            if (board[sr, sc] == -1)
+            {
+                board[sr, sc] = opponentID;
+                int threatCount = CountThreats(board, opponentID);
+                board[sr, sc] = -1;
+
+                if (threatCount >= 2)
+                {
+                    Debug.Log($"[Бот] ОПАСНЫЙ УГОЛ: постановка в ({r},{c}) позволяет игроку создать вилку через ({sr},{sc}).");
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private int CountThreats(int[,] board, int playerID)
+    {
+        int threatCount = 0;
+        for (int r = 0; r < 3; r++)
+        {
+            for (int c = 0; c < 3; c++)
+            {
+                if (board[r, c] == -1)
+                {
+                    board[r, c] = playerID;
+                    if (IsWinningOnBoard(board, r, c, playerID))
+                    {
+                        board[r, c] = -1;
+                        // Проверим, что это не "мертвая" угроза
+                        Cell cell = BoardManager.Singltone.GetCell(r, c);
+                        if (cell.IsEmpty() && IsThreatReal(r, c, playerID))
+                        {
+                            threatCount++;
+                        }
+                    }
+                    board[r, c] = -1;
+                }
+            }
+        }
+        return threatCount;
     }
 
     private void ShuffleList<T>(List<T> list)
@@ -804,5 +891,23 @@ public class BotController : MonoBehaviour
             int j = Random.Range(0, i + 1);
             (list[i], list[j]) = (list[j], list[i]);
         }
+    }
+
+    private Cell GetBestAvailableSide(out string reason)
+    {
+        int[,] sides = { { 0, 1 }, { 1, 0 }, { 1, 2 }, { 2, 1 } };
+        for (int i = 0; i < 4; i++)
+        {
+            int r = sides[i, 0];
+            int c = sides[i, 1];
+            Cell cell = BoardManager.Singltone.GetCell(r, c);
+            if (cell != null && cell.IsEmpty())
+            {
+                reason = $"Сторона: ставим в ({r},{c}) — последний выбор.";
+                return cell;
+            }
+        }
+        reason = "";
+        return null;
     }
 }
