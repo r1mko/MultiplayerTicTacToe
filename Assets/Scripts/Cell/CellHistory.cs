@@ -17,28 +17,29 @@ public class CellHistoryManager
 
     public void CheckCellHistory()
     {
-        foreach (var item in CellHistory)
+        foreach (var kvp in CellHistory)
         {
-            if (item.Value.Count < 3)
-            {
-                return;
-            }
+            List<Cell> history = kvp.Value;
 
-            if (item.Value[2] != null)
+            if (history.Count >= 3)
             {
-                item.Value[2].PreDestroy();
-                item.Value[2].MarkForDestruction(true);
-            }
-
-            if (item.Value.Count == 4)
-            {
-                if (item.Value[3] != null)
+                Cell cellToMark = history[2];
+                if (cellToMark != null && !cellToMark.IsMarkedForDestruction)
                 {
-                    item.Value[3].Clear();
-                    item.Value[3].Unblock();
-                    item.Value[3].MarkForDestruction(false);
+                    cellToMark.MarkForDestruction(true);
                 }
-                item.Value.RemoveAt(3);
+            }
+
+            if (history.Count >= 4)
+            {
+                Cell cellToRemove = history[3];
+                if (cellToRemove != null)
+                {
+                    cellToRemove.MarkForDestruction(false);
+                    cellToRemove.Clear();
+                    cellToRemove.Unblock();
+                }
+                history.RemoveAt(3);
             }
         }
     }

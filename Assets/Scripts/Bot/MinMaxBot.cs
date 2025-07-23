@@ -227,7 +227,11 @@ public class MinmaxBot : MonoBehaviour
         if (history.TryGetValue(playerID, out List<Cell> list) && list.Count >= 3)
         {
             Cell cellToRemove = list[2];
-            board[cellToRemove.row, cellToRemove.coll] = -1;
+            if (cellToRemove != null)
+            {
+                board[cellToRemove.row, cellToRemove.coll] = -1;
+            }
+
             list.RemoveAt(2);
         }
     }
