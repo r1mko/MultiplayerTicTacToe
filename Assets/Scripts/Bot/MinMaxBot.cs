@@ -211,14 +211,25 @@ public class MinmaxBot : MonoBehaviour
     {
         var clone = new Dictionary<int, List<Cell>>();
 
-        // Гарантируем, что есть ключи 0 и 1
-        if (!source.ContainsKey(0)) source[0] = new List<Cell>();
-        if (!source.ContainsKey(1)) source[1] = new List<Cell>();
-
-        foreach (var kvp in source)
+        // Гарантируем, что в клоне есть 0 и 1, НО НЕ МОДИФИЦИРУЕМ source
+        if (source.ContainsKey(0))
         {
-            clone[kvp.Key] = new List<Cell>(kvp.Value);
+            clone[0] = new List<Cell>(source[0]);
         }
+        else
+        {
+            clone[0] = new List<Cell>();
+        }
+
+        if (source.ContainsKey(1))
+        {
+            clone[1] = new List<Cell>(source[1]);
+        }
+        else
+        {
+            clone[1] = new List<Cell>();
+        }
+
         return clone;
     }
 
@@ -231,7 +242,6 @@ public class MinmaxBot : MonoBehaviour
             {
                 board[cellToRemove.row, cellToRemove.coll] = -1;
             }
-
             list.RemoveAt(2);
         }
     }

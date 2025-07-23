@@ -58,6 +58,7 @@ public class Cell: MonoBehaviour
 
     internal void PreDestroy()
     {
+        Debug.Log("Вызвали мигание для клетки");
         ChangeColorCell(preDestroyColor);
         
         if (blinkCoroutine != null)
@@ -78,6 +79,7 @@ public class Cell: MonoBehaviour
 
     private IEnumerator BlinkAnimation()
     {
+        Debug.Log("Вызвали корутину BlinkAnimation");
         float duration = 2f; // Время одного полного цикла "мигания" (туда-обратно)
         float halfDuration = duration / 2f;
 
