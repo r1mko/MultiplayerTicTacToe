@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,12 +17,14 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button restartButton;
     [SerializeField] private Button hostButton;
     [SerializeField] private Button clientButton;
+    [SerializeField] private Button singlePlayerButton;
 
     private void Awake()
     {
         Singletone = this;
         restartButton.onClick.AddListener(OnRestart);
         hostButton.onClick.AddListener(OnHost);
+        singlePlayerButton.onClick.AddListener(OnSingle);
         clientButton.onClick.AddListener(OnClient);
         HideRestartButton();
         ShowNavigationPanel();
@@ -32,9 +35,15 @@ public class UIManager : MonoBehaviour
         HideTimerText();
     }
 
+    private void OnSingle()
+    {
+        HideNavigationPanel();
+        GameManager.Singletone.StartGame();
+    }
+
     private void OnRestart()
     {
-        NetworkPlayer.Singletone.RestartGameRpc();
+        GameManager.Singletone.RestartGame();
     }
 
     private void OnHost()
@@ -51,7 +60,7 @@ public class UIManager : MonoBehaviour
 
     public void UpdateCurrentPlayerText()
     {
-        if (GameManager.Singltone.IsOurTurn())
+        if (GameManager.Singletone.IsOurTurn())
         {
             currentPlayerTextID.text = "Ваш ход";
         }
@@ -64,7 +73,7 @@ public class UIManager : MonoBehaviour
 
     public void SetWinText()
     {
-        if (GameManager.Singltone.IsOurTurn())
+        if (GameManager.Singletone.IsOurTurn())
         {
             currentPlayerTextID.text = "Вы победили!";
         }
@@ -158,11 +167,13 @@ public class UIManager : MonoBehaviour
     public void HideTimerText()
     {
         timerText.gameObject.SetActive(false);
+       // Debug.Log("Вызвали скрытие таймера");
     }
 
     public void ShowTimerText()
     {
         timerText.gameObject.SetActive(true);
+        //Debug.Log("Вызвали отображение таймера");
     }
 
     private void OnDestroy()
@@ -170,5 +181,6 @@ public class UIManager : MonoBehaviour
         restartButton.onClick.RemoveAllListeners();
         hostButton.onClick.RemoveAllListeners();
         clientButton.onClick.RemoveAllListeners();
+        singlePlayerButton.onClick.RemoveAllListeners();
     }
 }

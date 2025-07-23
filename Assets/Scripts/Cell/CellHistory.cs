@@ -5,6 +5,14 @@ public class CellHistoryManager
 {
     public Dictionary<int, List<Cell>> CellHistory = new Dictionary<int, List<Cell>>();
 
+    public void EnsurePlayerExists(int playerID)
+    {
+        if (!CellHistory.ContainsKey(playerID))
+        {
+            CellHistory[playerID] = new List<Cell>();
+        }
+    }
+
     public void Add(Cell cell, int playerID)
     {
         if (!CellHistory.ContainsKey(playerID))
@@ -27,6 +35,7 @@ public class CellHistoryManager
             if (item.Value[2] != null)
             {
                 item.Value[2].PreDestroy();
+                item.Value[2].MarkForDestruction(true);
             }
 
             if (item.Value.Count == 4)
@@ -35,9 +44,10 @@ public class CellHistoryManager
                 {
                     item.Value[3].Clear();
                     item.Value[3].Unblock();
+                    item.Value[3].MarkForDestruction(false);
                 }
                 item.Value.RemoveAt(3);
-            }            
+            }
         }
     }
 

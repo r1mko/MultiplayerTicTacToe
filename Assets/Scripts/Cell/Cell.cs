@@ -16,9 +16,20 @@ public class Cell: MonoBehaviour
     private int _indexPlayer;
     private bool _isFillCell;
 
+    public int row;
+    public int coll;
+
     public int IndexPlayer => _indexPlayer;
     public bool IsFillCell => _isFillCell;
-    
+
+    private bool _isMarkedForDestruction = false;
+    public bool IsMarkedForDestruction => _isMarkedForDestruction;
+
+    public void MarkForDestruction(bool mark)
+    {
+        _isMarkedForDestruction = mark;
+    }
+
     public void Clear()
     {
         HideAll();
@@ -47,6 +58,7 @@ public class Cell: MonoBehaviour
 
     internal void PreDestroy()
     {
+        Debug.Log("Вызвали мигание для клетки");
         ChangeColorCell(preDestroyColor);
         
         if (blinkCoroutine != null)
@@ -67,6 +79,7 @@ public class Cell: MonoBehaviour
 
     private IEnumerator BlinkAnimation()
     {
+        Debug.Log("Вызвали корутину BlinkAnimation");
         float duration = 2f; // Время одного полного цикла "мигания" (туда-обратно)
         float halfDuration = duration / 2f;
 
@@ -130,6 +143,11 @@ public class Cell: MonoBehaviour
         }
     }
 
+    public bool IsEmpty()
+    {
+        return !_isFillCell;
+    }
+
     public bool IsSameCell(int indexPlayer)
     {
         if (!IsFillCell)
@@ -146,11 +164,13 @@ public class Cell: MonoBehaviour
         }
     }
 
-    public void Init(int row, int col)
+    public void Init(int row, int coll)
     {
+        this.row = row;
+        this.coll = coll;
         Clear();
         Unblock();
-        cellButton.onClick.AddListener(() => BoardManager.Singltone.OnClickCell(row, col, this));
+        cellButton.onClick.AddListener(() => BoardManager.Singltone.OnClickCell(row, coll, this));
     }
 
 

@@ -10,17 +10,16 @@ public class BoardManager : MonoBehaviour
 
     public static BoardManager Singltone;
 
+    Cell[,] buttons = new Cell[3, 3];
+
     private void Awake()
     {
         Singltone = this;
         ShowBoard();
     }
 
-    Cell[,] buttons = new Cell[3, 3];
     private void Start()
     {
-        Debug.Log($"Count of buttons.length is {buttons.Length}");
-
         var cells = GetComponentsInChildren<Cell>();
         int n = 0;
         for (int i = 0; i < 3; i++)
@@ -38,7 +37,6 @@ public class BoardManager : MonoBehaviour
             }
         }
         BlockAllButtons();
-        //HideBoard(); //позже добавим
     }
 
     public Cell GetCell(int row, int col)
@@ -54,13 +52,23 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    public void OnClickCell(int row, int col, Cell cell)
+    public void OnClickCell(int row, int coll, Cell cell)
     {
-        if (!GameManager.Singltone.IsOurTurn())
+        Debug.Log($"Вызвали onClickCell row: {row} coll: {coll} is our turn? {GameManager.Singletone.IsOurTurn()}");
+        if (!GameManager.Singletone.IsOurTurn())
         {
             return;
         }
-        NetworkPlayer.Singletone.OnClickRpc(row, col);
+
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            NetworkPlayer.Singletone.OnClickRpc(row, coll);
+        }
+        else
+        {
+            GameManager.Singletone.OnClick(row, coll);
+        }
+
     }
 
     public void FillCell(int row, int col, int currentPlayerIndex)
@@ -115,12 +123,10 @@ public class BoardManager : MonoBehaviour
             {
                 if (!buttons[i, j].IsFillCell)
                 {
-                    Debug.Log("Проверяем у нас ничья? Нет");
                     return false;
                 }
             }
         }
-        Debug.Log("Проверяем у нас ничья? Да");
         return true;
     }
 
@@ -140,5 +146,56 @@ public class BoardManager : MonoBehaviour
     public void HideBoard()
     {
         board.SetActive(false);
+    }
+
+    public bool TryGetEmptyCell(out Cell cell)
+    {
+        List<Cell> emptyCells = new List<Cell>();
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                if (!buttons[i, j].IsFillCell)
+                {
+                    emptyCells.Add(buttons[i, j]);
+                }
+            }
+        }
+
+        if (emptyCells.Count > 0)
+        {
+            cell = emptyCells[Random.Range(0, emptyCells.Count)];
+            return true;
+        }
+        else
+        {
+            cell = null;
+            return false;
+        }
+    }
+
+    public int[,] GetBoardState()
+    {
+        int size = 3;
+        int[,] board = new int[size, size];
+
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                Cell cell = buttons[i, j];
+                if (cell.IsFillCell)
+                {
+                    board[i, j] = cell.IndexPlayer;
+                }
+                else
+                {
+                    board[i, j] = -1; // Свободная клетка
+                }
+            }
+        }
+
+        return board;
     }
 }
