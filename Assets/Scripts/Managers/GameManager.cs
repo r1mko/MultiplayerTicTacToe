@@ -71,7 +71,6 @@ public class GameManager : MonoBehaviour
     public void Restart()
     {
         TurnIndex = 0;
-        //Debug.Log("[GameManager] Вызвали Restart метод, сбросили индекс");
     }
 
     public void SetWin(int winnerID)
@@ -121,6 +120,7 @@ public class GameManager : MonoBehaviour
         {
             Restart();
             PrepareGame();
+            MinmaxBot.Singletone.ResetBot();
         }
     }
 
