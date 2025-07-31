@@ -45,7 +45,7 @@ public class MinmaxBot : MonoBehaviour
         var history = CloneHistory(GameManager.Singletone.CellHistoryManager.CellHistory);
 
         int bestScore = int.MinValue;
-        Cell bestCell = null;
+        List<Cell> bestMoves = new List<Cell>(); // Список всех лучших ходов
 
         for (int r = 0; r < 3; r++)
         {
@@ -57,27 +57,38 @@ public class MinmaxBot : MonoBehaviour
                     var newBoard = (int[,])board.Clone();
                     var newHistory = CloneHistory(history);
 
-                    // Удаляем старую клетку (если есть)
                     RemoveOldestCell(newBoard, newHistory, playerID);
-
-                    // Ставим новую
                     newBoard[r, c] = playerID;
                     Cell cell = BoardManager.Singltone.GetCell(r, c);
                     newHistory[playerID].Insert(0, cell);
 
-                    // Оцениваем ответ игрока
+                    // Оцениваем позицию
                     int score = Minimax(newBoard, newHistory, 0, false, playerID, opponentID, int.MinValue, int.MaxValue);
 
                     if (score > bestScore)
                     {
                         bestScore = score;
-                        bestCell = cell;
+                        bestMoves.Clear();
+                        bestMoves.Add(cell);
+                    }
+                    else if (score == bestScore)
+                    {
+                        bestMoves.Add(cell);
                     }
                 }
             }
         }
 
-        return bestCell;
+        // Если есть несколько равных лучших ходов — выбираем случайный
+        if (bestMoves.Count > 0)
+        {
+            Cell chosenMove = bestMoves[UnityEngine.Random.Range(0, bestMoves.Count)];
+            Debug.Log($"[MinimaxBot] Выбираем случайный лучший ход из {bestMoves.Count} вариантов: ({chosenMove.row},{chosenMove.coll})");
+            return chosenMove;
+        }
+
+        Debug.Log("[MinimaxBot] Нет доступных ходов.");
+        return null;
     }
 
     private int Minimax(int[,] board, Dictionary<int, List<Cell>> history, int depth, bool isBotTurn, int botID, int playerID, int alpha, int beta)
