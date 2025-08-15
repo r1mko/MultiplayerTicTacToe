@@ -120,7 +120,7 @@ public class GameManager : MonoBehaviour
         {
             Restart();
             PrepareGame();
-            MinmaxBot.Singletone.ResetBot();
+            MinmaxBot.Singletone.ResetBotMoveCount();
         }
     }
 

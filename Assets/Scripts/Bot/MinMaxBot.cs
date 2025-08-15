@@ -49,8 +49,6 @@ public class MinmaxBot : MonoBehaviour
 
     private Cell FindBestMove()
     {
-
-
         int playerID = GameManager.Singletone.CurrentPlayerTurnID;
         int opponentID = 1 - playerID;
 
@@ -277,15 +275,19 @@ public class MinmaxBot : MonoBehaviour
     // --- НОВЫЕ МЕТОДЫ ДЛЯ ДИНАМИЧЕСКОЙ ГЛУБИНЫ ---
     private int GetCurrentSearchDepth()
     {
-        if (botMoveCount == 0) //хардкод первого хода
+        if (UnityEngine.Random.value < 0.5f)
         {
-            return UnityEngine.Random.Range(6, 10);
+            int minDepth = maxDepth - 1;
+            int maxDepthRange = maxDepth + 2;
+            return UnityEngine.Random.Range(minDepth, maxDepthRange + 1);
         }
-
-        return maxDepth;
+        else
+        {
+            return maxDepth;
+        }
     }
 
-    public void ResetBot()
+    public void ResetBotMoveCount()
     {
         botMoveCount = 0;
     }
