@@ -19,9 +19,10 @@ public class MinmaxBot : MonoBehaviour
 
     void Update()
     {
-        if (NetworkPlayer.Singletone.IsMultiplayer()) return;
         if (!GameManager.Singletone.IsPlaying) return;
         if (!GameManager.Singletone.IsBotTurn()) return;
+        if (NetworkPlayer.Singletone.IsMultiplayer()) return;
+        if (GameManager.Singletone.IsBlocking) return;
         if (botTurnCoroutine != null) return;
 
         botTurnCoroutine = StartCoroutine(BotTurn());

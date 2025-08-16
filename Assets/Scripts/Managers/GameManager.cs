@@ -12,7 +12,9 @@ public class GameManager : MonoBehaviour
     public int TurnIndex;
     private int startOffSet;
     private bool isPlaying;
+    private bool isBlocking;
     public bool IsPlaying => isPlaying;
+    public bool IsBlocking => isBlocking;
     private HPHistoryManager hPHistoryManager;
     private CellHistoryManager cellHistoryManager;
     public CellHistoryManager CellHistoryManager => cellHistoryManager;
@@ -203,7 +205,10 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator DamageDelay()
     {
-        yield return new WaitForSeconds(0f); //поменять задержку чтобы бот не мог ходить
+        isBlocking = true;
+        BoardManager.Singltone.BlockAllButtons();
+        yield return new WaitForSeconds(3f); //поменять задержку чтобы бот не мог ходить
+        isBlocking = false;
         cellHistoryManager.Clear();
         BoardManager.Singltone.ClearAndUnbloackCells();
     }
