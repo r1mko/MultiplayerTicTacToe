@@ -91,6 +91,7 @@ public class GameManager : MonoBehaviour
     {
         TurnIndex = 0;
         SetPlayersHP();
+        UIManager.Singletone.ShowHPBar();
     }
 
     public void SetWin(int winnerID)
@@ -127,6 +128,7 @@ public class GameManager : MonoBehaviour
 
     private void GameOver()
     {
+        UIManager.Singletone.HideHPBar();
         UIManager.Singletone.ShowRestartButton();
         BoardManager.Singltone.BlockAllButtons();
         isPlaying = false;
@@ -166,7 +168,6 @@ public class GameManager : MonoBehaviour
 
     public void OnClick(int row, int col)
     {
-        Debug.Log($"<color=green>Turn index равен {TurnIndex}</color>");
         BoardManager.Singltone.FillCell(row, col, CurrentPlayerTurnID);
         NextTurn();
         cellHistoryManager.Add(BoardManager.Singltone.GetCell(row, col), CurrentPlayerTurnID);
@@ -244,7 +245,7 @@ public class GameManager : MonoBehaviour
         UIManager.Singletone.ShowMoveInfo();
         UIManager.Singletone.ShowWinLoseCountInfo();
         UIManager.Singletone.ShowSmileScreen();
-        UIManager.Singletone.ShowHPText();
+        UIManager.Singletone.ShowHPBar();
     }
 
 }

@@ -7,8 +7,8 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager Singletone;
-    [SerializeField] private TMP_Text playerHP;
-    [SerializeField] private TMP_Text opponentHP;
+    [SerializeField] private Slider playerHPSlider;
+    [SerializeField] private Slider opponentHPSlider;
     [SerializeField] private TMP_Text timerText;
     [SerializeField] private TMP_Text sessionInfoText;
     [SerializeField] private TMP_Text winXText;
@@ -29,7 +29,7 @@ public class UIManager : MonoBehaviour
         singlePlayerButton.onClick.AddListener(OnSingle);
         clientButton.onClick.AddListener(OnClient);
         HideRestartButton();
-        HideHPText();
+        HideHPBar();
         HideMoveInfo();
         HideWinLoseCountInfo();
         HideSmileScreen();
@@ -181,19 +181,31 @@ public class UIManager : MonoBehaviour
 
     public void SetPlayersHP(int player, int opponent)
     {
-        playerHP.text = "ME: " + player.ToString();
-        opponentHP.text = "OP: " + opponent.ToString();
+        if (playerHPSlider != null)
+            playerHPSlider.value = player;
+
+        if (opponentHPSlider != null)
+            opponentHPSlider.value = opponent;
+
+        // Если ты хочешь, чтобы максимальное значение слайдера устанавливалось автоматически,
+        // раскомментируй следующие строки:
+        /*
+        if (playerHPSlider != null)
+            playerHPSlider.maxValue = player; // или задай максимальное HP отдельно
+        if (opponentHPSlider != null)
+            opponentHPSlider.maxValue = opponent;
+        */
     }
 
-    public void ShowHPText()
+    public void ShowHPBar()
     {
-        playerHP.gameObject.SetActive(true);
-        opponentHP.gameObject.SetActive(true);
+        playerHPSlider.gameObject.SetActive(true);
+        opponentHPSlider.gameObject.SetActive(true);
     }
-    public void HideHPText()
+    public void HideHPBar()
     {
-        playerHP.gameObject.SetActive(false);
-        opponentHP.gameObject.SetActive(false);
+        playerHPSlider.gameObject.SetActive(false);
+        opponentHPSlider.gameObject.SetActive(false);
     }
     private void OnDestroy()
     {

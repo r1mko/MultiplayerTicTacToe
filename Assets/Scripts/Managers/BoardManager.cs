@@ -54,7 +54,6 @@ public class BoardManager : MonoBehaviour
 
     public void OnClickCell(int row, int coll, Cell cell)
     {
-        Debug.Log($"Вызвали onClickCell row: {row} coll: {coll} is our turn? {GameManager.Singletone.IsOurTurn()}");
         if (!GameManager.Singletone.IsOurTurn())
         {
             return;

@@ -98,7 +98,6 @@ public class MinmaxBot : MonoBehaviour
         if (bestMoves.Count > 0)
         {
             Cell chosenMove = bestMoves[UnityEngine.Random.Range(0, bestMoves.Count)];
-            Debug.Log($"[MinimaxBot] Выбираем случайный лучший ход из {bestMoves.Count} вариантов: ({chosenMove.row},{chosenMove.coll})");
             return chosenMove;
         }
 
