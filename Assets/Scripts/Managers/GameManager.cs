@@ -8,15 +8,15 @@ public class GameManager : MonoBehaviour
     public static GameManager Singletone;
 
     public int CurrentPlayerTurnID;
-    private int startOffSet;
-
     public int TurnIndex;
-
+    private int startOffSet;
     private bool isPlaying;
     public bool IsPlaying => isPlaying;
-
+    private HPHistoryManager hPHistoryManager;
     private CellHistoryManager cellHistoryManager;
     public CellHistoryManager CellHistoryManager => cellHistoryManager;
+    public HPHistoryManager HPHistoryManager => hPHistoryManager;
+
 
     private int[] wins = new int[] { 0, 0 };
 
@@ -25,6 +25,7 @@ public class GameManager : MonoBehaviour
     {
         Singletone = this;
         cellHistoryManager = new CellHistoryManager();
+        hPHistoryManager = new HPHistoryManager();
     }
 
     public void StartGame()
@@ -37,6 +38,7 @@ public class GameManager : MonoBehaviour
         {
             UpdateUI();
             PrepareGame();
+            hPHistoryManager.ResetPlayersHP(); //сбросили хп
         }
 
         StartTimer();
@@ -151,6 +153,13 @@ public class GameManager : MonoBehaviour
 
         if (BoardManager.Singltone.IsWon(row, col))
         {
+            int playerID = CurrentPlayerTurnID;
+            int opponentID = 1 - playerID;
+            hPHistoryManager.Damage(opponentID);
+            if (hPHistoryManager.LosePlayer(opponentID))
+            {
+                Debug.Log($"Игрок с айди {opponentID} умер");
+            }
             GameOver();
             SetWin(CurrentPlayerTurnID);
             UIManager.Singletone.SetWinText();
