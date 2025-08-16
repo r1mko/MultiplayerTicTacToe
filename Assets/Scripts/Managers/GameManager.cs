@@ -38,7 +38,7 @@ public class GameManager : MonoBehaviour
         {
             UpdateUI();
             PrepareGame();
-            hPHistoryManager.ResetPlayersHP(); //сбросили хп
+            hPHistoryManager.ResetPlayersHP();
         }
 
         StartTimer();
@@ -120,6 +120,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            hPHistoryManager.ResetPlayersHP();
             Restart();
             PrepareGame();
             MinmaxBot.Singletone.ResetBotMoveCount();

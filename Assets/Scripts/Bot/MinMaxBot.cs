@@ -277,7 +277,7 @@ public class MinmaxBot : MonoBehaviour
         if (UnityEngine.Random.value < 0.5f)
         {
             int minDepth = maxDepth - 1;
-            int maxDepthRange = maxDepth + 2;
+            int maxDepthRange = maxDepth + 1;
             return UnityEngine.Random.Range(minDepth, maxDepthRange + 1);
         }
         else

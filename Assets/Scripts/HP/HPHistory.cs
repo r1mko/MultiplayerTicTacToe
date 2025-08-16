@@ -18,7 +18,7 @@ public class HPHistoryManager
 
     public bool LosePlayer(int playerID)
     {
-        if (!HPHistory.ContainsKey(playerID))
+        if (HPHistory.ContainsKey(playerID))
         {
             if (HPHistory[playerID] <= 0)
             {
