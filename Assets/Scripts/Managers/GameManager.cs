@@ -39,19 +39,25 @@ public class GameManager : MonoBehaviour
         {
             UpdateUI();
             PrepareGame();
-            hPHistoryManager.ResetPlayersHP();
-            SetPlayersHP();
-
         }
 
         StartTimer();
     }
     private void SetPlayersHP()
     {
-        int playerHP = hPHistoryManager.GetHP(0); // игрок (человек)
-        int opponentHP = hPHistoryManager.GetHP(1); // бот
-
-        UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            var opId = NetworkManager.Singleton.LocalClientId == 0 ? 1 : 0;
+            var playerHP = hPHistoryManager.GetHP((int)NetworkManager.Singleton.LocalClientId);
+            int opponentHP = hPHistoryManager.GetHP(opId);
+            UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
+        }
+        else
+        {
+            int playerHP = hPHistoryManager.GetHP(0); // игрок (человек)
+            int opponentHP = hPHistoryManager.GetHP(1); // бот
+            UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
+        }
     }
     public void UpdateCurrentPlayerID(int clientID)
     {
@@ -95,6 +101,8 @@ public class GameManager : MonoBehaviour
     {
         TurnIndex = 0;
         cellHistoryManager.Clear();
+        hPHistoryManager.ResetPlayersHP();
+        SetPlayersHP();
 
         if (NetworkPlayer.Singletone.IsMultiplayer())
         {
@@ -195,7 +203,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator DamageDelay()
     {
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(0f); //поменять задержку чтобы бот не мог ходить
         cellHistoryManager.Clear();
         BoardManager.Singltone.ClearAndUnbloackCells();
     }
