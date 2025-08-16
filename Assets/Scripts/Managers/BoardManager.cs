@@ -76,7 +76,7 @@ public class BoardManager : MonoBehaviour
         buttons[row, col].Fill(currentPlayerIndex);
     }
 
-    public bool IsWon(int row, int column)
+    public bool IsRow(int row, int column)
     {
         int indexPlayer = buttons[row, column].IndexPlayer;
 

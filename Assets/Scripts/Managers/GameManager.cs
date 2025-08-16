@@ -145,13 +145,14 @@ public class GameManager : MonoBehaviour
 
     public void OnClick(int row, int col)
     {
+        Debug.Log($"<color=green>Turn index равен {TurnIndex}</color>");
         BoardManager.Singltone.FillCell(row, col, CurrentPlayerTurnID);
         NextTurn();
         cellHistoryManager.Add(BoardManager.Singltone.GetCell(row, col), CurrentPlayerTurnID);
 
         TimerController.Singletone.EndTime();
 
-        if (BoardManager.Singltone.IsWon(row, col))
+        if (BoardManager.Singltone.IsRow(row, col))
         {
             int playerID = CurrentPlayerTurnID;
             int opponentID = 1 - playerID;
@@ -159,11 +160,16 @@ public class GameManager : MonoBehaviour
             if (hPHistoryManager.LosePlayer(opponentID))
             {
                 Debug.Log($"Игрок с айди {opponentID} умер");
+                GameOver();
+                SetWin(CurrentPlayerTurnID);
+                UIManager.Singletone.SetWinText();
+                return;
             }
-            GameOver();
-            SetWin(CurrentPlayerTurnID);
-            UIManager.Singletone.SetWinText();
-            return;
+            else
+            {
+                cellHistoryManager.Clear();
+                BoardManager.Singltone.ClearAndUnbloackCells();
+            }
         }
 
         if (BoardManager.Singltone.IsGameDraw())

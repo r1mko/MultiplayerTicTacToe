@@ -34,7 +34,6 @@ public class MinmaxBot : MonoBehaviour
         Cell bestMove = FindBestMove();
         if (bestMove != null)
         {
-            Debug.Log($"[MinimaxBot] Выбираем ход: ({bestMove.row},{bestMove.coll})");
             GameManager.Singletone.OnClick(bestMove.row, bestMove.coll);
 
             botMoveCount++;
