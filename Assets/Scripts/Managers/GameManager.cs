@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -39,11 +40,19 @@ public class GameManager : MonoBehaviour
             UpdateUI();
             PrepareGame();
             hPHistoryManager.ResetPlayersHP();
+            SetPlayersHP();
+
         }
 
         StartTimer();
     }
+    private void SetPlayersHP()
+    {
+        int playerHP = hPHistoryManager.GetHP(0); // игрок (человек)
+        int opponentHP = hPHistoryManager.GetHP(1); // бот
 
+        UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
+    }
     public void UpdateCurrentPlayerID(int clientID)
     {
         //Debug.Log($"[GameManager] Вызвали UpdateCurrentPlayerID {clientID}");
@@ -73,6 +82,7 @@ public class GameManager : MonoBehaviour
     public void Restart()
     {
         TurnIndex = 0;
+        SetPlayersHP();
     }
 
     public void SetWin(int winnerID)
@@ -158,6 +168,7 @@ public class GameManager : MonoBehaviour
             int playerID = CurrentPlayerTurnID;
             int opponentID = 1 - playerID;
             hPHistoryManager.Damage(opponentID);
+            SetPlayersHP();
             if (hPHistoryManager.LosePlayer(opponentID))
             {
                 Debug.Log($"Игрок с айди {opponentID} умер");
@@ -168,8 +179,7 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                cellHistoryManager.Clear();
-                BoardManager.Singltone.ClearAndUnbloackCells();
+                StartCoroutine(DamageDelay());
             }
         }
 
@@ -183,6 +193,12 @@ public class GameManager : MonoBehaviour
         PassMoveToNextPlayer();
     }
 
+    private IEnumerator DamageDelay()
+    {
+        yield return new WaitForSeconds(2f);
+        cellHistoryManager.Clear();
+        BoardManager.Singltone.ClearAndUnbloackCells();
+    }
     public void PlayerSkipMove()
     {
         if (NetworkPlayer.Singletone.IsMultiplayer())
@@ -215,7 +231,7 @@ public class GameManager : MonoBehaviour
         UIManager.Singletone.ShowMoveInfo();
         UIManager.Singletone.ShowWinLoseCountInfo();
         UIManager.Singletone.ShowSmileScreen();
-        //Debug.Log($"[GameManager] Вызвали UpdateUI");
+        UIManager.Singletone.ShowHPText();
     }
 
 }

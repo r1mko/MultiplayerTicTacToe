@@ -15,6 +15,10 @@ public class HPHistoryManager
             Debug.Log($"У игрока с айди {playerID} осталось хп: {HPHistory[playerID]}");
         }
     }
+    public int GetHP(int playerID)
+    {
+        return HPHistory.TryGetValue(playerID, out int hp) ? hp : defaultHP;
+    }
 
     public bool LosePlayer(int playerID)
     {
@@ -26,11 +30,6 @@ public class HPHistoryManager
             }
         }
         return false;
-    }
-
-    public void Clear()
-    {
-        HPHistory = new Dictionary<int, int>();
     }
 
     public void ResetPlayersHP()

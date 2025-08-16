@@ -1726,6 +1726,14 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9179739849518806624, guid: 8a53ec5e2e1217c4d8b3a18d1aa75413, type: 3}
+      propertyPath: playerHP
+      value: 
+      objectReference: {fileID: 1855576099}
+    - target: {fileID: 9179739849518806624, guid: 8a53ec5e2e1217c4d8b3a18d1aa75413, type: 3}
+      propertyPath: opponentHP
+      value: 
+      objectReference: {fileID: 1598250993}
+    - target: {fileID: 9179739849518806624, guid: 8a53ec5e2e1217c4d8b3a18d1aa75413, type: 3}
       propertyPath: singlePlayerButton
       value: 
       objectReference: {fileID: 188810726}

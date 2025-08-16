@@ -7,6 +7,8 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager Singletone;
+    [SerializeField] private TMP_Text playerHP;
+    [SerializeField] private TMP_Text opponentHP;
     [SerializeField] private TMP_Text timerText;
     [SerializeField] private TMP_Text sessionInfoText;
     [SerializeField] private TMP_Text winXText;
@@ -27,12 +29,13 @@ public class UIManager : MonoBehaviour
         singlePlayerButton.onClick.AddListener(OnSingle);
         clientButton.onClick.AddListener(OnClient);
         HideRestartButton();
-        ShowNavigationPanel();
-        ShowActiveSessionInfo();
+        HideHPText();
         HideMoveInfo();
         HideWinLoseCountInfo();
         HideSmileScreen();
         HideTimerText();
+        ShowActiveSessionInfo();
+        ShowNavigationPanel();
     }
 
     private void OnSingle()
@@ -176,6 +179,22 @@ public class UIManager : MonoBehaviour
         //Debug.Log("Вызвали отображение таймера");
     }
 
+    public void SetPlayersHP(int player, int opponent)
+    {
+        playerHP.text = "ME: " + player.ToString();
+        opponentHP.text = "OP: " + opponent.ToString();
+    }
+
+    public void ShowHPText()
+    {
+        playerHP.gameObject.SetActive(true);
+        opponentHP.gameObject.SetActive(true);
+    }
+    public void HideHPText()
+    {
+        playerHP.gameObject.SetActive(false);
+        opponentHP.gameObject.SetActive(false);
+    }
     private void OnDestroy()
     {
         restartButton.onClick.RemoveAllListeners();
