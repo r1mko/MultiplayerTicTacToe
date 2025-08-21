@@ -19,9 +19,10 @@ public class MinmaxBot : MonoBehaviour
 
     void Update()
     {
-        if (NetworkPlayer.Singletone.IsMultiplayer()) return;
         if (!GameManager.Singletone.IsPlaying) return;
         if (!GameManager.Singletone.IsBotTurn()) return;
+        if (NetworkPlayer.Singletone.IsMultiplayer()) return;
+        if (GameManager.Singletone.IsBlocking) return;
         if (botTurnCoroutine != null) return;
 
         botTurnCoroutine = StartCoroutine(BotTurn());
@@ -34,7 +35,6 @@ public class MinmaxBot : MonoBehaviour
         Cell bestMove = FindBestMove();
         if (bestMove != null)
         {
-            Debug.Log($"[MinimaxBot] Выбираем ход: ({bestMove.row},{bestMove.coll})");
             GameManager.Singletone.OnClick(bestMove.row, bestMove.coll);
 
             botMoveCount++;
@@ -98,7 +98,6 @@ public class MinmaxBot : MonoBehaviour
         if (bestMoves.Count > 0)
         {
             Cell chosenMove = bestMoves[UnityEngine.Random.Range(0, bestMoves.Count)];
-            Debug.Log($"[MinimaxBot] Выбираем случайный лучший ход из {bestMoves.Count} вариантов: ({chosenMove.row},{chosenMove.coll})");
             return chosenMove;
         }
 
@@ -278,7 +277,7 @@ public class MinmaxBot : MonoBehaviour
         if (UnityEngine.Random.value < 0.5f)
         {
             int minDepth = maxDepth - 1;
-            int maxDepthRange = maxDepth + 2;
+            int maxDepthRange = maxDepth + 1;
             return UnityEngine.Random.Range(minDepth, maxDepthRange + 1);
         }
         else
