@@ -5,14 +5,24 @@ using UnityEngine;
 
 public class MinmaxBot : MonoBehaviour
 {
+    public static MinmaxBot Singletone;
+
     private Coroutine botTurnCoroutine;
+
+    private int botMoveCount = 0;
     public int maxDepth = 8;
+
+    private void Awake()
+    {
+        Singletone = this;
+    }
 
     void Update()
     {
-        if (NetworkPlayer.Singletone.IsMultiplayer()) return;
         if (!GameManager.Singletone.IsPlaying) return;
         if (!GameManager.Singletone.IsBotTurn()) return;
+        if (NetworkPlayer.Singletone.IsMultiplayer()) return;
+        if (GameManager.Singletone.IsBlocking) return;
         if (botTurnCoroutine != null) return;
 
         botTurnCoroutine = StartCoroutine(BotTurn());
@@ -25,8 +35,9 @@ public class MinmaxBot : MonoBehaviour
         Cell bestMove = FindBestMove();
         if (bestMove != null)
         {
-            Debug.Log($"[MinimaxBot] Выбираем ход: ({bestMove.row},{bestMove.coll})");
             GameManager.Singletone.OnClick(bestMove.row, bestMove.coll);
+
+            botMoveCount++;
         }
         else
         {
@@ -45,7 +56,11 @@ public class MinmaxBot : MonoBehaviour
         var history = CloneHistory(GameManager.Singletone.CellHistoryManager.CellHistory);
 
         int bestScore = int.MinValue;
-        Cell bestCell = null;
+        List<Cell> bestMoves = new List<Cell>(); // Список всех лучших ходов
+
+        // Определяем текущую максимальную глубину
+        int currentMaxDepth = GetCurrentSearchDepth();
+        Debug.Log($"Сделали ход с глубиной {currentMaxDepth}");
 
         for (int r = 0; r < 3; r++)
         {
@@ -57,30 +72,40 @@ public class MinmaxBot : MonoBehaviour
                     var newBoard = (int[,])board.Clone();
                     var newHistory = CloneHistory(history);
 
-                    // Удаляем старую клетку (если есть)
                     RemoveOldestCell(newBoard, newHistory, playerID);
-
-                    // Ставим новую
                     newBoard[r, c] = playerID;
                     Cell cell = BoardManager.Singltone.GetCell(r, c);
                     newHistory[playerID].Insert(0, cell);
 
-                    // Оцениваем ответ игрока
-                    int score = Minimax(newBoard, newHistory, 0, false, playerID, opponentID, int.MinValue, int.MaxValue);
+                    // Оцениваем позицию с текущей максимальной глубиной
+                    int score = Minimax(newBoard, newHistory, 0, false, playerID, opponentID, int.MinValue, int.MaxValue, currentMaxDepth);
 
                     if (score > bestScore)
                     {
                         bestScore = score;
-                        bestCell = cell;
+                        bestMoves.Clear();
+                        bestMoves.Add(cell);
+                    }
+                    else if (score == bestScore)
+                    {
+                        bestMoves.Add(cell);
                     }
                 }
             }
         }
 
-        return bestCell;
+        // Если есть несколько равных лучших ходов — выбираем случайный
+        if (bestMoves.Count > 0)
+        {
+            Cell chosenMove = bestMoves[UnityEngine.Random.Range(0, bestMoves.Count)];
+            return chosenMove;
+        }
+
+        Debug.Log("[MinimaxBot] Нет доступных ходов.");
+        return null;
     }
 
-    private int Minimax(int[,] board, Dictionary<int, List<Cell>> history, int depth, bool isBotTurn, int botID, int playerID, int alpha, int beta)
+    private int Minimax(int[,] board, Dictionary<int, List<Cell>> history, int depth, bool isBotTurn, int botID, int playerID, int alpha, int beta, int maxDepth)
     {
         // Базовые случаи
         if (IsWin(board, botID)) return +10 - depth;
@@ -105,7 +130,7 @@ public class MinmaxBot : MonoBehaviour
                         Cell cell = BoardManager.Singltone.GetCell(r, c);
                         newHistory[currID].Insert(0, cell);
 
-                        int eval = Minimax(newBoard, newHistory, depth + 1, false, botID, playerID, alpha, beta);
+                        int eval = Minimax(newBoard, newHistory, depth + 1, false, botID, playerID, alpha, beta, maxDepth);
                         maxEval = Math.Max(maxEval, eval);
                         alpha = Math.Max(alpha, eval);
                         if (beta <= alpha) break;
@@ -132,7 +157,7 @@ public class MinmaxBot : MonoBehaviour
                         Cell cell = BoardManager.Singltone.GetCell(r, c);
                         newHistory[currID].Insert(0, cell);
 
-                        int eval = Minimax(newBoard, newHistory, depth + 1, true, botID, playerID, alpha, beta);
+                        int eval = Minimax(newBoard, newHistory, depth + 1, true, botID, playerID, alpha, beta, maxDepth);
                         minEval = Math.Min(minEval, eval);
                         beta = Math.Min(beta, eval);
                         if (beta <= alpha) break;
@@ -244,5 +269,25 @@ public class MinmaxBot : MonoBehaviour
             }
             list.RemoveAt(2);
         }
+    }
+
+    // --- НОВЫЕ МЕТОДЫ ДЛЯ ДИНАМИЧЕСКОЙ ГЛУБИНЫ ---
+    private int GetCurrentSearchDepth()
+    {
+        if (UnityEngine.Random.value < 0.5f)
+        {
+            int minDepth = maxDepth - 1;
+            int maxDepthRange = maxDepth + 1;
+            return UnityEngine.Random.Range(minDepth, maxDepthRange + 1);
+        }
+        else
+        {
+            return maxDepth;
+        }
+    }
+
+    public void ResetBotMoveCount()
+    {
+        botMoveCount = 0;
     }
 }

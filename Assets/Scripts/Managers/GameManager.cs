@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -8,15 +9,17 @@ public class GameManager : MonoBehaviour
     public static GameManager Singletone;
 
     public int CurrentPlayerTurnID;
-    private int startOffSet;
-
     public int TurnIndex;
-
+    private int startOffSet;
     private bool isPlaying;
+    private bool isBlocking;
     public bool IsPlaying => isPlaying;
-
+    public bool IsBlocking => isBlocking;
+    private HPHistoryManager hPHistoryManager;
     private CellHistoryManager cellHistoryManager;
     public CellHistoryManager CellHistoryManager => cellHistoryManager;
+    public HPHistoryManager HPHistoryManager => hPHistoryManager;
+
 
     private int[] wins = new int[] { 0, 0 };
 
@@ -25,6 +28,7 @@ public class GameManager : MonoBehaviour
     {
         Singletone = this;
         cellHistoryManager = new CellHistoryManager();
+        hPHistoryManager = new HPHistoryManager();
     }
 
     public void StartGame()
@@ -41,7 +45,22 @@ public class GameManager : MonoBehaviour
 
         StartTimer();
     }
-
+    private void SetPlayersHP()
+    {
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            var opId = NetworkManager.Singleton.LocalClientId == 0 ? 1 : 0;
+            var playerHP = hPHistoryManager.GetHP((int)NetworkManager.Singleton.LocalClientId);
+            int opponentHP = hPHistoryManager.GetHP(opId);
+            UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
+        }
+        else
+        {
+            int playerHP = hPHistoryManager.GetHP(0); // игрок (человек)
+            int opponentHP = hPHistoryManager.GetHP(1); // бот
+            UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
+        }
+    }
     public void UpdateCurrentPlayerID(int clientID)
     {
         //Debug.Log($"[GameManager] Вызвали UpdateCurrentPlayerID {clientID}");
@@ -71,7 +90,8 @@ public class GameManager : MonoBehaviour
     public void Restart()
     {
         TurnIndex = 0;
-        //Debug.Log("[GameManager] Вызвали Restart метод, сбросили индекс");
+        SetPlayersHP();
+        UIManager.Singletone.ShowHPBar();
     }
 
     public void SetWin(int winnerID)
@@ -84,6 +104,8 @@ public class GameManager : MonoBehaviour
     {
         TurnIndex = 0;
         cellHistoryManager.Clear();
+        hPHistoryManager.ResetPlayersHP();
+        SetPlayersHP();
 
         if (NetworkPlayer.Singletone.IsMultiplayer())
         {
@@ -106,6 +128,7 @@ public class GameManager : MonoBehaviour
 
     private void GameOver()
     {
+        UIManager.Singletone.HideHPBar();
         UIManager.Singletone.ShowRestartButton();
         BoardManager.Singltone.BlockAllButtons();
         isPlaying = false;
@@ -119,8 +142,10 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            hPHistoryManager.ResetPlayersHP();
             Restart();
             PrepareGame();
+            MinmaxBot.Singletone.ResetBotMoveCount();
         }
     }
 
@@ -149,12 +174,24 @@ public class GameManager : MonoBehaviour
 
         TimerController.Singletone.EndTime();
 
-        if (BoardManager.Singltone.IsWon(row, col))
+        if (BoardManager.Singltone.IsRow(row, col))
         {
-            GameOver();
-            SetWin(CurrentPlayerTurnID);
-            UIManager.Singletone.SetWinText();
-            return;
+            int playerID = CurrentPlayerTurnID;
+            int opponentID = 1 - playerID;
+            hPHistoryManager.Damage(opponentID);
+            SetPlayersHP();
+            if (hPHistoryManager.LosePlayer(opponentID))
+            {
+                Debug.Log($"Игрок с айди {opponentID} умер");
+                GameOver();
+                SetWin(CurrentPlayerTurnID);
+                UIManager.Singletone.SetWinText();
+                return;
+            }
+            else
+            {
+                StartCoroutine(DamageDelay());
+            }
         }
 
         if (BoardManager.Singltone.IsGameDraw())
@@ -167,6 +204,15 @@ public class GameManager : MonoBehaviour
         PassMoveToNextPlayer();
     }
 
+    private IEnumerator DamageDelay()
+    {
+        isBlocking = true;
+        BoardManager.Singltone.BlockAllButtons();
+        yield return new WaitForSeconds(3f); //поменять задержку чтобы бот не мог ходить
+        isBlocking = false;
+        cellHistoryManager.Clear();
+        BoardManager.Singltone.ClearAndUnbloackCells();
+    }
     public void PlayerSkipMove()
     {
         if (NetworkPlayer.Singletone.IsMultiplayer())
@@ -199,7 +245,7 @@ public class GameManager : MonoBehaviour
         UIManager.Singletone.ShowMoveInfo();
         UIManager.Singletone.ShowWinLoseCountInfo();
         UIManager.Singletone.ShowSmileScreen();
-        //Debug.Log($"[GameManager] Вызвали UpdateUI");
+        UIManager.Singletone.ShowHPBar();
     }
 
 }
