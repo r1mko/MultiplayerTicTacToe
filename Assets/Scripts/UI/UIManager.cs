@@ -10,31 +10,23 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Slider playerHPSlider;
     [SerializeField] private Slider opponentHPSlider;
     [SerializeField] private TMP_Text timerText;
-    [SerializeField] private TMP_Text sessionInfoText;
     [SerializeField] private TMP_Text winXText;
     [SerializeField] private TMP_Text winOText;
     [SerializeField] private TMP_Text currentPlayerTextID;
     [SerializeField] private GameObject navigationPanel;
-    [SerializeField] private GameObject smileScreen;
     [SerializeField] private Button restartButton;
-    [SerializeField] private Button hostButton;
-    [SerializeField] private Button clientButton;
     [SerializeField] private Button singlePlayerButton;
 
     private void Awake()
     {
         Singletone = this;
         restartButton.onClick.AddListener(OnRestart);
-        hostButton.onClick.AddListener(OnHost);
         singlePlayerButton.onClick.AddListener(OnSingle);
-        clientButton.onClick.AddListener(OnClient);
         HideRestartButton();
         HideHPBar();
         HideMoveInfo();
         HideWinLoseCountInfo();
-        HideSmileScreen();
         HideTimerText();
-        ShowActiveSessionInfo();
         ShowNavigationPanel();
     }
 
@@ -47,18 +39,6 @@ public class UIManager : MonoBehaviour
     private void OnRestart()
     {
         GameManager.Singletone.RestartGame();
-    }
-
-    private void OnHost()
-    {
-        HideNavigationPanel();
-        SessionManager.Instance.StartSessionAsHostButton();
-    }
-
-    private void OnClient()
-    {
-        HideNavigationPanel();
-        SessionManager.Instance.FindAndJoinSessionButton();
     }
 
     public void UpdateCurrentPlayerText()
@@ -110,20 +90,6 @@ public class UIManager : MonoBehaviour
         navigationPanel.SetActive(false);
     }
 
-    public void ShowActiveSessionInfo()
-    {
-        sessionInfoText.gameObject.SetActive(true);
-    }
-
-    public void HideActiveSessionInfo()
-    {
-        sessionInfoText.gameObject.SetActive(false);
-    }
-
-    public void SetSessionInfoText(string info)
-    {
-        sessionInfoText.text = info;
-    }
 
     public void ShowMoveInfo()
     {
@@ -152,16 +118,6 @@ public class UIManager : MonoBehaviour
         winOText.text = $"O: {winArray[1]}";
     }
 
-    public void ShowSmileScreen()
-    {
-        smileScreen.SetActive(true);
-    }
-
-    public void HideSmileScreen()
-    {
-        smileScreen.SetActive(false);
-    }
-
     public void SetTimerText(double time)
     {
         timerText.text = time.ToString();
@@ -170,7 +126,7 @@ public class UIManager : MonoBehaviour
     public void HideTimerText()
     {
         timerText.gameObject.SetActive(false);
-       // Debug.Log("Вызвали скрытие таймера");
+        // Debug.Log("Вызвали скрытие таймера");
     }
 
     public void ShowTimerText()
@@ -186,15 +142,6 @@ public class UIManager : MonoBehaviour
 
         if (opponentHPSlider != null)
             opponentHPSlider.value = opponent;
-
-        // Если ты хочешь, чтобы максимальное значение слайдера устанавливалось автоматически,
-        // раскомментируй следующие строки:
-        /*
-        if (playerHPSlider != null)
-            playerHPSlider.maxValue = player; // или задай максимальное HP отдельно
-        if (opponentHPSlider != null)
-            opponentHPSlider.maxValue = opponent;
-        */
     }
 
     public void ShowHPBar()
@@ -210,8 +157,6 @@ public class UIManager : MonoBehaviour
     private void OnDestroy()
     {
         restartButton.onClick.RemoveAllListeners();
-        hostButton.onClick.RemoveAllListeners();
-        clientButton.onClick.RemoveAllListeners();
         singlePlayerButton.onClick.RemoveAllListeners();
     }
 }

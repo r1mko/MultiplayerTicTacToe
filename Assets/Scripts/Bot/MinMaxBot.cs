@@ -21,7 +21,6 @@ public class MinmaxBot : MonoBehaviour
     {
         if (!GameManager.Singletone.IsPlaying) return;
         if (!GameManager.Singletone.IsBotTurn()) return;
-        if (NetworkPlayer.Singletone.IsMultiplayer()) return;
         if (GameManager.Singletone.IsBlocking) return;
         if (botTurnCoroutine != null) return;
 

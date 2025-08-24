@@ -56,15 +56,9 @@ public class TimerController : MonoBehaviour
 
     private double GetTime()
     {
-        if (NetworkPlayer.Singletone.IsMultiplayer())
-        {
-            double serverTime = NetworkManager.Singleton.ServerTime.Time;
-            return serverTime;
-        }
-        else
-        {
-            double gameTime = Time.time;
-            return gameTime;
-        }
+
+        double gameTime = Time.time;
+        return gameTime;
+
     }
 }

@@ -59,14 +59,7 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
-        if (NetworkPlayer.Singletone.IsMultiplayer())
-        {
-            NetworkPlayer.Singletone.OnClickRpc(row, coll);
-        }
-        else
-        {
-            GameManager.Singletone.OnClick(row, coll);
-        }
+        GameManager.Singletone.OnClick(row, coll);
 
     }
 

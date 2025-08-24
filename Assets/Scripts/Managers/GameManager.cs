@@ -33,33 +33,17 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
-        if (NetworkPlayer.Singletone.IsMultiplayer())
-        {
-            NetworkPlayer.Singletone.StartGameRpc();
-        }
-        else
-        {
-            UpdateUI();
-            PrepareGame();
-        }
-
+        UpdateUI();
+        PrepareGame();
         StartTimer();
     }
     private void SetPlayersHP()
     {
-        if (NetworkPlayer.Singletone.IsMultiplayer())
-        {
-            var opId = NetworkManager.Singleton.LocalClientId == 0 ? 1 : 0;
-            var playerHP = hPHistoryManager.GetHP((int)NetworkManager.Singleton.LocalClientId);
-            int opponentHP = hPHistoryManager.GetHP(opId);
-            UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
-        }
-        else
-        {
-            int playerHP = hPHistoryManager.GetHP(0); // игрок (человек)
-            int opponentHP = hPHistoryManager.GetHP(1); // бот
-            UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
-        }
+
+        int playerHP = hPHistoryManager.GetHP(0); // игрок (человек)
+        int opponentHP = hPHistoryManager.GetHP(1); // бот
+        UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
+
     }
     public void UpdateCurrentPlayerID(int clientID)
     {
@@ -75,14 +59,12 @@ public class GameManager : MonoBehaviour
 
     public bool IsOurTurn()
     {
-        return CurrentPlayerTurnID == (int)NetworkPlayer.Singletone.NetworkManager.LocalClientId;
+        return CurrentPlayerTurnID == 0;
+        //return CurrentPlayerTurnID == (int)NetworkPlayer.Singletone.NetworkManager.LocalClientId;
     }
 
     public bool IsBotTurn()
     {
-        if (NetworkPlayer.Singletone.IsMultiplayer())
-            return !IsOurTurn();
-
         // В одиночной игре: бот — всегда игрок 1
         return CurrentPlayerTurnID == 1;
     }
@@ -107,23 +89,11 @@ public class GameManager : MonoBehaviour
         hPHistoryManager.ResetPlayersHP();
         SetPlayersHP();
 
-        if (NetworkPlayer.Singletone.IsMultiplayer())
-        {
-            if (NetworkPlayer.Singletone.IsServer)
-            {
-                startOffSet = UnityEngine.Random.Range(0, NetworkManager.Singleton.ConnectedClientsIds.Count);
-                NetworkPlayer.Singletone.UpdateOffSetRpc(startOffSet);
-            }
-        }
-        else
-        {
-            startOffSet = UnityEngine.Random.Range(0, 2);
-            UpdateOffSet(startOffSet);
-            BoardManager.Singltone.ClearAndUnbloackCells();
-        }
+        startOffSet = UnityEngine.Random.Range(0, 2);
+        UpdateOffSet(startOffSet);
+        BoardManager.Singltone.ClearAndUnbloackCells();
 
         isPlaying = true;
-
     }
 
     private void GameOver()
@@ -136,17 +106,12 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
-        if (NetworkPlayer.Singletone.IsMultiplayer())
-        {
-            NetworkPlayer.Singletone.RestartGameRpc();
-        }
-        else
-        {
-            hPHistoryManager.ResetPlayersHP();
-            Restart();
-            PrepareGame();
-            MinmaxBot.Singletone.ResetBotMoveCount();
-        }
+
+        hPHistoryManager.ResetPlayersHP();
+        Restart();
+        PrepareGame();
+        MinmaxBot.Singletone.ResetBotMoveCount();
+
     }
 
     public void StartTimer()
@@ -215,15 +180,8 @@ public class GameManager : MonoBehaviour
     }
     public void PlayerSkipMove()
     {
-        if (NetworkPlayer.Singletone.IsMultiplayer())
-        {
-            NetworkPlayer.Singletone.MoveToNextPlayerRpc();
-        }
-        else
-        {
-            HandleSkipTurn();
-            PassMoveToNextPlayer();
-        }
+        HandleSkipTurn();
+        PassMoveToNextPlayer();
     }
 
     public void HandleSkipTurn()
@@ -241,10 +199,8 @@ public class GameManager : MonoBehaviour
 
     public void UpdateUI()
     {
-        UIManager.Singletone.HideActiveSessionInfo();
         UIManager.Singletone.ShowMoveInfo();
         UIManager.Singletone.ShowWinLoseCountInfo();
-        UIManager.Singletone.ShowSmileScreen();
         UIManager.Singletone.ShowHPBar();
     }
 
