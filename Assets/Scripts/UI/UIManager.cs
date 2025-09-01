@@ -20,6 +20,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button hostButton;
     [SerializeField] private Button clientButton;
     [SerializeField] private Button singlePlayerButton;
+    [SerializeField] private Button slideButton;
 
     private void Awake()
     {
@@ -28,6 +29,7 @@ public class UIManager : MonoBehaviour
         hostButton.onClick.AddListener(OnHost);
         singlePlayerButton.onClick.AddListener(OnSingle);
         clientButton.onClick.AddListener(OnClient);
+        slideButton.onClick.AddListener(Slide);
         HideRestartButton();
         HideHPBar();
         HideMoveInfo();
@@ -206,6 +208,11 @@ public class UIManager : MonoBehaviour
     {
         playerHPSlider.gameObject.SetActive(false);
         opponentHPSlider.gameObject.SetActive(false);
+    }
+
+    private void Slide()
+    {
+        BoardManager.Singltone.ApplyGravity();
     }
     private void OnDestroy()
     {

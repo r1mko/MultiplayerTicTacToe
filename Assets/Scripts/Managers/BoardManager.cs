@@ -197,4 +197,73 @@ public class BoardManager : MonoBehaviour
 
         return board;
     }
+
+    public void ApplyGravity()
+    {
+        bool changes = false;
+        List<(int row, int col, int playerIndex)> filledCells = new List<(int, int, int)>();
+
+        for (int j = 0; j < 3; j++)
+        {
+            List<int> columnValues = new List<int>();
+            for (int i = 0; i < 3; i++)
+            {
+                if (buttons[i, j].IsFillCell)
+                {
+                    columnValues.Add(buttons[i, j].IndexPlayer);
+                }
+            }
+
+            int fillIndex = 2;
+            for (int k = columnValues.Count - 1; k >= 0; k--)
+            {
+                if (fillIndex >= 0)
+                {
+                    int oldIndex = fillIndex + 1;
+                    if (oldIndex <= 2 && buttons[oldIndex, j].IsFillCell && buttons[oldIndex, j].IndexPlayer == columnValues[k])
+                    {
+                        // Тот же игрок, но на новом месте
+                        if (buttons[fillIndex, j].IsFillCell && buttons[fillIndex, j].IndexPlayer != columnValues[k])
+                        {
+                            changes = true;
+                        }
+                    }
+                    else if (!buttons[fillIndex, j].IsFillCell || buttons[fillIndex, j].IndexPlayer != columnValues[k])
+                    {
+                        changes = true;
+                    }
+
+                    buttons[fillIndex, j].Fill(columnValues[k]);
+                    filledCells.Add((fillIndex, j, columnValues[k]));
+                    fillIndex--;
+                }
+            }
+
+            while (fillIndex >= 0)
+            {
+                if (buttons[fillIndex, j].IsFillCell)
+                {
+                    buttons[fillIndex, j].Clear();
+                    changes = true;
+                }
+                fillIndex--;
+            }
+        }
+
+        if (changes)
+        {
+            Debug.Log("Гравитация применена.");
+
+            // Проверка победы после падения (опционально!)
+            foreach (var (row, col, playerIndex) in filledCells)
+            {
+                if (IsRow(row, col))
+                {
+                    Debug.Log($"Игрок {playerIndex} победил после гравитации!");
+                    // Можно вызвать GameOver, но это зависит от логики
+                    // Пока не вызываем — ход передается дальше
+                }
+            }
+        }
+    }
 }
