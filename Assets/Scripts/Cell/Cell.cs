@@ -43,6 +43,7 @@ public class Cell: MonoBehaviour
         ChangeColorCell(defaultColor);
 
         _isFillCell = false;
+        Unblock();
     }
 
     public void Block()
