@@ -201,68 +201,91 @@ public class BoardManager : MonoBehaviour
     public void ApplyGravity()
     {
         bool changes = false;
-        List<(int row, int col, int playerIndex)> filledCells = new List<(int, int, int)>();
+        Dictionary<Cell, Cell> cellRemap = new Dictionary<Cell, Cell>();
 
         for (int j = 0; j < 3; j++)
         {
-            List<int> columnValues = new List<int>();
+            List<Cell> columnCells = new List<Cell>();
+
+            // Собираем заполненные клетки сверху вниз (по возрастанию row)
             for (int i = 0; i < 3; i++)
             {
                 if (buttons[i, j].IsFillCell)
                 {
-                    columnValues.Add(buttons[i, j].IndexPlayer);
+                    columnCells.Add(buttons[i, j]);
                 }
             }
 
-            int fillIndex = 2;
-            for (int k = columnValues.Count - 1; k >= 0; k--)
-            {
-                if (fillIndex >= 0)
-                {
-                    int oldIndex = fillIndex + 1;
-                    if (oldIndex <= 2 && buttons[oldIndex, j].IsFillCell && buttons[oldIndex, j].IndexPlayer == columnValues[k])
-                    {
-                        // Тот же игрок, но на новом месте
-                        if (buttons[fillIndex, j].IsFillCell && buttons[fillIndex, j].IndexPlayer != columnValues[k])
-                        {
-                            changes = true;
-                        }
-                    }
-                    else if (!buttons[fillIndex, j].IsFillCell || buttons[fillIndex, j].IndexPlayer != columnValues[k])
-                    {
-                        changes = true;
-                    }
+            if (columnCells.Count == 0) continue;
 
-                    buttons[fillIndex, j].Fill(columnValues[k]);
-                    filledCells.Add((fillIndex, j, columnValues[k]));
-                    fillIndex--;
+            // Проверяем, нужно ли двигать
+            bool needToMove = false;
+            int expectedRow = 2;
+            for (int k = columnCells.Count - 1; k >= 0; k--)
+            {
+                if (columnCells[k].row != expectedRow)
+                {
+                    needToMove = true;
+                    break;
                 }
+                expectedRow--;
             }
 
-            while (fillIndex >= 0)
+            if (!needToMove) continue;
+
+            // Очищаем столбец
+            for (int i = 0; i < 3; i++)
             {
-                if (buttons[fillIndex, j].IsFillCell)
+                buttons[i, j].Clear();
+            }
+
+            // Заполняем снизу вверх, начиная с самой нижней фишки
+            int fillRow = 2;
+            for (int k = columnCells.Count - 1; k >= 0; k--)
+            {
+                Cell cell = columnCells[k];
+                Cell targetCell = buttons[fillRow, j];
+                targetCell.Fill(cell.IndexPlayer); // ← сохраняем оригинального владельца
+
+                if (cell.row != fillRow)
                 {
-                    buttons[fillIndex, j].Clear();
+                    cellRemap[cell] = targetCell;
                     changes = true;
                 }
-                fillIndex--;
+
+                fillRow--;
             }
         }
 
-        if (changes)
+        if (!changes)
         {
-            Debug.Log("Гравитация применена.");
+            Debug.Log("Гравитация: всё на месте.");
+            return;
+        }
 
-            // Проверка победы после падения (опционально!)
-            foreach (var (row, col, playerIndex) in filledCells)
+        Debug.Log("Гравитация: фишки упали. Обновляем историю...");
+
+        // Обновляем CellHistory
+        var cellHistory = GameManager.Singletone.cellHistoryManager.CellHistory;
+        foreach (var playerEntry in cellHistory)
+        {
+            for (int i = 0; i < playerEntry.Value.Count; i++)
             {
-                if (IsRow(row, col))
+                if (playerEntry.Value[i] != null && cellRemap.TryGetValue(playerEntry.Value[i], out Cell newCell))
                 {
-                    Debug.Log($"Игрок {playerIndex} победил после гравитации!");
-                    // Можно вызвать GameOver, но это зависит от логики
-                    // Пока не вызываем — ход передается дальше
+                    playerEntry.Value[i] = newCell;
                 }
+            }
+        }
+
+        GameManager.Singletone.cellHistoryManager.CheckCellHistory();
+
+        // Проверка победы
+        foreach (var (oldCell, newCell) in cellRemap)
+        {
+            if (IsRow(newCell.row, newCell.coll))
+            {
+                Debug.Log($"Игрок {newCell.IndexPlayer} победил после гравитации!");
             }
         }
     }

@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviour
     public bool IsPlaying => isPlaying;
     public bool IsBlocking => isBlocking;
     private HPHistoryManager hPHistoryManager;
-    private CellHistoryManager cellHistoryManager;
+    public CellHistoryManager cellHistoryManager;
     public CellHistoryManager CellHistoryManager => cellHistoryManager;
     public HPHistoryManager HPHistoryManager => hPHistoryManager;
 
