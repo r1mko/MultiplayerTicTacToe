@@ -7,20 +7,21 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager Singletone;
+
     [SerializeField] private Slider playerHPSlider;
     [SerializeField] private Slider opponentHPSlider;
-    [SerializeField] private TMP_Text timerText;
-    [SerializeField] private TMP_Text sessionInfoText;
-    [SerializeField] private TMP_Text winXText;
-    [SerializeField] private TMP_Text winOText;
-    [SerializeField] private TMP_Text currentPlayerTextID;
-    [SerializeField] private GameObject navigationPanel;
-    [SerializeField] private GameObject smileScreen;
     [SerializeField] private Button restartButton;
     [SerializeField] private Button hostButton;
     [SerializeField] private Button clientButton;
     [SerializeField] private Button singlePlayerButton;
     [SerializeField] private Button slideButton;
+    [SerializeField] private GameObject navigationPanel;
+    [SerializeField] private GameObject smileScreen;
+    [SerializeField] private TMP_Text timerText;
+    [SerializeField] private TMP_Text sessionInfoText;
+    [SerializeField] private TMP_Text winXText;
+    [SerializeField] private TMP_Text winOText;
+    [SerializeField] private TMP_Text currentPlayerTextID;
 
     private void Awake()
     {
@@ -36,6 +37,7 @@ public class UIManager : MonoBehaviour
         HideWinLoseCountInfo();
         HideSmileScreen();
         HideTimerText();
+        HideSlideButton();
         ShowActiveSessionInfo();
         ShowNavigationPanel();
     }
@@ -86,6 +88,15 @@ public class UIManager : MonoBehaviour
         {
             currentPlayerTextID.text = "Вы проиграли!";
         }
+    }
+
+    public void ShowSlideButton()
+    {
+        slideButton.gameObject.SetActive(true);
+    }
+    public void HideSlideButton()
+    {
+        slideButton.gameObject.SetActive(false);
     }
 
     public void SetDrawText(string text)
@@ -188,15 +199,6 @@ public class UIManager : MonoBehaviour
 
         if (opponentHPSlider != null)
             opponentHPSlider.value = opponent;
-
-        // Если ты хочешь, чтобы максимальное значение слайдера устанавливалось автоматически,
-        // раскомментируй следующие строки:
-        /*
-        if (playerHPSlider != null)
-            playerHPSlider.maxValue = player; // или задай максимальное HP отдельно
-        if (opponentHPSlider != null)
-            opponentHPSlider.maxValue = opponent;
-        */
     }
 
     public void ShowHPBar()

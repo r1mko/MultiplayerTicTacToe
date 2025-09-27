@@ -246,6 +246,7 @@ public class GameManager : MonoBehaviour
         UIManager.Singletone.ShowWinLoseCountInfo();
         UIManager.Singletone.ShowSmileScreen();
         UIManager.Singletone.ShowHPBar();
+        UIManager.Singletone.ShowSlideButton();
     }
 
 }
