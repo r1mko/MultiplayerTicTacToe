@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -212,10 +210,22 @@ public class UIManager : MonoBehaviour
         opponentHPSlider.gameObject.SetActive(false);
     }
 
+
     private void Slide()
     {
-        BoardManager.Singltone.ApplyGravity();
+        GameManager.Singletone.ApplySlideGravity();
     }
+
+    public void BlockSlideButton()
+    {
+        slideButton.interactable = false;  
+    }
+
+    public void UnblockSlideButton()
+    {
+        slideButton.interactable = true;
+    }
+
     private void OnDestroy()
     {
         restartButton.onClick.RemoveAllListeners();
@@ -223,4 +233,5 @@ public class UIManager : MonoBehaviour
         clientButton.onClick.RemoveAllListeners();
         singlePlayerButton.onClick.RemoveAllListeners();
     }
+
 }

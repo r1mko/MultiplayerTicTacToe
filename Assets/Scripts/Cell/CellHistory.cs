@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
 
 public class CellHistoryManager
 {
@@ -13,7 +12,7 @@ public class CellHistoryManager
         }
     }
 
-    public void Add(Cell cell, int playerID)
+    public void AddMove(Cell cell, int playerID)
     {
         if (!CellHistory.ContainsKey(playerID))
         {
@@ -22,6 +21,21 @@ public class CellHistoryManager
         CellHistory[playerID].Insert(0, cell);
         CheckCellHistory();
     }
+
+    public void AddMoveToBothPlayers(Cell cell)
+    {
+        for (int playerId = 0; playerId <= 1; playerId++)
+        {
+            if (!CellHistory.ContainsKey(playerId))
+            {
+                CellHistory.Add(playerId, new List<Cell>());
+            }
+            CellHistory[playerId].Insert(0, cell);
+        }
+
+        CheckCellHistory();
+    }
+
 
     public void CheckCellHistory()
     {
@@ -53,7 +67,7 @@ public class CellHistoryManager
 
     public void SkipTurn(int playerID)
     {
-        Add(null, playerID); 
+        AddMove(null, playerID); 
     }
 
     public void Clear()

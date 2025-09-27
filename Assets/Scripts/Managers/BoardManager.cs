@@ -1,9 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using Unity.Netcode;
-using UnityEngine.UI;
-using TMPro;
 public class BoardManager : MonoBehaviour
 {
     [SerializeField] private GameObject board;

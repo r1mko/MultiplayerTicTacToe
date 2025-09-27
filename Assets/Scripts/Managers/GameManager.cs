@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -11,14 +9,20 @@ public class GameManager : MonoBehaviour
     public int CurrentPlayerTurnID;
     public int TurnIndex;
     private int startOffSet;
+    private int slideCooldownTurnIndex;
+    private bool isSlideOnCooldown;
     private bool isPlaying;
     private bool isBlocking;
     public bool IsPlaying => isPlaying;
     public bool IsBlocking => isBlocking;
+
     private HPHistoryManager hPHistoryManager;
+
     public CellHistoryManager cellHistoryManager;
     public CellHistoryManager CellHistoryManager => cellHistoryManager;
     public HPHistoryManager HPHistoryManager => hPHistoryManager;
+
+    public SkillCooldownManager SkillCooldownManager { get; private set; }
 
 
     private int[] wins = new int[] { 0, 0 };
@@ -29,6 +33,7 @@ public class GameManager : MonoBehaviour
         Singletone = this;
         cellHistoryManager = new CellHistoryManager();
         hPHistoryManager = new HPHistoryManager();
+        SkillCooldownManager = new SkillCooldownManager();
     }
 
     public void StartGame()
@@ -63,14 +68,14 @@ public class GameManager : MonoBehaviour
     }
     public void UpdateCurrentPlayerID(int clientID)
     {
-        //Debug.Log($"[GameManager] Вызвали UpdateCurrentPlayerID {clientID}");
         CurrentPlayerTurnID = clientID;
         UIManager.Singletone.UpdateCurrentPlayerText();
         StartTimer();
     }
-    public void NextTurn()
+
+    public void ChangeTurnIndex(int index = 1)
     {
-        TurnIndex++;
+        TurnIndex += index;
     }
 
     public bool IsOurTurn()
@@ -104,6 +109,8 @@ public class GameManager : MonoBehaviour
     {
         TurnIndex = 0;
         cellHistoryManager.Clear();
+        SkillCooldownManager.Initialize(startOffSet);
+        SkillCooldownManager.OnSlideUsed(TurnIndex);
         hPHistoryManager.ResetPlayersHP();
         SetPlayersHP();
 
@@ -111,13 +118,13 @@ public class GameManager : MonoBehaviour
         {
             if (NetworkPlayer.Singletone.IsServer)
             {
-                startOffSet = UnityEngine.Random.Range(0, NetworkManager.Singleton.ConnectedClientsIds.Count);
+                startOffSet = Random.Range(0, NetworkManager.Singleton.ConnectedClientsIds.Count);
                 NetworkPlayer.Singletone.UpdateOffSetRpc(startOffSet);
             }
         }
         else
         {
-            startOffSet = UnityEngine.Random.Range(0, 2);
+            startOffSet = Random.Range(0, 2);
             UpdateOffSet(startOffSet);
             BoardManager.Singltone.ClearAndUnbloackCells();
         }
@@ -143,10 +150,12 @@ public class GameManager : MonoBehaviour
         else
         {
             hPHistoryManager.ResetPlayersHP();
+            SkillCooldownManager.Reset();
             Restart();
             PrepareGame();
             MinmaxBot.Singletone.ResetBotMoveCount();
         }
+
     }
 
     public void StartTimer()
@@ -163,14 +172,23 @@ public class GameManager : MonoBehaviour
     {
         var playersCount = 2;
         var currentPlayerIndex = (TurnIndex + startOffSet) % playersCount;
+
         UpdateCurrentPlayerID(currentPlayerIndex);
+
+        if (SkillCooldownManager.ShouldRemoveCooldown(TurnIndex, CurrentPlayerTurnID))
+        {
+            SkillCooldownManager.RemoveCooldown();
+            UIManager.Singletone.UnblockSlideButton();
+            Debug.Log("[Slide] Кулдаун завершён. Кнопка разблокирована.");
+        }
     }
+
 
     public void OnClick(int row, int col)
     {
         BoardManager.Singltone.FillCell(row, col, CurrentPlayerTurnID);
-        NextTurn();
-        cellHistoryManager.Add(BoardManager.Singltone.GetCell(row, col), CurrentPlayerTurnID);
+        ChangeTurnIndex();
+        cellHistoryManager.AddMove(BoardManager.Singltone.GetCell(row, col), CurrentPlayerTurnID);
 
         TimerController.Singletone.EndTime();
 
@@ -226,10 +244,17 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void ApplySlideGravity()
+    {
+        BoardManager.Singltone.ApplyGravity();
+        UIManager.Singletone.BlockSlideButton();
+        SkillCooldownManager.OnSlideUsed(TurnIndex);
+    }
+
     public void HandleSkipTurn()
     {
         cellHistoryManager.SkipTurn(CurrentPlayerTurnID);
-        NextTurn();
+        ChangeTurnIndex();
     }
 
     public void UpdateOffSet(int clientID)
