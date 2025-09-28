@@ -42,11 +42,18 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
 
+
     //rpc region
     [Rpc(SendTo.Everyone)]
     public void OnClickRpc(int row, int col)
     {
         GameManager.Singletone.OnClick(row, col);
+    }
+
+    [Rpc(SendTo.Everyone)]
+    public void ApplyGravitySlideRpc()
+    {
+        GameManager.Singletone.SlideGravity();
     }
 
     [Rpc(SendTo.Everyone)]

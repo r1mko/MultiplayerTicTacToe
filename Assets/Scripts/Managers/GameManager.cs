@@ -262,10 +262,24 @@ public class GameManager : MonoBehaviour
 
     public void ApplySlideGravity()
     {
-        BoardManager.Singltone.ApplyGravity();
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            NetworkPlayer.Singletone.ApplyGravitySlideRpc();
+        }
+        else
+        {
+            SlideGravity();
+        }
+
         UIManager.Singletone.BlockSlideButton();
         SkillCooldownManager.OnSlideUsed(TurnIndex);
         UpdateSlideButtonText();
+    }
+
+    public void SlideGravity()
+    {
+        BoardManager.Singltone.ApplyGravity();
+
     }
 
     public void HandleSkipTurn()
