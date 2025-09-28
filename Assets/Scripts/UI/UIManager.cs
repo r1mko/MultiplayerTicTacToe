@@ -20,6 +20,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text winXText;
     [SerializeField] private TMP_Text winOText;
     [SerializeField] private TMP_Text currentPlayerTextID;
+    [SerializeField] private TMP_Text slideButtonText;
 
     private void Awake()
     {
@@ -86,6 +87,11 @@ public class UIManager : MonoBehaviour
         {
             currentPlayerTextID.text = "Вы проиграли!";
         }
+    }
+
+    public void SetCooldownText(string text)
+    {
+        slideButtonText.text = text;
     }
 
     public void ShowSlideButton()

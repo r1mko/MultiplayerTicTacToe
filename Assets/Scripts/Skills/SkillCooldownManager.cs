@@ -19,19 +19,36 @@ public class SkillCooldownManager
         isSlideOnCooldown = false;
     }
 
+
     /// <summary>
-    /// Проверяет, можно ли сейчас использовать Slide
+    /// Возвращает текст для отображения на кнопке Slide: либо "Slide", либо "3/3"
     /// </summary>
-    public bool CanUseSlide(int currentTurnIndex, int currentPlayerID)
+    public string GetSlideButtonText(int currentTurnIndex)
     {
-        if (isSlideOnCooldown)
-            return false;
+        if (!isSlideOnCooldown)
+            return "Slide";
 
-        // Проверяем, что прошло минимум N ходов игры
-        if (currentTurnIndex < minTurnToUseSlide)
-            return false;
+        int playerWhoUsedSlide = (slideCooldownTurnIndex + startOffSet) % 2;
+        int turnsByThatPlayer = 0;
 
-        return true;
+        for (int turn = slideCooldownTurnIndex + 1; turn <= currentTurnIndex; turn++)
+        {
+            int playerOnTurn = (turn + startOffSet) % 2;
+            if (playerOnTurn == playerWhoUsedSlide)
+            {
+                turnsByThatPlayer++;
+            }
+        }
+
+        int remaining = 3 - turnsByThatPlayer;
+
+        return remaining switch
+        {
+            3 => "In 3 turns",
+            2 => "In 2 turns",
+            1 => "Next turn",
+            _ => "Slide"
+        };
     }
 
     /// <summary>

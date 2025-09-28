@@ -8,11 +8,13 @@ public class GameManager : MonoBehaviour
 
     public int CurrentPlayerTurnID;
     public int TurnIndex;
+
     private int startOffSet;
-    private int slideCooldownTurnIndex;
-    private bool isSlideOnCooldown;
+
     private bool isPlaying;
     private bool isBlocking;
+
+    private string lastSlideButtonText;
     public bool IsPlaying => isPlaying;
     public bool IsBlocking => isBlocking;
 
@@ -111,6 +113,7 @@ public class GameManager : MonoBehaviour
         cellHistoryManager.Clear();
         SkillCooldownManager.Initialize(startOffSet);
         SkillCooldownManager.OnSlideUsed(TurnIndex);
+        UpdateSlideButtonText();
         hPHistoryManager.ResetPlayersHP();
         SetPlayersHP();
 
@@ -181,8 +184,21 @@ public class GameManager : MonoBehaviour
             UIManager.Singletone.UnblockSlideButton();
             Debug.Log("[Slide] Кулдаун завершён. Кнопка разблокирована.");
         }
+
+        UpdateSlideButtonText();
     }
 
+    private void UpdateSlideButtonText()
+    {
+        string newText = SkillCooldownManager.GetSlideButtonText(TurnIndex);
+
+        if (newText != lastSlideButtonText)
+        {
+            UIManager.Singletone.SetCooldownText(newText);
+            lastSlideButtonText = newText;
+            Debug.Log($"[UI] Текст кнопки Slide обновлён: {newText}");
+        }
+    }
 
     public void OnClick(int row, int col)
     {
@@ -249,6 +265,7 @@ public class GameManager : MonoBehaviour
         BoardManager.Singltone.ApplyGravity();
         UIManager.Singletone.BlockSlideButton();
         SkillCooldownManager.OnSlideUsed(TurnIndex);
+        UpdateSlideButtonText();
     }
 
     public void HandleSkipTurn()
