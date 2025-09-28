@@ -208,25 +208,7 @@ public class GameManager : MonoBehaviour
 
         TimerController.Singletone.EndTime();
 
-        if (BoardManager.Singltone.IsRow(row, col))
-        {
-            int playerID = CurrentPlayerTurnID;
-            int opponentID = 1 - playerID;
-            hPHistoryManager.Damage(opponentID);
-            SetPlayersHP();
-            if (hPHistoryManager.LosePlayer(opponentID))
-            {
-                Debug.Log($"Игрок с айди {opponentID} умер");
-                GameOver();
-                SetWin(CurrentPlayerTurnID);
-                UIManager.Singletone.SetWinText();
-                return;
-            }
-            else
-            {
-                StartCoroutine(DamageDelay());
-            }
-        }
+        CheckWRow(row, col);
 
         if (BoardManager.Singltone.IsGameDraw())
         {
@@ -236,6 +218,36 @@ public class GameManager : MonoBehaviour
         }
 
         PassMoveToNextPlayer();
+    }
+
+    public void CheckWRow(int row, int col)
+    {
+        if (BoardManager.Singltone.IsRow(row, col))
+        {
+            int playerID = CurrentPlayerTurnID;
+            int opponentID = 1 - playerID;
+            hPHistoryManager.Damage(opponentID);
+            SetPlayersHP();
+            HandleDamage();
+        }
+    }
+
+    public void HandleDamage()
+    {
+        int playerID = CurrentPlayerTurnID;
+        int opponentID = 1 - playerID;
+        if (hPHistoryManager.LosePlayer(opponentID))
+        {
+            Debug.Log($"Игрок с айди {opponentID} умер");
+            GameOver();
+            SetWin(CurrentPlayerTurnID);
+            UIManager.Singletone.SetWinText();
+            return;
+        }
+        else
+        {
+            StartCoroutine(DamageDelay());
+        }
     }
 
     private IEnumerator DamageDelay()
