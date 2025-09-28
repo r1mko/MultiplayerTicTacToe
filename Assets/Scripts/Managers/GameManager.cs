@@ -210,21 +210,13 @@ public class GameManager : MonoBehaviour
 
         if (BoardManager.Singltone.IsRow(row, col))
         {
-            int playerID = CurrentPlayerTurnID;
-            int opponentID = 1 - playerID;
-            hPHistoryManager.Damage(opponentID);
-            SetPlayersHP();
-            if (hPHistoryManager.LosePlayer(opponentID))
+            if (NetworkPlayer.Singletone.IsMultiplayer())
             {
-                Debug.Log($"Игрок с айди {opponentID} умер");
-                GameOver();
-                SetWin(CurrentPlayerTurnID);
-                UIManager.Singletone.SetWinText();
-                return;
+                NetworkPlayer.Singletone.TriggerDamageRpc(row, col);
             }
             else
             {
-                StartCoroutine(DamageDelay());
+                HandleDamageFromCell(row, col);
             }
         }
 
@@ -246,6 +238,36 @@ public class GameManager : MonoBehaviour
         isBlocking = false;
         cellHistoryManager.Clear();
         BoardManager.Singltone.ClearAndUnbloackCells();
+    }
+
+    public void HandleDamageFromCell(int row, int col)
+    {
+        Cell cell = BoardManager.Singltone.GetCell(row, col);
+
+        if (!cell.IsFillCell)
+            return;
+
+        if (BoardManager.Singltone.IsRow(row, col))
+        {
+            int playerID = cell.IndexPlayer;
+            int opponentID = 1 - playerID;
+
+            hPHistoryManager.Damage(opponentID);
+            SetPlayersHP();
+
+            if (hPHistoryManager.LosePlayer(opponentID))
+            {
+                Debug.Log($"[GameOver] Игрок {opponentID} проиграл после урона от клетки ({row},{col})");
+                GameOver();
+                SetWin(playerID);
+                UIManager.Singletone.SetWinText();
+                return;
+            }
+            else
+            {
+                StartCoroutine(DamageDelay());
+            }
+        }
     }
     public void PlayerSkipMove()
     {

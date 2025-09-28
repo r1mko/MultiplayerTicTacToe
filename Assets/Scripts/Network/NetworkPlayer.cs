@@ -57,6 +57,12 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
+    public void TriggerDamageRpc(int row, int col)
+    {
+        GameManager.Singletone.HandleDamageFromCell(row, col);
+    }
+
+    [Rpc(SendTo.Everyone)]
     public void MoveToNextPlayerRpc()
     {
         Debug.Log("[NetworkPlayer] Вызвали метод MoveToNextPlayerRpc");
