@@ -111,9 +111,7 @@ public class GameManager : MonoBehaviour
     {
         TurnIndex = 0;
         cellHistoryManager.Clear();
-        SkillCooldownManager.Initialize(startOffSet);
-        SkillCooldownManager.OnSlideUsed(TurnIndex);
-        UpdateSlideButtonText();
+
         hPHistoryManager.ResetPlayersHP();
         SetPlayersHP();
 
@@ -129,6 +127,9 @@ public class GameManager : MonoBehaviour
         {
             startOffSet = Random.Range(0, 2);
             UpdateOffSet(startOffSet);
+            SkillCooldownManager.Initialize(startOffSet);
+            SkillCooldownManager.OnSlideUsed(TurnIndex - 1);
+            UpdateSlideButtonText();
             BoardManager.Singltone.ClearAndUnbloackCells();
         }
 
