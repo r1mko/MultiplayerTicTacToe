@@ -281,9 +281,7 @@ public class BoardManager : MonoBehaviour
         {
             if (IsRow(newCell.row, newCell.coll))
             {
-                GameManager.Singletone.HandleDamageFromCell(newCell.row, newCell.coll);
                 Debug.Log($"Игрок {newCell.IndexPlayer} победил после гравитации!");
-                break;
             }
         }
     }
