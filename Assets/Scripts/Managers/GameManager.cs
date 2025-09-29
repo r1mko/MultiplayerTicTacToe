@@ -238,6 +238,27 @@ public class GameManager : MonoBehaviour
         PassMoveToNextPlayer();
     }
 
+    public void SetDamage()
+    {
+        Debug.Log("Вызвали SetDamage");
+        int playerID = CurrentPlayerTurnID;
+        int opponentID = 1 - playerID;
+        hPHistoryManager.Damage(opponentID);
+        SetPlayersHP();
+        if (hPHistoryManager.LosePlayer(opponentID))
+        {
+            Debug.Log($"Игрок с айди {opponentID} умер");
+            GameOver();
+            SetWin(CurrentPlayerTurnID);
+            UIManager.Singletone.SetWinText();
+            return;
+        }
+        else
+        {
+            StartCoroutine(DamageDelay());
+        }
+    }
+
     private IEnumerator DamageDelay()
     {
         isBlocking = true;

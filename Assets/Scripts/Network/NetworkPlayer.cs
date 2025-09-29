@@ -110,4 +110,11 @@ public class NetworkPlayer : NetworkBehaviour
     {
         GameManager.Singletone.UpdateOffSet(clientID);
     }
+
+    [Rpc(SendTo.Everyone)]
+    public void TriggerDamageRpc()
+    {
+        GameManager.Singletone.SetDamage();
+    }
+
 }

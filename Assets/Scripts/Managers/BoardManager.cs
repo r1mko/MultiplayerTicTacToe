@@ -281,7 +281,19 @@ public class BoardManager : MonoBehaviour
         {
             if (IsRow(newCell.row, newCell.coll))
             {
+                if (NetworkPlayer.Singletone.IsMultiplayer())
+                {
+                    if (NetworkPlayer.Singletone.IsServer)
+                    {
+                        NetworkPlayer.Singletone.TriggerDamageRpc();
+                    }
+                }
+                else
+                {
+                    GameManager.Singletone.SetDamage();
+                }
                 Debug.Log($"Игрок {newCell.IndexPlayer} победил после гравитации!");
+                break;
             }
         }
     }
