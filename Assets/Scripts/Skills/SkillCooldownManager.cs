@@ -10,8 +10,6 @@ public class SkillCooldownManager
     {
         startOffSet = offset;
         Reset();
-        isSlideOnCooldown = true;
-        slideCooldownTurnIndex = 0;
     }
 
     public void Reset()
@@ -20,16 +18,14 @@ public class SkillCooldownManager
         isSlideOnCooldown = false;
     }
 
-
-    /// <summary>
-    /// Возвращает текст для отображения на кнопке Slide: либо "Slide", либо "3/3"
-    /// </summary>
     public string GetSlideButtonText(int currentTurnIndex)
     {
         if (!isSlideOnCooldown)
             return "Slide";
 
-        int playerWhoUsedSlide = (slideCooldownTurnIndex + startOffSet) % 2;
+        int raw = (slideCooldownTurnIndex + startOffSet) % 2;
+        int playerWhoUsedSlide = raw < 0 ? raw + 2 : raw;
+
         int turnsByThatPlayer = 0;
 
         for (int turn = slideCooldownTurnIndex + 1; turn <= currentTurnIndex; turn++)
@@ -52,24 +48,20 @@ public class SkillCooldownManager
         };
     }
 
-    /// <summary>
-    /// Вызывается при использовании Slide
-    /// </summary>
     public void OnSlideUsed(int currentTurnIndex)
     {
         slideCooldownTurnIndex = currentTurnIndex;
         isSlideOnCooldown = true;
     }
 
-    /// <summary>
-    /// Проверяет, пора ли снимать кулдаун (прошло 3 хода игрока, который использовал Slide)
-    /// </summary>
     public bool ShouldRemoveCooldown(int currentTurnIndex, int currentPlayerID)
     {
         if (!isSlideOnCooldown)
             return false;
 
-        int playerWhoUsedSlide = (slideCooldownTurnIndex + startOffSet) % 2;
+        int raw = (slideCooldownTurnIndex + startOffSet) % 2;
+        int playerWhoUsedSlide = raw < 0 ? raw + 2 : raw;
+
         int turnsByThatPlayer = 0;
 
         for (int turn = slideCooldownTurnIndex + 1; turn <= currentTurnIndex; turn++)
@@ -84,9 +76,6 @@ public class SkillCooldownManager
         return turnsByThatPlayer >= 3;
     }
 
-    /// <summary>
-    /// Снимает кулдаун (вызывается после проверки)
-    /// </summary>
     public void RemoveCooldown()
     {
         isSlideOnCooldown = false;

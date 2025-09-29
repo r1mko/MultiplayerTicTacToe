@@ -196,7 +196,6 @@ public class GameManager : MonoBehaviour
         {
             UIManager.Singletone.SetCooldownText(newText);
             lastSlideButtonText = newText;
-            Debug.Log($"[UI] Текст кнопки Slide обновлён: {newText}");
         }
     }
 
