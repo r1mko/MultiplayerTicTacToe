@@ -127,12 +127,11 @@ public class GameManager : MonoBehaviour
         {
             startOffSet = Random.Range(0, 2);
             UpdateOffSet(startOffSet);
-            SkillCooldownManager.Initialize(startOffSet);
-            SkillCooldownManager.OnSlideUsed(TurnIndex - 1);
-            UpdateSlideButtonText();
             BoardManager.Singltone.ClearAndUnbloackCells();
         }
 
+        SkillCooldownManager.Initialize(startOffSet);
+        UpdateSlideButtonText();
         isPlaying = true;
 
     }

@@ -5,12 +5,13 @@ public class SkillCooldownManager
     private int slideCooldownTurnIndex = -1;
     private bool isSlideOnCooldown = false;
     private int startOffSet;
-    private int minTurnToUseSlide = 3;
 
     public void Initialize(int offset)
     {
         startOffSet = offset;
         Reset();
+        isSlideOnCooldown = true;
+        slideCooldownTurnIndex = 0;
     }
 
     public void Reset()
