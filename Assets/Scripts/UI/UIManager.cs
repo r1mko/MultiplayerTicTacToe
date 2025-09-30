@@ -224,7 +224,8 @@ public class UIManager : MonoBehaviour
 
     public void BlockSlideButton()
     {
-        slideButton.interactable = false;  
+        slideButton.interactable = false;
+        Debug.Log($"Вызвали блок слайда");
     }
 
     public void UnblockSlideButton()

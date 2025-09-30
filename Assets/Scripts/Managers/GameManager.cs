@@ -72,6 +72,7 @@ public class GameManager : MonoBehaviour
     {
         CurrentPlayerTurnID = clientID;
         UIManager.Singletone.UpdateCurrentPlayerText();
+        UpdateSlideButtonState();
         StartTimer();
     }
 
@@ -134,6 +135,7 @@ public class GameManager : MonoBehaviour
         UpdateSlideButtonText();
         isPlaying = true;
 
+        UpdateSlideButtonState();
     }
 
     private void GameOver()
@@ -185,7 +187,44 @@ public class GameManager : MonoBehaviour
             Debug.Log("[Slide] Кулдаун завершён. Кнопка разблокирована.");
         }
 
+        UpdateSlideButtonState();
         UpdateSlideButtonText();
+
+    }
+
+    private void UpdateSlideButtonState()
+    {
+        if (IsBlocking)
+        {
+            UIManager.Singletone.BlockSlideButton();
+            StartCoroutine(WaitForBlockingEnd());
+            return;
+        }
+
+        CheckSlideButton();
+    }
+
+    private IEnumerator WaitForBlockingEnd()
+    {
+        yield return new WaitUntil(() => !IsBlocking);
+        CheckSlideButton();
+
+
+    }
+
+    private void CheckSlideButton()
+    {
+        if (IsOurTurn())
+        {
+            if (!SkillCooldownManager.IsOnCooldown())
+            {
+                UIManager.Singletone.UnblockSlideButton();
+            }
+        }
+        else
+        {
+            UIManager.Singletone.BlockSlideButton();
+        }
     }
 
     private void UpdateSlideButtonText()
@@ -262,7 +301,9 @@ public class GameManager : MonoBehaviour
     {
         isBlocking = true;
         BoardManager.Singltone.BlockAllButtons();
+        UIManager.Singletone.BlockSlideButton();
         yield return new WaitForSeconds(3f); //поменять задержку чтобы бот не мог ходить
+        UpdateSlideButtonState();
         isBlocking = false;
         cellHistoryManager.Clear();
         BoardManager.Singltone.ClearAndUnbloackCells();
