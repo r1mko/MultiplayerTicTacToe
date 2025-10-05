@@ -295,18 +295,25 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        // === ЕДИНЫЙ ВЫЗОВ УРОНА ===
-        if (NetworkPlayer.Singletone.IsMultiplayer())
+        // === ЕДИНЫЙ ВЫЗОВ УРОНА ТОЛЬКО ЕСЛИ ЕСТЬ ЖЕРТВЫ ===
+        if (victims.Count > 0)
         {
-            if (NetworkPlayer.Singletone.IsServer)
+            if (NetworkPlayer.Singletone.IsMultiplayer())
             {
-                int[] victimsArray = victims.ToArray();
-                NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victimsArray);
+                if (NetworkPlayer.Singletone.IsServer)
+                {
+                    int[] victimsArray = victims.ToArray();
+                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victimsArray);
+                }
+            }
+            else
+            {
+                GameManager.Singletone.ApplyMultipleDamages(victims);
             }
         }
         else
         {
-            GameManager.Singletone.ApplyMultipleDamages(victims);
+            Debug.Log("После гравитации ни одна линия не собрана. Продолжаем игру.");
         }
     }
 }

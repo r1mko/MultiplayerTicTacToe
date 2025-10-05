@@ -282,7 +282,7 @@ public class GameManager : MonoBehaviour
     {
         if (victimPlayerIDs == null || victimPlayerIDs.Count == 0)
         {
-            StartCoroutine(DamageDelay());
+            Debug.LogError("PlayerIDs is null or not found");
             return;
         }
 
