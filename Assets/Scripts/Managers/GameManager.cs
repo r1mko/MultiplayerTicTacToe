@@ -141,9 +141,10 @@ public class GameManager : MonoBehaviour
 
     private void GameOver()
     {
+        TimerController.Singletone.EndTime();
+        BoardManager.Singltone.BlockAllButtons();
         UIManager.Singletone.HideHPBar();
         UIManager.Singletone.ShowRestartButton();
-        BoardManager.Singltone.BlockAllButtons();
         isPlaying = false;
     }
 
