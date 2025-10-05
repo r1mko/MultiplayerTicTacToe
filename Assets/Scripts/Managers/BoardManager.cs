@@ -276,25 +276,34 @@ public class BoardManager : MonoBehaviour
 
         GameManager.Singletone.cellHistoryManager.CheckCellHistory();
 
-        // Проверка победы
+        HashSet<int> playersWhoWon = new HashSet<int>();
+
         foreach (var (oldCell, newCell) in cellRemap)
         {
             if (IsRow(newCell.row, newCell.coll))
             {
-                if (NetworkPlayer.Singletone.IsMultiplayer())
-                {
-                    if (NetworkPlayer.Singletone.IsServer)
-                    {
-                        NetworkPlayer.Singletone.TriggerDamageRpc();
-                    }
-                }
-                else
-                {
-                    GameManager.Singletone.SetDamage();
-                }
-                Debug.Log($"Игрок {newCell.IndexPlayer} победил после гравитации!");
-                break;
+                int ownerOfWinningRow = newCell.IndexPlayer;
+                playersWhoWon.Add(ownerOfWinningRow);
             }
+        }
+
+        foreach (int winnerID in playersWhoWon)
+        {
+            int opponentID = 1 - winnerID;
+
+            if (NetworkPlayer.Singletone.IsMultiplayer())
+            {
+                if (NetworkPlayer.Singletone.IsServer)
+                {
+                    NetworkPlayer.Singletone.TriggerDamageRpc(opponentID);
+                }
+            }
+            else
+            {
+                GameManager.Singletone.SetDamage(opponentID);
+            }
+
+            Debug.Log($"Игрок {winnerID} собрал ряд после гравитации! Игроку {opponentID} нанесён урон!");
         }
     }
 }

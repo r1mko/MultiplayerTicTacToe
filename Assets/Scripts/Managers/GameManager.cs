@@ -276,16 +276,16 @@ public class GameManager : MonoBehaviour
         PassMoveToNextPlayer();
     }
 
-    public void SetDamage()
+    public void SetDamage(int victimPlayerID)
     {
-        Debug.Log("Вызвали SetDamage");
-        int playerID = CurrentPlayerTurnID;
-        int opponentID = 1 - playerID;
-        hPHistoryManager.Damage(opponentID);
+        Debug.Log($"Вызван SetDamage: наносим урон игроку {victimPlayerID}");
+
+        hPHistoryManager.Damage(victimPlayerID);
         SetPlayersHP();
-        if (hPHistoryManager.LosePlayer(opponentID))
+
+        if (hPHistoryManager.LosePlayer(victimPlayerID))
         {
-            Debug.Log($"Игрок с айди {opponentID} умер");
+            Debug.Log($"Игрок с ID {victimPlayerID} проиграл!");
             GameOver();
             SetWin(CurrentPlayerTurnID);
             UIManager.Singletone.SetWinText();

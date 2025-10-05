@@ -112,9 +112,8 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
-    public void TriggerDamageRpc()
+    public void TriggerDamageRpc(int victimID)
     {
-        GameManager.Singletone.SetDamage();
+        GameManager.Singletone.SetDamage(victimID);
     }
-
 }
