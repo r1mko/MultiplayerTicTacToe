@@ -276,34 +276,37 @@ public class BoardManager : MonoBehaviour
 
         GameManager.Singletone.cellHistoryManager.CheckCellHistory();
 
-        HashSet<int> playersWhoWon = new HashSet<int>();
+        // === СБОР ЖЕРТВ УРОНА ===
+        List<int> victims = new List<int>();
+        HashSet<int> winners = new HashSet<int>(); // Чтобы не дублировать
 
         foreach (var (oldCell, newCell) in cellRemap)
         {
             if (IsRow(newCell.row, newCell.coll))
             {
                 int ownerOfWinningRow = newCell.IndexPlayer;
-                playersWhoWon.Add(ownerOfWinningRow);
+                if (!winners.Contains(ownerOfWinningRow))
+                {
+                    winners.Add(ownerOfWinningRow);
+                    int opponentID = 1 - ownerOfWinningRow;
+                    victims.Add(opponentID);
+                    Debug.Log($"Игрок {ownerOfWinningRow} собрал ряд после гравитации! Игроку {opponentID} будет нанесён урон!");
+                }
             }
         }
 
-        foreach (int winnerID in playersWhoWon)
+        // === ЕДИНЫЙ ВЫЗОВ УРОНА ===
+        if (NetworkPlayer.Singletone.IsMultiplayer())
         {
-            int opponentID = 1 - winnerID;
-
-            if (NetworkPlayer.Singletone.IsMultiplayer())
+            if (NetworkPlayer.Singletone.IsServer)
             {
-                if (NetworkPlayer.Singletone.IsServer)
-                {
-                    NetworkPlayer.Singletone.TriggerDamageRpc(opponentID);
-                }
+                int[] victimsArray = victims.ToArray();
+                NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victimsArray);
             }
-            else
-            {
-                GameManager.Singletone.SetDamage(opponentID);
-            }
-
-            Debug.Log($"Игрок {winnerID} собрал ряд после гравитации! Игроку {opponentID} нанесён урон!");
+        }
+        else
+        {
+            GameManager.Singletone.ApplyMultipleDamages(victims);
         }
     }
 }

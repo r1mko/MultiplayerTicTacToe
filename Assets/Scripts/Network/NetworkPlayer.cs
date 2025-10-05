@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityUtils;
@@ -112,8 +113,9 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
-    public void TriggerDamageRpc(int victimID)
+    public void TriggerMultipleDamageRpc(int[] victimIDs)
     {
-        GameManager.Singletone.SetDamage(victimID);
+        List<int> victims = new List<int>(victimIDs);
+        GameManager.Singletone.ApplyMultipleDamages(victims);
     }
 }

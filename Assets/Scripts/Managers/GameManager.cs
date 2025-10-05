@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -276,20 +277,48 @@ public class GameManager : MonoBehaviour
         PassMoveToNextPlayer();
     }
 
-    public void SetDamage(int victimPlayerID)
+    public void ApplyMultipleDamages(List<int> victimPlayerIDs)
     {
-        Debug.Log($"Вызван SetDamage: наносим урон игроку {victimPlayerID}");
+        if (victimPlayerIDs == null || victimPlayerIDs.Count == 0)
+        {
+            StartCoroutine(DamageDelay());
+            return;
+        }
 
-        hPHistoryManager.Damage(victimPlayerID);
+        Debug.Log($"[ApplyMultipleDamages] Наносим урон {victimPlayerIDs.Count} игрокам: [{string.Join(", ", victimPlayerIDs)}]");
+
+        var uniqueVictims = new HashSet<int>(victimPlayerIDs);
+
+        foreach (int playerId in uniqueVictims)
+        {
+            hPHistoryManager.Damage(playerId);
+            Debug.Log($"У игрока с айди {playerId} осталось хп: {hPHistoryManager.GetHP(playerId)}");
+        }
+
         SetPlayersHP();
 
-        if (hPHistoryManager.LosePlayer(victimPlayerID))
+        bool player0Lost = hPHistoryManager.LosePlayer(0);
+        bool player1Lost = hPHistoryManager.LosePlayer(1);
+
+        if (player0Lost && player1Lost)
         {
-            Debug.Log($"Игрок с ID {victimPlayerID} проиграл!");
+            Debug.Log("Оба игрока проиграли! Ничья.");
             GameOver();
-            SetWin(CurrentPlayerTurnID);
+            UIManager.Singletone.SetDrawText("Ничья");
+        }
+        else if (player0Lost)
+        {
+            Debug.Log("Игрок 0 проиграл! Игрок 1 победил.");
+            GameOver();
+            SetWin(1);
             UIManager.Singletone.SetWinText();
-            return;
+        }
+        else if (player1Lost)
+        {
+            Debug.Log("Игрок 1 проиграл! Игрок 0 победил.");
+            GameOver();
+            SetWin(0);
+            UIManager.Singletone.SetWinText();
         }
         else
         {
