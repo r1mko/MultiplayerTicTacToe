@@ -363,19 +363,17 @@ public class GameManager : MonoBehaviour
     {
         RectTransform canvasRect = Canvas.GetComponent<RectTransform>();
 
-        // Стартовая позиция — снизу по центру
+        // Старт: снизу по центру
         Vector2 startPosition = new Vector2(0, -canvasRect.rect.height / 2 - 50);
 
-        // Получаем все ячейки из BoardManager
+        // Выбираем случайную ячейку через BoardManager
         List<Cell> allCells = BoardManager.Singltone.GetAllCells();
-
         if (allCells.Count == 0)
         {
             Debug.LogError("Нет ячеек на доске!");
             yield break;
         }
 
-        // Выбираем случайную ячейку
         Cell targetCell = allCells[Random.Range(0, allCells.Count)];
         int targetRow = targetCell.row;
         int targetCol = targetCell.coll;
@@ -409,7 +407,13 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        Destroy(shot);
+        // === ПОПАДАНИЕ ===
+        Destroy(shot); // Удаляем снаряд
+
+        // Просто очищаем ячейку
+        targetCell.Clear();
+
+        cellHistoryManager.RemoveMoveFromAnyPlayer(targetCell);
     }
 
     public void ApplySlideGravity()

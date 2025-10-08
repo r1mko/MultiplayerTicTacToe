@@ -75,4 +75,16 @@ public class CellHistoryManager
         CellHistory = new Dictionary<int, List<Cell>>();
     }
 
+    public void RemoveMoveFromAnyPlayer(Cell cell)
+    {
+        foreach (var list in CellHistory.Values)
+        {
+            if (list.Contains(cell))
+            {
+                list.Remove(cell);
+                break;
+            }
+        }
+    }
+
 }
