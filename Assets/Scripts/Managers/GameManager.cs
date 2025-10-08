@@ -361,26 +361,30 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator ShootEffect()
     {
-        // Получаем размеры Canvas
+        // Стартовая позиция — снизу по центру
         RectTransform canvasRect = Canvas.GetComponent<RectTransform>();
-        Vector2 startPosition = new Vector2(0, -canvasRect.rect.height / 2 - 50); // чуть ниже нижнего края
-        Vector2 endPosition = new Vector2(0, 0); // центр канваса
+        Vector2 startPosition = new Vector2(0, -canvasRect.rect.height / 2 - 50);
 
-        // Создаём временный UI объект
+        // Конечная позиция — центр ячейки [0,0]
+        Vector2 endPosition = BoardManager.Singltone.GetCellScreenPosition(0, 0);
+
+        // Создаём объект
         GameObject shot = new GameObject("Shot");
         Image image = shot.AddComponent<Image>();
-        image.color = Color.white;
+        image.color = Color.red; // Красный кружок — пусть будет "выстрел"
 
         RectTransform rectTransform = shot.GetComponent<RectTransform>();
         rectTransform.SetParent(Canvas.transform, false);
-        rectTransform.sizeDelta = new Vector2(50, 50);
+        rectTransform.sizeDelta = new Vector2(40, 40);
         rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
         rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         rectTransform.pivot = new Vector2(0.5f, 0.5f);
-        rectTransform.anchoredPosition = startPosition; // старт — снизу по центру
+        rectTransform.anchoredPosition = startPosition;
 
-        // Анимация
-        float duration = 0.7f;
+        // Сделаем круглым через Corner Radius (если используешь UGUI с Vector Image или Rounded Image)
+        // Или просто используй спрайт-круг. Пока оставим квадрат.
+
+        float duration = 0.6f;
         float elapsedTime = 0f;
 
         while (elapsedTime < duration)
@@ -391,6 +395,8 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
+        // Можно добавить эффект исчезновения
+        yield return new WaitForSeconds(0.1f);
         Destroy(shot);
     }
 

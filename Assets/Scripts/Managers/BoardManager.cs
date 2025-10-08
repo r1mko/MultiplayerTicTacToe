@@ -3,10 +3,11 @@ using UnityEngine;
 public class BoardManager : MonoBehaviour
 {
     [SerializeField] private GameObject board;
+    public Canvas Canvas;
 
     public static BoardManager Singltone;
 
-    Cell[,] buttons = new Cell[3, 3];
+    private Cell[,] buttons = new Cell[3, 3];
 
     private void Awake()
     {
@@ -46,6 +47,31 @@ public class BoardManager : MonoBehaviour
         {
             item.Block();
         }
+    }
+
+    /// <summary>
+    /// Возвращает позицию центра ячейки в координатах Canvas (для UI)
+    /// </summary>
+    public Vector2 GetCellScreenPosition(int row, int col)
+    {
+        if (row < 0 || row >= 3 || col < 0 || col >= 3) return Vector2.zero;
+
+        RectTransform cellRect = buttons[row, col].GetComponent<RectTransform>();
+        Vector3[] corners = new Vector3[4];
+        cellRect.GetWorldCorners(corners);
+
+        // Центр ячейки в мировых координатах
+        Vector3 worldCenter = (corners[0] + corners[2]) / 2f;
+
+        // Преобразуем в локальные координаты Canvas
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            Canvas.transform as RectTransform,
+            worldCenter,
+            null,
+            out Vector2 localPosition
+        );
+
+        return localPosition;
     }
 
     public void OnClickCell(int row, int coll, Cell cell)
