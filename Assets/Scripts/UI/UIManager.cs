@@ -13,6 +13,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button clientButton;
     [SerializeField] private Button singlePlayerButton;
     [SerializeField] private Button slideButton;
+    [SerializeField] private Button shotButton;
     [SerializeField] private GameObject navigationPanel;
     [SerializeField] private GameObject smileScreen;
     [SerializeField] private TMP_Text timerText;
@@ -30,6 +31,7 @@ public class UIManager : MonoBehaviour
         singlePlayerButton.onClick.AddListener(OnSingle);
         clientButton.onClick.AddListener(OnClient);
         slideButton.onClick.AddListener(Slide);
+        shotButton.onClick.AddListener(Shot);
         HideRestartButton();
         HideHPBar();
         HideMoveInfo();
@@ -37,6 +39,7 @@ public class UIManager : MonoBehaviour
         HideSmileScreen();
         HideTimerText();
         HideSlideButton();
+        HideShotButton();
         ShowActiveSessionInfo();
         ShowNavigationPanel();
     }
@@ -92,15 +95,6 @@ public class UIManager : MonoBehaviour
     public void SetCooldownText(string text)
     {
         slideButtonText.text = text;
-    }
-
-    public void ShowSlideButton()
-    {
-        slideButton.gameObject.SetActive(true);
-    }
-    public void HideSlideButton()
-    {
-        slideButton.gameObject.SetActive(false);
     }
 
     public void SetDrawText(string text)
@@ -216,10 +210,32 @@ public class UIManager : MonoBehaviour
         opponentHPSlider.gameObject.SetActive(false);
     }
 
+    public void ShowSlideButton()
+    {
+        slideButton.gameObject.SetActive(true);
+    }
+    public void HideSlideButton()
+    {
+        slideButton.gameObject.SetActive(false);
+    }
 
     private void Slide()
     {
         GameManager.Singletone.ApplySlideGravity();
+    }
+
+    public void ShowShotButton()
+    {
+        shotButton.gameObject.SetActive(true);
+    }
+    public void HideShotButton()
+    {
+        shotButton.gameObject.SetActive(false);
+    }
+
+    private void Shot()
+    {
+        GameManager.Singletone.ApplyShot();
     }
 
     public void BlockSlideButton()

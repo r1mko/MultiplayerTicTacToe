@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -9,6 +10,7 @@ public class GameManager : MonoBehaviour
 
     public int CurrentPlayerTurnID;
     public int TurnIndex;
+    public Canvas Canvas;
 
     private int startOffSet;
 
@@ -26,7 +28,6 @@ public class GameManager : MonoBehaviour
     public HPHistoryManager HPHistoryManager => hPHistoryManager;
 
     public SkillCooldownManager SkillCooldownManager { get; private set; }
-
 
     private int[] wins = new int[] { 0, 0 };
 
@@ -351,6 +352,48 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void ApplyShot()
+    {
+        if (!IsOurTurn()) return; // Только наш ход
+
+        StartCoroutine(ShootEffect());
+    }
+
+    private IEnumerator ShootEffect()
+    {
+        // Получаем размеры Canvas
+        RectTransform canvasRect = Canvas.GetComponent<RectTransform>();
+        Vector2 startPosition = new Vector2(0, -canvasRect.rect.height / 2 - 50); // чуть ниже нижнего края
+        Vector2 endPosition = new Vector2(0, 0); // центр канваса
+
+        // Создаём временный UI объект
+        GameObject shot = new GameObject("Shot");
+        Image image = shot.AddComponent<Image>();
+        image.color = Color.white;
+
+        RectTransform rectTransform = shot.GetComponent<RectTransform>();
+        rectTransform.SetParent(Canvas.transform, false);
+        rectTransform.sizeDelta = new Vector2(50, 50);
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.anchoredPosition = startPosition; // старт — снизу по центру
+
+        // Анимация
+        float duration = 0.7f;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsedTime / duration);
+            rectTransform.anchoredPosition = Vector2.Lerp(startPosition, endPosition, t);
+            yield return null;
+        }
+
+        Destroy(shot);
+    }
+
     public void ApplySlideGravity()
     {
         if (NetworkPlayer.Singletone.IsMultiplayer())
@@ -394,6 +437,7 @@ public class GameManager : MonoBehaviour
         UIManager.Singletone.ShowSmileScreen();
         UIManager.Singletone.ShowHPBar();
         UIManager.Singletone.ShowSlideButton();
+        UIManager.Singletone.ShowShotButton();
     }
 
 }

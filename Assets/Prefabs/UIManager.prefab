@@ -715,7 +715,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 4570123066394820763}
   m_OnClick:
     m_PersistentCalls:
@@ -2625,6 +2625,7 @@ MonoBehaviour:
   winXText: {fileID: 9023880485925018054}
   winOText: {fileID: 7037644347946730090}
   currentPlayerTextID: {fileID: 7073752933038788591}
+  slideButtonText: {fileID: 1325174952952840659}
 --- !u!1 &8186554837706006398
 GameObject:
   m_ObjectHideFlags: 0
