@@ -414,6 +414,53 @@ public class GameManager : MonoBehaviour
         targetCell.Clear();
 
         cellHistoryManager.RemoveMoveFromAnyPlayer(targetCell);
+
+        PlacePieceInCell(targetCell);
+    }
+
+    public void PlacePieceInCell(Cell cell)
+    {
+        if (!IsPlaying || !IsOurTurn())
+            return;
+
+        int row = cell.row;
+        int col = cell.coll;
+        int playerID = CurrentPlayerTurnID;
+
+        // 1. Заполняем ячейку
+        BoardManager.Singltone.FillCell(row, col, playerID);
+
+        // 2. Добавляем ход в историю
+        cellHistoryManager.AddMove(cell, playerID);
+
+        // 3. Проверяем, собрал ли игрок ряд
+        if (BoardManager.Singltone.IsRow(row, col))
+        {
+            int opponentID = 1 - playerID;
+            hPHistoryManager.Damage(opponentID);
+            SetPlayersHP();
+
+            if (hPHistoryManager.LosePlayer(opponentID))
+            {
+                Debug.Log($"Игрок с айди {opponentID} умер");
+                GameOver();
+                SetWin(playerID);
+                UIManager.Singletone.SetWinText();
+                return;
+            }
+            else
+            {
+                StartCoroutine(DamageDelay());
+            }
+        }
+
+        // 4. Проверка на ничью
+        if (BoardManager.Singltone.IsGameDraw())
+        {
+            GameOver();
+            UIManager.Singletone.SetDrawText("Ничья");
+            return;
+        }
     }
 
     public void ApplySlideGravity()
