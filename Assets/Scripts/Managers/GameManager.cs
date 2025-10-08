@@ -354,33 +354,43 @@ public class GameManager : MonoBehaviour
 
     public void ApplyShot()
     {
-        if (!IsOurTurn()) return; // Только наш ход
-
-        StartCoroutine(ShootEffect());
+        if (!IsOurTurn()) return;
+        StartCoroutine(ShootTwoArrowsSimultaneously());
     }
 
-    private IEnumerator ShootEffect()
+    private IEnumerator ShootTwoArrowsSimultaneously()
     {
-        RectTransform canvasRect = Canvas.GetComponent<RectTransform>();
+        List<Cell> allCells = new List<Cell>(BoardManager.Singltone.GetAllCells());
+        if (allCells.Count == 0) yield break;
 
-        // Старт: снизу по центру
-        Vector2 startPosition = new Vector2(0, -canvasRect.rect.height / 2 - 50);
+        // Перемешиваем и берём 2 уникальные ячейки
+        ShuffleList(allCells);
+        int count = Mathf.Min(3, allCells.Count);
+        List<Cell> targets = allCells.GetRange(0, count);
 
-        // Выбираем случайную ячейку через BoardManager
-        List<Cell> allCells = BoardManager.Singltone.GetAllCells();
-        if (allCells.Count == 0)
+        // Список корутин анимаций
+        List<Coroutine> animations = new List<Coroutine>();
+
+        // Запускаем анимации параллельно
+        foreach (Cell targetCell in targets)
         {
-            Debug.LogError("Нет ячеек на доске!");
-            yield break;
+            Coroutine anim = StartCoroutine(AnimateSingleArrow(targetCell));
+            animations.Add(anim);
         }
 
-        Cell targetCell = allCells[Random.Range(0, allCells.Count)];
-        int targetRow = targetCell.row;
-        int targetCol = targetCell.coll;
+        // Ждём завершения всех анимаций
+        foreach (Coroutine anim in animations)
+        {
+            yield return anim;
+        }
 
-        Vector2 endPosition = BoardManager.Singltone.GetCellScreenPosition(targetRow, targetCol);
+    }
 
-        Debug.Log($"[ApplyShot] Летим в ячейку [{targetRow}, {targetCol}]");
+    private IEnumerator AnimateSingleArrow(Cell targetCell)
+    {
+        RectTransform canvasRect = Canvas.GetComponent<RectTransform>();
+        Vector2 startPosition = new Vector2(0, -canvasRect.rect.height / 2 - 50);
+        Vector2 endPosition = BoardManager.Singltone.GetCellScreenPosition(targetCell.row, targetCell.coll);
 
         // Создаём объект выстрела
         GameObject shot = new GameObject("Shot");
@@ -407,15 +417,21 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        // === ПОПАДАНИЕ ===
-        Destroy(shot); // Удаляем снаряд
+        Destroy(shot);
 
-        // Просто очищаем ячейку
+        // Очищаем и ставим свою фишку
         targetCell.Clear();
-
         cellHistoryManager.RemoveMoveFromAnyPlayer(targetCell);
-
         PlacePieceInCell(targetCell);
+    }
+
+    private void ShuffleList<T>(List<T> list)
+    {
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
     }
 
     public void PlacePieceInCell(Cell cell)
