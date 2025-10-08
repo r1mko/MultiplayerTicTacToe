@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
     public Canvas Canvas;
 
     private int startOffSet;
-
+    private const int ArrowCount = 3;
     private bool isPlaying;
     private bool isBlocking;
 
@@ -365,7 +365,7 @@ public class GameManager : MonoBehaviour
 
         // Перемешиваем и берём 2 уникальные ячейки
         ShuffleList(allCells);
-        int count = Mathf.Min(3, allCells.Count);
+        int count = Mathf.Min(ArrowCount, allCells.Count);
         List<Cell> targets = allCells.GetRange(0, count);
 
         // Список корутин анимаций
@@ -382,6 +382,12 @@ public class GameManager : MonoBehaviour
         foreach (Coroutine anim in animations)
         {
             yield return anim;
+        }
+
+        if (IsPlaying)
+        {
+            ChangeTurnIndex();
+            PassMoveToNextPlayer();
         }
 
     }
