@@ -74,6 +74,19 @@ public class BoardManager : MonoBehaviour
         return localPosition;
     }
 
+    public List<Cell> GetAllCells()
+    {
+        List<Cell> allCells = new List<Cell>();
+        for (int i = 0; i < buttons.GetLength(0); i++)
+        {
+            for (int j = 0; j < buttons.GetLength(1); j++)
+            {
+                allCells.Add(buttons[i, j]);
+            }
+        }
+        return allCells;
+    }
+
     public void OnClickCell(int row, int coll, Cell cell)
     {
         if (!GameManager.Singletone.IsOurTurn())

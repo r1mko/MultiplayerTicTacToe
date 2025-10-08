@@ -361,17 +361,33 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator ShootEffect()
     {
-        // Стартовая позиция — снизу по центру
         RectTransform canvasRect = Canvas.GetComponent<RectTransform>();
+
+        // Стартовая позиция — снизу по центру
         Vector2 startPosition = new Vector2(0, -canvasRect.rect.height / 2 - 50);
 
-        // Конечная позиция — центр ячейки [0,0]
-        Vector2 endPosition = BoardManager.Singltone.GetCellScreenPosition(0, 0);
+        // Получаем все ячейки из BoardManager
+        List<Cell> allCells = BoardManager.Singltone.GetAllCells();
 
-        // Создаём объект
+        if (allCells.Count == 0)
+        {
+            Debug.LogError("Нет ячеек на доске!");
+            yield break;
+        }
+
+        // Выбираем случайную ячейку
+        Cell targetCell = allCells[Random.Range(0, allCells.Count)];
+        int targetRow = targetCell.row;
+        int targetCol = targetCell.coll;
+
+        Vector2 endPosition = BoardManager.Singltone.GetCellScreenPosition(targetRow, targetCol);
+
+        Debug.Log($"[ApplyShot] Летим в ячейку [{targetRow}, {targetCol}]");
+
+        // Создаём объект выстрела
         GameObject shot = new GameObject("Shot");
         Image image = shot.AddComponent<Image>();
-        image.color = Color.red; // Красный кружок — пусть будет "выстрел"
+        image.color = new Color(1f, 0.2f, 0.3f); // Яркий цвет
 
         RectTransform rectTransform = shot.GetComponent<RectTransform>();
         rectTransform.SetParent(Canvas.transform, false);
@@ -381,9 +397,7 @@ public class GameManager : MonoBehaviour
         rectTransform.pivot = new Vector2(0.5f, 0.5f);
         rectTransform.anchoredPosition = startPosition;
 
-        // Сделаем круглым через Corner Radius (если используешь UGUI с Vector Image или Rounded Image)
-        // Или просто используй спрайт-круг. Пока оставим квадрат.
-
+        // Анимация полёта
         float duration = 0.6f;
         float elapsedTime = 0f;
 
@@ -395,8 +409,6 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        // Можно добавить эффект исчезновения
-        yield return new WaitForSeconds(0.1f);
         Destroy(shot);
     }
 
