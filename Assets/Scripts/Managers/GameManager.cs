@@ -355,54 +355,113 @@ public class GameManager : MonoBehaviour
     public void ApplyShot()
     {
         if (!IsOurTurn()) return;
-        StartCoroutine(ShootTwoArrowsSimultaneously());
+        StartCoroutine(ShootThreeArrowsAndFill());
     }
 
-    private IEnumerator ShootTwoArrowsSimultaneously()
+    private IEnumerator ShootThreeArrowsAndFill()
     {
+        // 1. Выбираем 3 случайные ячейки
         List<Cell> allCells = new List<Cell>(BoardManager.Singltone.GetAllCells());
         if (allCells.Count == 0) yield break;
 
-        // Перемешиваем и берём 2 уникальные ячейки
         ShuffleList(allCells);
         int count = Mathf.Min(ArrowCount, allCells.Count);
         List<Cell> targets = allCells.GetRange(0, count);
 
-        // Список корутин анимаций
-        List<Coroutine> animations = new List<Coroutine>();
-
-        // Запускаем анимации параллельно
-        foreach (Cell targetCell in targets)
+        // 2. Анимация выстрела
+        foreach (Cell target in targets)
         {
-            Coroutine anim = StartCoroutine(AnimateSingleArrow(targetCell));
-            animations.Add(anim);
+            yield return StartCoroutine(AnimateSingleArrow(target));
         }
 
-        // Ждём завершения всех анимаций
-        foreach (Coroutine anim in animations)
+        // 3. УДАЛЯЕМ старые фишки из целевых ячеек (если есть)
+        foreach (Cell cell in targets)
         {
-            yield return anim;
+            if (cell.IsFillCell)
+            {
+                // Удаляем из истории владельца
+                cellHistoryManager.RemoveMoveFromPlayer(cell, cell.IndexPlayer);
+                // Очищаем ячейку
+                cell.Clear();
+                cellHistoryManager.CheckCellHistory();
+                Debug.Log($"[Выстрел] Удалена старая фишка в ({cell.row}, {cell.coll})");
+            }
         }
 
-        if (IsPlaying)
+        // 4. СТАВИМ новые фишки (все три)
+        foreach (Cell cell in targets)
         {
-            ChangeTurnIndex();
-            PassMoveToNextPlayer();
+            BoardManager.Singltone.FillCell(cell.row, cell.coll, CurrentPlayerTurnID);
+            cellHistoryManager.AddMove(cell, CurrentPlayerTurnID);
+            Debug.Log($"[Выстрел] Поставлена новая фишка в ({cell.row}, {cell.coll})");
         }
 
+        // 5. ТОЛЬКО СЕЙЧАС проверяем, есть ли ряды
+        bool hasRow = false;
+        int opponentID = 1 - CurrentPlayerTurnID;
+
+        foreach (Cell cell in targets)
+        {
+            if (BoardManager.Singltone.IsRow(cell.row, cell.coll))
+            {
+                hasRow = true;
+                break; // Достаточно одного ряда
+            }
+        }
+
+        // 6. Обработка результата
+        if (hasRow)
+        {
+            if (NetworkPlayer.Singletone.IsMultiplayer())
+            {
+                if (NetworkPlayer.Singletone.IsServer)
+                {
+                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(new int[] { opponentID });
+                }
+            }
+            else
+            {
+                hPHistoryManager.Damage(opponentID);
+                SetPlayersHP();
+
+                if (hPHistoryManager.LosePlayer(opponentID))
+                {
+                    GameOver();
+                    SetWin(CurrentPlayerTurnID);
+                    UIManager.Singletone.SetWinText();
+                    yield break;
+                }
+                else
+                {
+                    StartCoroutine(DamageDelay());
+                    ChangeTurnIndex();
+                    PassMoveToNextPlayer();
+                    yield break;
+                }
+            }
+        }
+
+        // 7. Проверка ничьей
+        if (BoardManager.Singltone.IsGameDraw())
+        {
+            GameOver();
+            UIManager.Singletone.SetDrawText("Ничья");
+            yield break;
+        }
+
+        // 8. Передача хода
+        ChangeTurnIndex();
+        PassMoveToNextPlayer();
     }
-
     private IEnumerator AnimateSingleArrow(Cell targetCell)
     {
         RectTransform canvasRect = Canvas.GetComponent<RectTransform>();
         Vector2 startPosition = new Vector2(0, -canvasRect.rect.height / 2 - 50);
         Vector2 endPosition = BoardManager.Singltone.GetCellScreenPosition(targetCell.row, targetCell.coll);
 
-        // Создаём объект выстрела
         GameObject shot = new GameObject("Shot");
         Image image = shot.AddComponent<Image>();
-        image.color = new Color(1f, 0.2f, 0.3f); // Яркий цвет
-
+        image.color = new Color(1f, 0.2f, 0.3f);
         RectTransform rectTransform = shot.GetComponent<RectTransform>();
         rectTransform.SetParent(Canvas.transform, false);
         rectTransform.sizeDelta = new Vector2(40, 40);
@@ -411,10 +470,8 @@ public class GameManager : MonoBehaviour
         rectTransform.pivot = new Vector2(0.5f, 0.5f);
         rectTransform.anchoredPosition = startPosition;
 
-        // Анимация полёта
         float duration = 0.6f;
         float elapsedTime = 0f;
-
         while (elapsedTime < duration)
         {
             elapsedTime += Time.deltaTime;
@@ -425,10 +482,7 @@ public class GameManager : MonoBehaviour
 
         Destroy(shot);
 
-        // Очищаем и ставим свою фишку
-        targetCell.Clear();
-        cellHistoryManager.RemoveMoveFromAnyPlayer(targetCell);
-        PlacePieceInCell(targetCell);
+        Debug.Log($"[Выстрел - Анимация] Попали в ячейку ({targetCell.row}, {targetCell.coll}). Заполнена: {targetCell.IsFillCell}");
     }
 
     private void ShuffleList<T>(List<T> list)
@@ -437,51 +491,6 @@ public class GameManager : MonoBehaviour
         {
             int j = Random.Range(0, i + 1);
             (list[i], list[j]) = (list[j], list[i]);
-        }
-    }
-
-    public void PlacePieceInCell(Cell cell)
-    {
-        if (!IsPlaying || !IsOurTurn())
-            return;
-
-        int row = cell.row;
-        int col = cell.coll;
-        int playerID = CurrentPlayerTurnID;
-
-        // 1. Заполняем ячейку
-        BoardManager.Singltone.FillCell(row, col, playerID);
-
-        // 2. Добавляем ход в историю
-        cellHistoryManager.AddMove(cell, playerID);
-
-        // 3. Проверяем, собрал ли игрок ряд
-        if (BoardManager.Singltone.IsRow(row, col))
-        {
-            int opponentID = 1 - playerID;
-            hPHistoryManager.Damage(opponentID);
-            SetPlayersHP();
-
-            if (hPHistoryManager.LosePlayer(opponentID))
-            {
-                Debug.Log($"Игрок с айди {opponentID} умер");
-                GameOver();
-                SetWin(playerID);
-                UIManager.Singletone.SetWinText();
-                return;
-            }
-            else
-            {
-                StartCoroutine(DamageDelay());
-            }
-        }
-
-        // 4. Проверка на ничью
-        if (BoardManager.Singltone.IsGameDraw())
-        {
-            GameOver();
-            UIManager.Singletone.SetDrawText("Ничья");
-            return;
         }
     }
 

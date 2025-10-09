@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class CellHistoryManager
 {
@@ -41,26 +42,24 @@ public class CellHistoryManager
     {
         foreach (var item in CellHistory)
         {
-            if (item.Value.Count < 3)
+            if (item.Value.Count >= 3)
             {
-                return;
-            }
-
-            if (item.Value[2] != null)
-            {
-                item.Value[2].PreDestroy();
-                item.Value[2].MarkForDestruction(true);
-            }
-
-            if (item.Value.Count == 4)
-            {
-                if (item.Value[3] != null)
+                if (item.Value[2] != null)
                 {
-                    item.Value[3].Clear();
-                    item.Value[3].Unblock();
-                    item.Value[3].MarkForDestruction(false);
+                    item.Value[2].PreDestroy();
+                    item.Value[2].MarkForDestruction(true);
                 }
-                item.Value.RemoveAt(3);
+
+                if (item.Value.Count == 4)
+                {
+                    if (item.Value[3] != null)
+                    {
+                        item.Value[3].Clear();
+                        item.Value[3].Unblock();
+                        item.Value[3].MarkForDestruction(false);
+                    }
+                    item.Value.RemoveAt(3);
+                }
             }
         }
     }
@@ -87,4 +86,16 @@ public class CellHistoryManager
         }
     }
 
+    public void RemoveMoveFromPlayer(Cell cell, int playerID)
+    {
+        if (CellHistory.ContainsKey(playerID) && CellHistory[playerID].Contains(cell))
+        {
+            CellHistory[playerID].Remove(cell);
+            Debug.Log($"[CellHistory] Удалена ячейка ({cell.row}, {cell.coll}) из истории игрока {playerID}.");
+        }
+        else
+        {
+            Debug.LogWarning($"[CellHistory] Ячейка ({cell.row}, {cell.coll}) не найдена в истории игрока {playerID} для удаления.");
+        }
+    }
 }

@@ -87,7 +87,6 @@ public class MinmaxBot : MonoBehaviour
 
         // Определяем текущую максимальную глубину
         int currentMaxDepth = GetCurrentSearchDepth();
-        Debug.Log($"Сделали ход с глубиной {currentMaxDepth}");
 
         for (int r = 0; r < 3; r++)
         {

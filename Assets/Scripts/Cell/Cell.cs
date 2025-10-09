@@ -42,6 +42,7 @@ public class Cell: MonoBehaviour
         ChangeColorCell(defaultColor);
 
         _isFillCell = false;
+        _indexPlayer = -1;
         Unblock();
     }
 

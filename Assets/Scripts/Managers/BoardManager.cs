@@ -112,38 +112,64 @@ public class BoardManager : MonoBehaviour
 
     public bool IsRow(int row, int column)
     {
-        int indexPlayer = buttons[row, column].IndexPlayer;
-
-        //проверяем столбцы
-        if (buttons[0, column].IsSameCell(indexPlayer) &&
-            buttons[1, column].IsSameCell(indexPlayer) &&
-            buttons[2, column].IsSameCell(indexPlayer))
+        Cell cell = buttons[row, column];
+        if (!cell.IsFillCell)
         {
+            Debug.Log($"[IsRow] Ячейка ({row},{column}) пуста — не может быть частью ряда");
+            return false;
+        }
+
+        int indexPlayer = cell.IndexPlayer;
+        Debug.Log($"[IsRow] Проверяем ячейку ({row},{column}), игрок: {indexPlayer}");
+
+        // Проверка строки
+        if (buttons[row, 0].IsFillCell &&
+            buttons[row, 1].IsFillCell &&
+            buttons[row, 2].IsFillCell &&
+            buttons[row, 0].IndexPlayer == indexPlayer &&
+            buttons[row, 1].IndexPlayer == indexPlayer &&
+            buttons[row, 2].IndexPlayer == indexPlayer)
+        {
+            Debug.Log($"[IsRow] Горизонтальный ряд найден в строке {row}!");
             return true;
         }
 
-        //проверяем ряды
-        else if (buttons[row, 0].IsSameCell(indexPlayer) &&
-                 buttons[row, 1].IsSameCell(indexPlayer) &&
-                 buttons[row, 2].IsSameCell(indexPlayer))
+        // Проверка столбца
+        if (buttons[0, column].IsFillCell &&
+            buttons[1, column].IsFillCell &&
+            buttons[2, column].IsFillCell &&
+            buttons[0, column].IndexPlayer == indexPlayer &&
+            buttons[1, column].IndexPlayer == indexPlayer &&
+            buttons[2, column].IndexPlayer == indexPlayer)
         {
+            Debug.Log($"[IsRow] Вертикальный ряд найден в столбце {column}!");
             return true;
         }
 
-        //проверяем первую диагональ
-        else if (buttons[0, 0].IsSameCell(indexPlayer) &&
-                 buttons[1, 1].IsSameCell(indexPlayer) &&
-                 buttons[2, 2].IsSameCell(indexPlayer))
+        // Диагональ 0,0 → 2,2
+        if (row == 1 && column == 1 || row == 0 && column == 0 || row == 2 && column == 2)
         {
-            return true;
+            if (buttons[0, 0].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 2].IsFillCell &&
+                buttons[0, 0].IndexPlayer == indexPlayer &&
+                buttons[1, 1].IndexPlayer == indexPlayer &&
+                buttons[2, 2].IndexPlayer == indexPlayer)
+            {
+                Debug.Log("[IsRow] Диагональ 0,0 → 2,2 собрана!");
+                return true;
+            }
         }
 
-        //проверяем вторую диагональ
-        else if (buttons[0, 2].IsSameCell(indexPlayer) &&
-                 buttons[1, 1].IsSameCell(indexPlayer) &&
-                 buttons[2, 0].IsSameCell(indexPlayer))
+        // Диагональ 0,2 → 2,0
+        if ((row == 0 && column == 2) || (row == 2 && column == 0) || (row == 1 && column == 1))
         {
-            return true;
+            if (buttons[0, 2].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 0].IsFillCell &&
+                buttons[0, 2].IndexPlayer == indexPlayer &&
+                buttons[1, 1].IndexPlayer == indexPlayer &&
+                buttons[2, 0].IndexPlayer == indexPlayer)
+            {
+                Debug.Log("[IsRow] Диагональ 0,2 → 2,0 собрана!");
+                return true;
+            }
         }
 
         return false;
