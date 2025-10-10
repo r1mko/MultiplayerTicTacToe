@@ -27,7 +27,6 @@ public class NetworkPlayer : NetworkBehaviour
         }
     }
 
-
     private bool CheckTwoPlayers()
     {
         if (!IsServer)
@@ -42,8 +41,6 @@ public class NetworkPlayer : NetworkBehaviour
         return false;
     }
 
-
-
     //rpc region
     [Rpc(SendTo.Everyone)]
     public void OnClickRpc(int row, int col)
@@ -55,6 +52,12 @@ public class NetworkPlayer : NetworkBehaviour
     public void ApplyGravitySlideRpc()
     {
         GameManager.Singletone.SlideGravity();
+    }
+
+    [Rpc(SendTo.Everyone)]
+    public void ApplyShotRpc()
+    {
+        GameManager.Singletone.StartCoroutine(GameManager.Singletone.ShootThreeArrowsAndFill());
     }
 
     [Rpc(SendTo.Everyone)]

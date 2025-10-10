@@ -7,27 +7,25 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Singletone;
+    public bool IsPlaying => isPlaying;
+    public bool IsBlocking => isBlocking;
+    private bool isBlocking;
 
     public int CurrentPlayerTurnID;
     public int TurnIndex;
     public Canvas Canvas;
 
+    private HPHistoryManager hPHistoryManager;
+    public CellHistoryManager CellHistoryManager => cellHistoryManager;
+    public CellHistoryManager cellHistoryManager;
+
+    public SkillCooldownManager SkillCooldownManager { get; private set; }
+
     private int startOffSet;
     private const int ArrowCount = 3;
     private bool isPlaying;
-    private bool isBlocking;
     private string lastSlideButtonText;
     private string lastShotButtonText;
-    public bool IsPlaying => isPlaying;
-    public bool IsBlocking => isBlocking;
-
-    private HPHistoryManager hPHistoryManager;
-
-    public CellHistoryManager cellHistoryManager;
-    public CellHistoryManager CellHistoryManager => cellHistoryManager;
-    public HPHistoryManager HPHistoryManager => hPHistoryManager;
-
-    public SkillCooldownManager SkillCooldownManager { get; private set; }
 
     private int[] wins = new int[] { 0, 0 };
 
@@ -74,7 +72,7 @@ public class GameManager : MonoBehaviour
     {
         CurrentPlayerTurnID = clientID;
         UIManager.Singletone.UpdateCurrentPlayerText();
-        UpdateSlideButtonState();
+        UpdateSkillsButtonState();
         StartTimer();
     }
 
@@ -137,8 +135,10 @@ public class GameManager : MonoBehaviour
         UpdateSlideButtonText();
         isPlaying = true;
 
-        UpdateSlideButtonState();
+        UpdateSkillsButtonState();
         UpdateShotButtonText();
+
+        UpdateUI();
     }
 
     private void GameOver()
@@ -190,8 +190,6 @@ public class GameManager : MonoBehaviour
             UIManager.Singletone.UnblockSlideButton();
             Debug.Log("[Slide] Кулдаун завершён. Кнопка разблокирована.");
         }
-
-        // Выстрел ← ДОБАВЬ ЭТО
         if (SkillCooldownManager.ShouldRemoveShotCooldown(TurnIndex, CurrentPlayerTurnID))
         {
             SkillCooldownManager.RemoveShotCooldown();
@@ -199,12 +197,12 @@ public class GameManager : MonoBehaviour
             Debug.Log("[Shot] Кулдаун завершён. Кнопка выстрела разблокирована.");
         }
 
-        UpdateSlideButtonState();
+        UpdateSkillsButtonState();
         UpdateSlideButtonText();
         UpdateShotButtonText();
     }
 
-    private void UpdateSlideButtonState()
+    private void UpdateSkillsButtonState()
     {
         if (IsBlocking)
         {
@@ -222,7 +220,7 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitUntil(() => !IsBlocking);
         CheckSlideButton();
-        CheckShotButton(); // ← ДОБАВЬ
+        CheckShotButton();
     }
 
     private void CheckShotButton()
@@ -364,8 +362,10 @@ public class GameManager : MonoBehaviour
         isBlocking = true;
         BoardManager.Singltone.BlockAllButtons();
         UIManager.Singletone.BlockSlideButton();
+        UIManager.Singletone.BlockShotButton();
         yield return new WaitForSeconds(3f); //поменять задержку чтобы бот не мог ходить
-        UpdateSlideButtonState();
+        UpdateSkillsButtonState();
+
         isBlocking = false;
         cellHistoryManager.Clear();
         BoardManager.Singltone.ClearAndUnbloackCells();
@@ -385,15 +385,22 @@ public class GameManager : MonoBehaviour
 
     public void ApplyShot()
     {
-        if (!IsOurTurn()) return;
-        if (SkillCooldownManager.IsShotOnCooldown())
-        {
-            Debug.Log("Выстрел на кулдауне!");
-            return;
-        }
+        // Только клиент, который нажал, управляет UI и кулдауном
+        UIManager.Singletone.BlockShotButton();
+        SkillCooldownManager.OnShotUsed(TurnIndex);
+        UpdateShotButtonText();
 
-        StartCoroutine(ShootThreeArrowsAndFill());
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            NetworkPlayer.Singletone.ApplyShotRpc();
+        }
+        else
+        {
+            StartCoroutine(ShootThreeArrowsAndFill());
+        }
     }
+
+
     private void UpdateShotButtonText()
     {
         string newText = SkillCooldownManager.GetShotButtonText(TurnIndex);
@@ -404,15 +411,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private IEnumerator ShootThreeArrowsAndFill()
+    public IEnumerator ShootThreeArrowsAndFill()
     {
-        if (!IsOurTurn()) yield break;
-        if (SkillCooldownManager.IsShotOnCooldown()) yield break;
-
-        // ← ДОБАВЬ ЭТО:
-        SkillCooldownManager.OnShotUsed(TurnIndex);
-        UIManager.Singletone.BlockShotButton();
-        UpdateShotButtonText();
+        // Убираем все проверки — они не нужны, т.к. кнопка заблокирована
 
         int shooterID = CurrentPlayerTurnID;
         int opponentID = 1 - shooterID;
@@ -434,21 +435,28 @@ public class GameManager : MonoBehaviour
             Debug.Log($"[Выстрел] Удалена моя фишка в ({cell.row}, {cell.coll}) перед выстрелом");
         }
 
-        // === ШАГ 2: ВЫБИРАЕМ 3 СЛУЧАЙНЫЕ ЯЧЕЙКИ ===
+        // === ШАГ 2: ВЫБИРАЕМ 3 СЛУЧАЙНЫЕ ЯЧЕЙКИ С ДЕТЕРМИНИРОВАННЫМ РАНДОМОМ ===
         List<Cell> allCells = new List<Cell>(BoardManager.Singltone.GetAllCells());
         if (allCells.Count == 0) yield break;
 
-        ShuffleList(allCells);
+        // Используем TurnIndex как seed → одинаково у всех!
+        System.Random deterministicRandom = new System.Random(TurnIndex);
+
+        // Fisher-Yates shuffle с детерминированным рандомом
+        for (int i = allCells.Count - 1; i > 0; i--)
+        {
+            int j = deterministicRandom.Next(0, i + 1);
+            (allCells[i], allCells[j]) = (allCells[j], allCells[i]);
+        }
+
         int count = Mathf.Min(ArrowCount, allCells.Count);
         List<Cell> targets = allCells.GetRange(0, count);
 
-        // === ШАГ 3: АНИМАЦИЯ + МГНОВЕННАЯ ОЧИСТКА И УСТАНОВКА ===
+        // === ШАГ 3: АНИМАЦИЯ + ЗАПОЛНЕНИЕ ===
         foreach (Cell target in targets)
         {
-            // Анимация выстрела
             yield return StartCoroutine(AnimateSingleArrow(target));
 
-            // Очищаем ячейку, если там что-то есть (даже если это наша — но её уже не должно быть)
             if (target.IsFillCell)
             {
                 int oldOwner = target.IndexPlayer;
@@ -457,13 +465,12 @@ public class GameManager : MonoBehaviour
                 Debug.Log($"[Выстрел] Уничтожена фишка игрока {oldOwner} в ({target.row}, {target.coll})");
             }
 
-            // Сразу ставим свою фишку
             BoardManager.Singltone.FillCell(target.row, target.coll, shooterID);
             cellHistoryManager.AddMove(target, shooterID);
             Debug.Log($"[Выстрел] Установлена моя фишка в ({target.row}, {target.coll})");
         }
 
-        // === ШАГ 4: ПРОВЕРКА РЯДА ТОЛЬКО В КОНЦЕ ===
+        // === ШАГ 4–7: ПРОВЕРКИ И ПЕРЕДАЧА ХОДА (без изменений) ===
         bool hasRow = false;
         foreach (Cell cell in targets)
         {
@@ -474,7 +481,6 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // === ШАГ 5: ОБРАБОТКА РЕЗУЛЬТАТА ===
         if (hasRow)
         {
             if (NetworkPlayer.Singletone.IsMultiplayer())
@@ -506,7 +512,6 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // === ШАГ 6: ПРОВЕРКА НИЧЬЕЙ ===
         if (BoardManager.Singltone.IsGameDraw())
         {
             GameOver();
@@ -514,7 +519,6 @@ public class GameManager : MonoBehaviour
             yield break;
         }
 
-        // === ШАГ 7: ПЕРЕДАЧА ХОДА ===
         ChangeTurnIndex();
         PassMoveToNextPlayer();
     }
