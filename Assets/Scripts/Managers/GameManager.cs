@@ -360,7 +360,29 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator ShootThreeArrowsAndFill()
     {
-        // 1. Выбираем 3 случайные ячейки
+        if (!IsOurTurn()) yield break;
+
+        int shooterID = CurrentPlayerTurnID;
+        int opponentID = 1 - shooterID;
+
+        // === ШАГ 1: УДАЛЯЕМ ВСЕ СВОИ ФИШКИ С ДОСКИ ===
+        List<Cell> myCellsToRemove = new List<Cell>();
+        foreach (var cell in BoardManager.Singltone.GetAllCells())
+        {
+            if (cell.IsFillCell && cell.IndexPlayer == shooterID)
+            {
+                myCellsToRemove.Add(cell);
+            }
+        }
+
+        foreach (var cell in myCellsToRemove)
+        {
+            cellHistoryManager.RemoveMoveFromPlayer(cell, shooterID);
+            cell.Clear();
+            Debug.Log($"[Выстрел] Удалена моя фишка в ({cell.row}, {cell.coll}) перед выстрелом");
+        }
+
+        // === ШАГ 2: ВЫБИРАЕМ 3 СЛУЧАЙНЫЕ ЯЧЕЙКИ ===
         List<Cell> allCells = new List<Cell>(BoardManager.Singltone.GetAllCells());
         if (allCells.Count == 0) yield break;
 
@@ -368,48 +390,39 @@ public class GameManager : MonoBehaviour
         int count = Mathf.Min(ArrowCount, allCells.Count);
         List<Cell> targets = allCells.GetRange(0, count);
 
-        // 2. Анимация выстрела
+        // === ШАГ 3: АНИМАЦИЯ + МГНОВЕННАЯ ОЧИСТКА И УСТАНОВКА ===
         foreach (Cell target in targets)
         {
+            // Анимация выстрела
             yield return StartCoroutine(AnimateSingleArrow(target));
-        }
 
-        // 3. УДАЛЯЕМ старые фишки из целевых ячеек (если есть)
-        foreach (Cell cell in targets)
-        {
-            if (cell.IsFillCell)
+            // Очищаем ячейку, если там что-то есть (даже если это наша — но её уже не должно быть)
+            if (target.IsFillCell)
             {
-                // Удаляем из истории владельца
-                cellHistoryManager.RemoveMoveFromPlayer(cell, cell.IndexPlayer);
-                // Очищаем ячейку
-                cell.Clear();
-                cellHistoryManager.CheckCellHistory();
-                Debug.Log($"[Выстрел] Удалена старая фишка в ({cell.row}, {cell.coll})");
+                int oldOwner = target.IndexPlayer;
+                cellHistoryManager.RemoveMoveFromPlayer(target, oldOwner);
+                target.Clear();
+                Debug.Log($"[Выстрел] Уничтожена фишка игрока {oldOwner} в ({target.row}, {target.coll})");
             }
+
+            // Сразу ставим свою фишку
+            BoardManager.Singltone.FillCell(target.row, target.coll, shooterID);
+            cellHistoryManager.AddMove(target, shooterID);
+            Debug.Log($"[Выстрел] Установлена моя фишка в ({target.row}, {target.coll})");
         }
 
-        // 4. СТАВИМ новые фишки (все три)
-        foreach (Cell cell in targets)
-        {
-            BoardManager.Singltone.FillCell(cell.row, cell.coll, CurrentPlayerTurnID);
-            cellHistoryManager.AddMove(cell, CurrentPlayerTurnID);
-            Debug.Log($"[Выстрел] Поставлена новая фишка в ({cell.row}, {cell.coll})");
-        }
-
-        // 5. ТОЛЬКО СЕЙЧАС проверяем, есть ли ряды
+        // === ШАГ 4: ПРОВЕРКА РЯДА ТОЛЬКО В КОНЦЕ ===
         bool hasRow = false;
-        int opponentID = 1 - CurrentPlayerTurnID;
-
         foreach (Cell cell in targets)
         {
             if (BoardManager.Singltone.IsRow(cell.row, cell.coll))
             {
                 hasRow = true;
-                break; // Достаточно одного ряда
+                break;
             }
         }
 
-        // 6. Обработка результата
+        // === ШАГ 5: ОБРАБОТКА РЕЗУЛЬТАТА ===
         if (hasRow)
         {
             if (NetworkPlayer.Singletone.IsMultiplayer())
@@ -427,7 +440,7 @@ public class GameManager : MonoBehaviour
                 if (hPHistoryManager.LosePlayer(opponentID))
                 {
                     GameOver();
-                    SetWin(CurrentPlayerTurnID);
+                    SetWin(shooterID);
                     UIManager.Singletone.SetWinText();
                     yield break;
                 }
@@ -441,7 +454,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // 7. Проверка ничьей
+        // === ШАГ 6: ПРОВЕРКА НИЧЬЕЙ ===
         if (BoardManager.Singltone.IsGameDraw())
         {
             GameOver();
@@ -449,7 +462,7 @@ public class GameManager : MonoBehaviour
             yield break;
         }
 
-        // 8. Передача хода
+        // === ШАГ 7: ПЕРЕДАЧА ХОДА ===
         ChangeTurnIndex();
         PassMoveToNextPlayer();
     }
