@@ -1,9 +1,13 @@
-﻿using System;
-
-public class SkillCooldownManager
+﻿public class SkillCooldownManager
 {
+    // === Слайд ===
     private int slideCooldownTurnIndex = -1;
     private bool isSlideOnCooldown = false;
+
+    // === Выстрел ===
+    private int shotCooldownTurnIndex = -1;
+    private bool isShotOnCooldown = false;
+
     private int startOffSet;
 
     public void Initialize(int offset)
@@ -16,27 +20,18 @@ public class SkillCooldownManager
     {
         slideCooldownTurnIndex = -1;
         isSlideOnCooldown = false;
+        shotCooldownTurnIndex = -1;
+        isShotOnCooldown = false;
     }
 
+    // === Слайд: текст ===
     public string GetSlideButtonText(int currentTurnIndex)
     {
         if (!isSlideOnCooldown)
             return "Slide";
 
-        int raw = (slideCooldownTurnIndex + startOffSet) % 2;
-        int playerWhoUsedSlide = raw < 0 ? raw + 2 : raw;
-
-        int turnsByThatPlayer = 0;
-
-        for (int turn = slideCooldownTurnIndex + 1; turn <= currentTurnIndex; turn++)
-        {
-            int playerOnTurn = (turn + startOffSet) % 2;
-            if (playerOnTurn == playerWhoUsedSlide)
-            {
-                turnsByThatPlayer++;
-            }
-        }
-
+        int playerWhoUsedSlide = (slideCooldownTurnIndex + startOffSet) % 2;
+        int turnsByThatPlayer = CountPlayerTurns(slideCooldownTurnIndex + 1, currentTurnIndex, playerWhoUsedSlide);
         int remaining = 3 - turnsByThatPlayer;
 
         return remaining switch
@@ -48,38 +43,84 @@ public class SkillCooldownManager
         };
     }
 
+    // === Выстрел: текст ===
+    public string GetShotButtonText(int currentTurnIndex)
+    {
+        if (!isShotOnCooldown)
+            return "Shot";
+
+        int playerWhoUsedShot = (shotCooldownTurnIndex + startOffSet) % 2;
+        int turnsByThatPlayer = CountPlayerTurns(shotCooldownTurnIndex + 1, currentTurnIndex, playerWhoUsedShot);
+        int remaining = 5 - turnsByThatPlayer;
+
+        return remaining switch
+        {
+            5 => "In 5 turns",
+            4 => "In 4 turns",
+            3 => "In 3 turns",
+            2 => "In 2 turns",
+            1 => "Next turn",
+            _ => "Shot"
+        };
+    }
+
+    private int CountPlayerTurns(int fromTurn, int toTurn, int playerId)
+    {
+        int count = 0;
+        for (int turn = fromTurn; turn <= toTurn; turn++)
+        {
+            int playerOnTurn = (turn + startOffSet) % 2;
+            if (playerOnTurn == playerId)
+                count++;
+        }
+        return count;
+    }
+
+    // === Слайд: использование ===
     public void OnSlideUsed(int currentTurnIndex)
     {
         slideCooldownTurnIndex = currentTurnIndex;
         isSlideOnCooldown = true;
     }
 
-    public bool ShouldRemoveCooldown(int currentTurnIndex, int currentPlayerID)
+    // === Выстрел: использование ===
+    public void OnShotUsed(int currentTurnIndex)
     {
-        if (!isSlideOnCooldown)
-            return false;
+        shotCooldownTurnIndex = currentTurnIndex;
+        isShotOnCooldown = true;
+    }
 
-        int raw = (slideCooldownTurnIndex + startOffSet) % 2;
-        int playerWhoUsedSlide = raw < 0 ? raw + 2 : raw;
-
-        int turnsByThatPlayer = 0;
-
-        for (int turn = slideCooldownTurnIndex + 1; turn <= currentTurnIndex; turn++)
-        {
-            int playerOnTurn = (turn + startOffSet) % 2;
-            if (playerOnTurn == playerWhoUsedSlide)
-            {
-                turnsByThatPlayer++;
-            }
-        }
-
+    // === Слайд: проверка снятия ===
+    public bool ShouldRemoveSlideCooldown(int currentTurnIndex, int currentPlayerID)
+    {
+        if (!isSlideOnCooldown) return false;
+        int playerWhoUsedSlide = (slideCooldownTurnIndex + startOffSet) % 2;
+        int turnsByThatPlayer = CountPlayerTurns(slideCooldownTurnIndex + 1, currentTurnIndex, playerWhoUsedSlide);
         return turnsByThatPlayer >= 3;
     }
 
-    public void RemoveCooldown()
+    // === Выстрел: проверка снятия ===
+    public bool ShouldRemoveShotCooldown(int currentTurnIndex, int currentPlayerID)
+    {
+        if (!isShotOnCooldown) return false;
+        int playerWhoUsedShot = (shotCooldownTurnIndex + startOffSet) % 2;
+        int turnsByThatPlayer = CountPlayerTurns(shotCooldownTurnIndex + 1, currentTurnIndex, playerWhoUsedShot);
+        return turnsByThatPlayer >= 5;
+    }
+
+    // === Слайд: сброс ===
+    public void RemoveSlideCooldown()
     {
         isSlideOnCooldown = false;
     }
 
-    public bool IsOnCooldown() => isSlideOnCooldown;
+    // === Выстрел: сброс ===
+    public void RemoveShotCooldown()
+    {
+        isShotOnCooldown = false;
+    }
+
+    // === Геттеры ===
+    public bool IsSlideOnCooldown() => isSlideOnCooldown;
+    public bool IsShotOnCooldown() => isShotOnCooldown;
 }

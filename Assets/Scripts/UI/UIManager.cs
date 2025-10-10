@@ -22,6 +22,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text winOText;
     [SerializeField] private TMP_Text currentPlayerTextID;
     [SerializeField] private TMP_Text slideButtonText;
+    [SerializeField] private TMP_Text shotButtonText;
 
     private void Awake()
     {
@@ -222,6 +223,21 @@ public class UIManager : MonoBehaviour
     private void Slide()
     {
         GameManager.Singletone.ApplySlideGravity();
+    }
+
+    public void SetShotCooldownText(string text)
+    {
+        shotButtonText.text = text;
+    }
+
+    public void BlockShotButton()
+    {
+        shotButton.interactable = false;
+    }
+
+    public void UnblockShotButton()
+    {
+        shotButton.interactable = true;
     }
 
     public void ShowShotButton()

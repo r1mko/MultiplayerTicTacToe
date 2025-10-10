@@ -16,8 +16,8 @@ public class GameManager : MonoBehaviour
     private const int ArrowCount = 3;
     private bool isPlaying;
     private bool isBlocking;
-
     private string lastSlideButtonText;
+    private string lastShotButtonText;
     public bool IsPlaying => isPlaying;
     public bool IsBlocking => isBlocking;
 
@@ -138,6 +138,7 @@ public class GameManager : MonoBehaviour
         isPlaying = true;
 
         UpdateSlideButtonState();
+        UpdateShotButtonText();
     }
 
     private void GameOver()
@@ -183,16 +184,24 @@ public class GameManager : MonoBehaviour
 
         UpdateCurrentPlayerID(currentPlayerIndex);
 
-        if (SkillCooldownManager.ShouldRemoveCooldown(TurnIndex, CurrentPlayerTurnID))
+        if (SkillCooldownManager.ShouldRemoveSlideCooldown(TurnIndex, CurrentPlayerTurnID))
         {
-            SkillCooldownManager.RemoveCooldown();
+            SkillCooldownManager.RemoveSlideCooldown(); 
             UIManager.Singletone.UnblockSlideButton();
             Debug.Log("[Slide] Кулдаун завершён. Кнопка разблокирована.");
         }
 
+        // Выстрел ← ДОБАВЬ ЭТО
+        if (SkillCooldownManager.ShouldRemoveShotCooldown(TurnIndex, CurrentPlayerTurnID))
+        {
+            SkillCooldownManager.RemoveShotCooldown();
+            UIManager.Singletone.UnblockShotButton();
+            Debug.Log("[Shot] Кулдаун завершён. Кнопка выстрела разблокирована.");
+        }
+
         UpdateSlideButtonState();
         UpdateSlideButtonText();
-
+        UpdateShotButtonText();
     }
 
     private void UpdateSlideButtonState()
@@ -200,26 +209,48 @@ public class GameManager : MonoBehaviour
         if (IsBlocking)
         {
             UIManager.Singletone.BlockSlideButton();
+            UIManager.Singletone.BlockShotButton();
             StartCoroutine(WaitForBlockingEnd());
             return;
         }
 
         CheckSlideButton();
+        CheckShotButton();
     }
 
     private IEnumerator WaitForBlockingEnd()
     {
         yield return new WaitUntil(() => !IsBlocking);
         CheckSlideButton();
+        CheckShotButton(); // ← ДОБАВЬ
+    }
 
+    private void CheckShotButton()
+    {
 
+        if (IsOurTurn())
+        {
+            if (!SkillCooldownManager.IsShotOnCooldown())
+            {
+                UIManager.Singletone.UnblockShotButton();
+            }
+            else
+            {
+                UIManager.Singletone.BlockShotButton();
+            }
+        }
+        else
+        {
+            UIManager.Singletone.BlockShotButton();
+        }
     }
 
     private void CheckSlideButton()
     {
+
         if (IsOurTurn())
         {
-            if (!SkillCooldownManager.IsOnCooldown())
+            if (!SkillCooldownManager.IsSlideOnCooldown())
             {
                 UIManager.Singletone.UnblockSlideButton();
             }
@@ -355,12 +386,33 @@ public class GameManager : MonoBehaviour
     public void ApplyShot()
     {
         if (!IsOurTurn()) return;
+        if (SkillCooldownManager.IsShotOnCooldown())
+        {
+            Debug.Log("Выстрел на кулдауне!");
+            return;
+        }
+
         StartCoroutine(ShootThreeArrowsAndFill());
+    }
+    private void UpdateShotButtonText()
+    {
+        string newText = SkillCooldownManager.GetShotButtonText(TurnIndex);
+        if (newText != lastShotButtonText)
+        {
+            UIManager.Singletone.SetShotCooldownText(newText);
+            lastShotButtonText = newText;
+        }
     }
 
     private IEnumerator ShootThreeArrowsAndFill()
     {
         if (!IsOurTurn()) yield break;
+        if (SkillCooldownManager.IsShotOnCooldown()) yield break;
+
+        // ← ДОБАВЬ ЭТО:
+        SkillCooldownManager.OnShotUsed(TurnIndex);
+        UIManager.Singletone.BlockShotButton();
+        UpdateShotButtonText();
 
         int shooterID = CurrentPlayerTurnID;
         int opponentID = 1 - shooterID;
