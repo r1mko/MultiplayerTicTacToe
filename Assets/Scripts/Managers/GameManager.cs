@@ -298,7 +298,10 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                StartCoroutine(DamageDelay());
+                StartCoroutine(DamageDelay(() => {
+                    PassMoveToNextPlayer();
+                }));
+                return;
             }
         }
 
@@ -361,19 +364,23 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private IEnumerator DamageDelay()
+    private IEnumerator DamageDelay(System.Action onDamageComplete = null)
     {
         isBlocking = true;
         BoardManager.Singltone.BlockAllButtons();
         UIManager.Singletone.BlockSlideButton();
         UIManager.Singletone.BlockShotButton();
-        yield return new WaitForSeconds(3f); //поменять задержку чтобы бот не мог ходить
-        UpdateSkillsButtonState();
 
+        yield return new WaitForSeconds(3f);
+
+        UpdateSkillsButtonState();
         isBlocking = false;
         cellHistoryManager.Clear();
         BoardManager.Singltone.ClearAndUnbloackCells();
+
+        onDamageComplete?.Invoke();
     }
+
     public IEnumerator PlayerSkipMove()
     {
         while (IsAnimating)
@@ -513,9 +520,10 @@ public class GameManager : MonoBehaviour
                 }
                 else
                 {
-                    StartCoroutine(DamageDelay());
-                    ChangeTurnIndex();
-                    PassMoveToNextPlayer();
+                    StartCoroutine(DamageDelay(() => {
+                        ChangeTurnIndex();
+                        PassMoveToNextPlayer();
+                    }));
                     yield break;
                 }
             }

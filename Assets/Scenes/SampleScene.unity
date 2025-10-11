@@ -677,7 +677,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2851367288205508246, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
       propertyPath: m_AdditionalShaderChannelsFlag
-      value: 0
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 4307540391768803751, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
       propertyPath: m_IsActive
@@ -1092,7 +1092,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a625ea36b729e8747890dca255ee310a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  duration: 40
+  duration: 31
 --- !u!1001 &7576674325887130073
 PrefabInstance:
   m_ObjectHideFlags: 0
