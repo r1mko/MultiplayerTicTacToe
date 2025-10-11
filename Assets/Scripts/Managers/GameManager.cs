@@ -413,8 +413,6 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator ShootThreeArrowsAndFill()
     {
-        // Убираем все проверки — они не нужны, т.к. кнопка заблокирована
-
         int shooterID = CurrentPlayerTurnID;
         int opponentID = 1 - shooterID;
 
@@ -460,7 +458,7 @@ public class GameManager : MonoBehaviour
             if (target.IsFillCell)
             {
                 int oldOwner = target.IndexPlayer;
-                cellHistoryManager.RemoveMoveFromPlayer(target, oldOwner);
+                cellHistoryManager.ReplaceCellWithNull(target, oldOwner);
                 target.Clear();
                 Debug.Log($"[Выстрел] Уничтожена фишка игрока {oldOwner} в ({target.row}, {target.coll})");
             }
@@ -552,15 +550,6 @@ public class GameManager : MonoBehaviour
         Destroy(shot);
 
         Debug.Log($"[Выстрел - Анимация] Попали в ячейку ({targetCell.row}, {targetCell.coll}). Заполнена: {targetCell.IsFillCell}");
-    }
-
-    private void ShuffleList<T>(List<T> list)
-    {
-        for (int i = list.Count - 1; i > 0; i--)
-        {
-            int j = Random.Range(0, i + 1);
-            (list[i], list[j]) = (list[j], list[i]);
-        }
     }
 
     public void ApplySlideGravity()

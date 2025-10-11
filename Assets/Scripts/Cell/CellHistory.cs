@@ -98,4 +98,21 @@ public class CellHistoryManager
             Debug.LogWarning($"[CellHistory] Ячейка ({cell.row}, {cell.coll}) не найдена в истории игрока {playerID} для удаления.");
         }
     }
+
+    public void ReplaceCellWithNull(Cell cell, int playerID)
+    {
+        if (!CellHistory.ContainsKey(playerID)) return;
+
+        var list = CellHistory[playerID];
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i] == cell)
+            {
+                list[i] = null;
+                Debug.Log($"[CellHistory] Ячейка ({cell.row}, {cell.coll}) заменена на null в истории игрока {playerID}.");
+                return;
+            }
+        }
+        Debug.LogWarning($"[CellHistory] Ячейка ({cell.row}, {cell.coll}) не найдена в истории игрока {playerID} для замены на null.");
+    }
 }
