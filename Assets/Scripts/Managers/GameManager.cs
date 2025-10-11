@@ -11,6 +11,9 @@ public class GameManager : MonoBehaviour
     public bool IsBlocking => isBlocking;
     private bool isBlocking;
 
+    private int activeAnimations = 0;
+    public bool IsAnimating => activeAnimations > 0;
+
     public int CurrentPlayerTurnID;
     public int TurnIndex;
     public Canvas Canvas;
@@ -68,6 +71,7 @@ public class GameManager : MonoBehaviour
             UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
         }
     }
+
     public void UpdateCurrentPlayerID(int clientID)
     {
         CurrentPlayerTurnID = clientID;
@@ -147,6 +151,8 @@ public class GameManager : MonoBehaviour
         BoardManager.Singltone.BlockAllButtons();
         UIManager.Singletone.HideHPBar();
         UIManager.Singletone.ShowRestartButton();
+        UIManager.Singletone.BlockShotButton();
+        UIManager.Singletone.BlockSlideButton();
         isPlaying = false;
     }
 
@@ -188,13 +194,11 @@ public class GameManager : MonoBehaviour
         {
             SkillCooldownManager.RemoveSlideCooldown(); 
             UIManager.Singletone.UnblockSlideButton();
-            Debug.Log("[Slide] Кулдаун завершён. Кнопка разблокирована.");
         }
         if (SkillCooldownManager.ShouldRemoveShotCooldown(TurnIndex, CurrentPlayerTurnID))
         {
             SkillCooldownManager.RemoveShotCooldown();
             UIManager.Singletone.UnblockShotButton();
-            Debug.Log("[Shot] Кулдаун завершён. Кнопка выстрела разблокирована.");
         }
 
         UpdateSkillsButtonState();
@@ -370,8 +374,13 @@ public class GameManager : MonoBehaviour
         cellHistoryManager.Clear();
         BoardManager.Singltone.ClearAndUnbloackCells();
     }
-    public void PlayerSkipMove()
+    public IEnumerator PlayerSkipMove()
     {
+        while (IsAnimating)
+        {
+            yield return null;
+        }
+
         if (NetworkPlayer.Singletone.IsMultiplayer())
         {
             NetworkPlayer.Singletone.MoveToNextPlayerRpc();
@@ -385,10 +394,12 @@ public class GameManager : MonoBehaviour
 
     public void ApplyShot()
     {
+
         // Только клиент, который нажал, управляет UI и кулдауном
         UIManager.Singletone.BlockShotButton();
         SkillCooldownManager.OnShotUsed(TurnIndex);
         UpdateShotButtonText();
+        TimerController.Singletone.EndTime();
 
         if (NetworkPlayer.Singletone.IsMultiplayer())
         {
@@ -520,8 +531,10 @@ public class GameManager : MonoBehaviour
         ChangeTurnIndex();
         PassMoveToNextPlayer();
     }
+
     private IEnumerator AnimateSingleArrow(Cell targetCell)
     {
+        BeginAnimation();
         RectTransform canvasRect = Canvas.GetComponent<RectTransform>();
         Vector2 startPosition = new Vector2(0, -canvasRect.rect.height / 2 - 50);
         Vector2 endPosition = BoardManager.Singltone.GetCellScreenPosition(targetCell.row, targetCell.coll);
@@ -548,8 +561,9 @@ public class GameManager : MonoBehaviour
         }
 
         Destroy(shot);
-
-        Debug.Log($"[Выстрел - Анимация] Попали в ячейку ({targetCell.row}, {targetCell.coll}). Заполнена: {targetCell.IsFillCell}");
+        EndAnimation();
+        Debug.Log($"[Выстрел - Анимация] Попали в ячейку ({targetCell.row}, {targetCell.coll})");
+        yield break;
     }
 
     public void ApplySlideGravity()
@@ -585,6 +599,16 @@ public class GameManager : MonoBehaviour
         startOffSet = clientID;
         UpdateCurrentPlayerID(clientID);
         UIManager.Singletone.HideRestartButton();
+    }
+
+    public void BeginAnimation()
+    {
+        activeAnimations++;
+    }
+
+    public void EndAnimation()
+    {
+        activeAnimations = Mathf.Max(0, activeAnimations - 1);
     }
 
     public void UpdateUI()
