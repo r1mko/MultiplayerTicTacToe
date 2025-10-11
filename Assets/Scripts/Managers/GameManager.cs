@@ -537,7 +537,7 @@ public class GameManager : MonoBehaviour
         rectTransform.pivot = new Vector2(0.5f, 0.5f);
         rectTransform.anchoredPosition = startPosition;
 
-        float duration = 0.6f;
+        float duration = 1f;
         float elapsedTime = 0f;
         while (elapsedTime < duration)
         {

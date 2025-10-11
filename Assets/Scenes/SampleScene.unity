@@ -671,6 +671,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2851367288205508246, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: m_VertexColorAlwaysGammaSpace
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2851367288205508246, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4307540391768803751, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
       propertyPath: m_IsActive
       value: 1
