@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 public class BoardManager : MonoBehaviour
 {
@@ -379,6 +380,127 @@ public class BoardManager : MonoBehaviour
         else
         {
             Debug.Log("После гравитации ни одна линия не собрана. Продолжаем игру.");
+        }
+    }
+
+    public void ShuffleAllCells()
+    {
+        // 1. Собираем все заполненные фишки (сохраняем владельца)
+        List<(int playerID, Cell originalCell)> filledData = new List<(int, Cell)>();
+        List<Cell> allCells = new List<Cell>();
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                Cell cell = buttons[i, j];
+                allCells.Add(cell);
+                if (cell.IsFillCell)
+                {
+                    filledData.Add((cell.IndexPlayer, cell));
+                }
+            }
+        }
+
+        int filledCount = filledData.Count;
+        if (filledCount == 0)
+        {
+            Debug.Log("[Shuffle] Нет фишек для перемешивания.");
+            return;
+        }
+
+        // 2. Создаём копию списка всех ячеек и перемешиваем её
+        List<Cell> shuffledCells = new List<Cell>(allCells);
+        int seed = GameManager.Singletone.TurnIndex;
+        System.Random rng = new System.Random(seed);
+
+        // Fisher-Yates shuffle
+        for (int i = shuffledCells.Count - 1; i > 0; i--)
+        {
+            int j = rng.Next(0, i + 1);
+            (shuffledCells[i], shuffledCells[j]) = (shuffledCells[j], shuffledCells[i]);
+        }
+
+        // 3. Берём первые `filledCount` ячеек как цели
+        List<Cell> targetCells = shuffledCells.GetRange(0, filledCount);
+
+        // 4. Очищаем ВСЁ поле
+        foreach (var cell in allCells)
+        {
+            cell.Clear();
+        }
+
+        // 5. Сопоставляем каждую фишку с новой ячейкой
+        Dictionary<Cell, Cell> cellRemap = new Dictionary<Cell, Cell>();
+
+        for (int i = 0; i < filledCount; i++)
+        {
+            var (playerID, oldCell) = filledData[i];
+            Cell newCell = targetCells[i];
+
+            // Заполняем новую ячейку
+            newCell.Fill(playerID);
+
+            // Если позиция изменилась — запоминаем для обновления истории
+            if (oldCell != newCell)
+            {
+                cellRemap[oldCell] = newCell;
+            }
+        }
+
+        // 6. Обновляем CellHistory
+        var cellHistory = GameManager.Singletone.cellHistoryManager.CellHistory;
+        foreach (var kvp in cellHistory)
+        {
+            for (int i = 0; i < kvp.Value.Count; i++)
+            {
+                Cell histCell = kvp.Value[i];
+                if (histCell != null && cellRemap.TryGetValue(histCell, out Cell newHistCell))
+                {
+                    kvp.Value[i] = newHistCell;
+                }
+            }
+        }
+
+        GameManager.Singletone.cellHistoryManager.CheckCellHistory();
+
+        Debug.Log($"[Shuffle] Перемешано {filledCount} фишек с seed={seed}. Новые позиции: {string.Join(", ", targetCells.Select(c => $"({c.row},{c.coll})"))}");
+
+        // 7. Проверка рядов и урон — как в ApplyGravity
+        List<int> victims = new List<int>();
+        HashSet<int> winners = new HashSet<int>();
+
+        foreach (Cell newCell in targetCells)
+        {
+            if (IsRow(newCell.row, newCell.coll))
+            {
+                int winner = newCell.IndexPlayer;
+                if (!winners.Contains(winner))
+                {
+                    winners.Add(winner);
+                    victims.Add(1 - winner);
+                    Debug.Log($"[Shuffle] Ряд собран игроком {winner} в ({newCell.row},{newCell.coll})!");
+                }
+            }
+        }
+
+        if (victims.Count > 0)
+        {
+            if (NetworkPlayer.Singletone.IsMultiplayer())
+            {
+                if (NetworkPlayer.Singletone.IsServer)
+                {
+                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victims.ToArray());
+                }
+            }
+            else
+            {
+                GameManager.Singletone.ApplyMultipleDamages(victims);
+            }
+        }
+        else
+        {
+            Debug.Log("[Shuffle] Ни одного ряда после перемешивания.");
         }
     }
 }

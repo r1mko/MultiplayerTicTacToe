@@ -61,6 +61,12 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
+    public void ApplyShuffleRpc()
+    {
+        GameManager.Singletone.ShuffleAllCells();
+    }
+
+    [Rpc(SendTo.Everyone)]
     public void MoveToNextPlayerRpc()
     {
         Debug.Log("[NetworkPlayer] Вызвали метод MoveToNextPlayerRpc");

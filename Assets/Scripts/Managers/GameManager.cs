@@ -593,7 +593,28 @@ public class GameManager : MonoBehaviour
     public void SlideGravity()
     {
         BoardManager.Singltone.ApplyGravity();
+    }
 
+    public void ShuffleAllCells()
+    {
+        BoardManager.Singltone.ShuffleAllCells();
+    }
+
+    public void ApplyShuffle()
+    {
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            NetworkPlayer.Singletone.ApplyShuffleRpc();
+        }
+        else
+        {
+            ShuffleAllCells();
+        }
+
+        //// Обновляем UI: блокируем кнопку и т.д., если нужно
+        //UIManager.Singletone.BlockSlideButton(); // или отдельная кнопка для shuffle
+        //SkillCooldownManager.OnSlideUsed(TurnIndex); // или свой кулдаун, если будет
+        //UpdateSlideButtonText(); // или отдельный текст
     }
 
     public void HandleSkipTurn()

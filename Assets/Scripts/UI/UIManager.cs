@@ -14,6 +14,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button singlePlayerButton;
     [SerializeField] private Button slideButton;
     [SerializeField] private Button shotButton;
+    [SerializeField] private Button shuffleButton;
     [SerializeField] private GameObject navigationPanel;
     [SerializeField] private GameObject smileScreen;
     [SerializeField] private TMP_Text timerText;
@@ -33,6 +34,7 @@ public class UIManager : MonoBehaviour
         clientButton.onClick.AddListener(OnClient);
         slideButton.onClick.AddListener(Slide);
         shotButton.onClick.AddListener(Shot);
+        shuffleButton.onClick.AddListener(Reverse);
         HideRestartButton();
         HideHPBar();
         HideMoveInfo();
@@ -219,6 +221,11 @@ public class UIManager : MonoBehaviour
     {
         slideButton.gameObject.SetActive(false);
     }
+    
+    private void Reverse()
+    {
+        GameManager.Singletone.ApplyShuffle();
+    }
 
     private void Slide()
     {
@@ -270,6 +277,9 @@ public class UIManager : MonoBehaviour
         hostButton.onClick.RemoveAllListeners();
         clientButton.onClick.RemoveAllListeners();
         singlePlayerButton.onClick.RemoveAllListeners();
+        slideButton.onClick.RemoveAllListeners();
+        shotButton.onClick.RemoveAllListeners();
+        shuffleButton.onClick.RemoveAllListeners();
     }
 
 }
