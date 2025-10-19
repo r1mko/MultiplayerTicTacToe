@@ -6,33 +6,48 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
+    // =============== SINGLETON & STATE ===============
     public static GameManager Singletone;
     public bool IsPlaying => isPlaying;
     public bool IsBlocking => isBlocking;
     private bool isBlocking;
+    private bool isPlaying;
 
+    // =============== ANIMATION TRACKING ===============
     private int activeAnimations = 0;
     public bool IsAnimating => activeAnimations > 0;
 
+    public void BeginAnimation()
+    {
+        activeAnimations++;
+    }
+
+    public void EndAnimation()
+    {
+        activeAnimations = Mathf.Max(0, activeAnimations - 1);
+    }
+
+    // =============== GAMEPLAY CORE STATE ===============
     public int CurrentPlayerTurnID;
     public int TurnIndex;
     public Canvas Canvas;
 
+    private int startOffSet;
+    private const int ArrowCount = 3;
+    private int[] wins = new int[] { 0, 0 };
+
+    // =============== MANAGERS ===============
     private HPHistoryManager hPHistoryManager;
     public CellHistoryManager CellHistoryManager => cellHistoryManager;
     public CellHistoryManager cellHistoryManager;
-
     public SkillCooldownManager SkillCooldownManager { get; private set; }
 
-    private int startOffSet;
-    private const int ArrowCount = 3;
-    private bool isPlaying;
+    // =============== UI TEXT CACHING ===============
     private string lastSlideButtonText;
     private string lastShotButtonText;
+    private string lastShuffleButtonText;
 
-    private int[] wins = new int[] { 0, 0 };
-
-
+    // =============== INITIALIZATION ===============
     private void Awake()
     {
         Singletone = this;
@@ -41,6 +56,7 @@ public class GameManager : MonoBehaviour
         SkillCooldownManager = new SkillCooldownManager();
     }
 
+    // =============== GAME LIFECYCLE ===============
     public void StartGame()
     {
         if (NetworkPlayer.Singletone.IsMultiplayer())
@@ -54,62 +70,6 @@ public class GameManager : MonoBehaviour
         }
 
         StartTimer();
-    }
-    private void SetPlayersHP()
-    {
-        if (NetworkPlayer.Singletone.IsMultiplayer())
-        {
-            var opId = NetworkManager.Singleton.LocalClientId == 0 ? 1 : 0;
-            var playerHP = hPHistoryManager.GetHP((int)NetworkManager.Singleton.LocalClientId);
-            int opponentHP = hPHistoryManager.GetHP(opId);
-            UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
-        }
-        else
-        {
-            int playerHP = hPHistoryManager.GetHP(0); // игрок (человек)
-            int opponentHP = hPHistoryManager.GetHP(1); // бот
-            UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
-        }
-    }
-
-    public void UpdateCurrentPlayerID(int clientID)
-    {
-        CurrentPlayerTurnID = clientID;
-        UIManager.Singletone.UpdateCurrentPlayerText();
-        UpdateSkillsButtonState();
-        StartTimer();
-    }
-
-    public void ChangeTurnIndex(int index = 1)
-    {
-        TurnIndex += index;
-    }
-
-    public bool IsOurTurn()
-    {
-        return CurrentPlayerTurnID == (int)NetworkPlayer.Singletone.NetworkManager.LocalClientId;
-    }
-
-    public bool IsBotTurn()
-    {
-        if (NetworkPlayer.Singletone.IsMultiplayer())
-            return !IsOurTurn();
-
-        // В одиночной игре: бот — всегда игрок 1
-        return CurrentPlayerTurnID == 1;
-    }
-
-    public void Restart()
-    {
-        TurnIndex = 0;
-        SetPlayersHP();
-        UIManager.Singletone.ShowHPBar();
-    }
-
-    public void SetWin(int winnerID)
-    {
-        wins[winnerID]++;
-        UIManager.Singletone.SetWinLoseCountText(wins);
     }
 
     public void PrepareGame()
@@ -141,19 +101,16 @@ public class GameManager : MonoBehaviour
 
         UpdateSkillsButtonState();
         UpdateShotButtonText();
+        UpdateShuffleButtonText();
 
         UpdateUI();
     }
 
-    private void GameOver()
+    public void Restart()
     {
-        TimerController.Singletone.EndTime();
-        BoardManager.Singltone.BlockAllButtons();
-        UIManager.Singletone.HideHPBar();
-        UIManager.Singletone.ShowRestartButton();
-        UIManager.Singletone.BlockShotButton();
-        UIManager.Singletone.BlockSlideButton();
-        isPlaying = false;
+        TurnIndex = 0;
+        SetPlayersHP();
+        UIManager.Singletone.ShowHPBar();
     }
 
     public void RestartGame()
@@ -170,17 +127,38 @@ public class GameManager : MonoBehaviour
             PrepareGame();
             MinmaxBot.Singletone.ResetBotMoveCount();
         }
-
     }
 
-    public void StartTimer()
+    private void GameOver()
     {
-        if (!IsOurTurn())
-        {
-            return;
-        }
+        TimerController.Singletone.EndTime();
+        BoardManager.Singltone.BlockAllButtons();
+        UIManager.Singletone.HideHPBar();
+        UIManager.Singletone.ShowRestartButton();
+        UIManager.Singletone.BlockShotButton();
+        UIManager.Singletone.BlockSlideButton();
+        UIManager.Singletone.BlockShuffleButton();
+        isPlaying = false;
+    }
 
-        TimerController.Singletone.StartTime();
+    public void SetWin(int winnerID)
+    {
+        wins[winnerID]++;
+        UIManager.Singletone.SetWinLoseCountText(wins);
+    }
+
+    // =============== TURN MANAGEMENT ===============
+    public void UpdateCurrentPlayerID(int clientID)
+    {
+        CurrentPlayerTurnID = clientID;
+        UIManager.Singletone.UpdateCurrentPlayerText();
+        UpdateSkillsButtonState();
+        StartTimer();
+    }
+
+    public void ChangeTurnIndex(int index = 1)
+    {
+        TurnIndex += index;
     }
 
     public void PassMoveToNextPlayer()
@@ -192,7 +170,7 @@ public class GameManager : MonoBehaviour
 
         if (SkillCooldownManager.ShouldRemoveSlideCooldown(TurnIndex, CurrentPlayerTurnID))
         {
-            SkillCooldownManager.RemoveSlideCooldown(); 
+            SkillCooldownManager.RemoveSlideCooldown();
             UIManager.Singletone.UnblockSlideButton();
         }
         if (SkillCooldownManager.ShouldRemoveShotCooldown(TurnIndex, CurrentPlayerTurnID))
@@ -200,82 +178,40 @@ public class GameManager : MonoBehaviour
             SkillCooldownManager.RemoveShotCooldown();
             UIManager.Singletone.UnblockShotButton();
         }
+        if (SkillCooldownManager.ShouldRemoveShuffleCooldown(TurnIndex, CurrentPlayerTurnID))
+        {
+            SkillCooldownManager.RemoveShuffleCooldown();
+            UIManager.Singletone.UnblockShuffleButton();
+        }
 
         UpdateSkillsButtonState();
         UpdateSlideButtonText();
         UpdateShotButtonText();
+        UpdateShuffleButtonText();
     }
 
-    private void UpdateSkillsButtonState()
+    public bool IsOurTurn()
     {
-        if (IsBlocking)
-        {
-            UIManager.Singletone.BlockSlideButton();
-            UIManager.Singletone.BlockShotButton();
-            StartCoroutine(WaitForBlockingEnd());
-            return;
-        }
-
-        CheckSlideButton();
-        CheckShotButton();
+        return CurrentPlayerTurnID == (int)NetworkPlayer.Singletone.NetworkManager.LocalClientId;
     }
 
-    private IEnumerator WaitForBlockingEnd()
+    public bool IsBotTurn()
     {
-        yield return new WaitUntil(() => !IsBlocking);
-        CheckSlideButton();
-        CheckShotButton();
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+            return !IsOurTurn();
+
+        // В одиночной игре: бот — всегда игрок 1
+        return CurrentPlayerTurnID == 1;
     }
 
-    private void CheckShotButton()
-    {
-
-        if (IsOurTurn())
-        {
-            if (!SkillCooldownManager.IsShotOnCooldown())
-            {
-                UIManager.Singletone.UnblockShotButton();
-            }
-            else
-            {
-                UIManager.Singletone.BlockShotButton();
-            }
-        }
-        else
-        {
-            UIManager.Singletone.BlockShotButton();
-        }
-    }
-
-    private void CheckSlideButton()
-    {
-
-        if (IsOurTurn())
-        {
-            if (!SkillCooldownManager.IsSlideOnCooldown())
-            {
-                UIManager.Singletone.UnblockSlideButton();
-            }
-        }
-        else
-        {
-            UIManager.Singletone.BlockSlideButton();
-        }
-    }
-
-    private void UpdateSlideButtonText()
-    {
-        string newText = SkillCooldownManager.GetSlideButtonText(TurnIndex);
-
-        if (newText != lastSlideButtonText)
-        {
-            UIManager.Singletone.SetCooldownText(newText);
-            lastSlideButtonText = newText;
-        }
-    }
-
+    // =============== PLAYER INPUT HANDLING ===============
     public void OnClick(int row, int col)
     {
+        if (IsAnimating)
+        {
+            Debug.LogWarning("IsAnimating break call method");
+            return;
+        }
         BoardManager.Singltone.FillCell(row, col, CurrentPlayerTurnID);
         ChangeTurnIndex();
         cellHistoryManager.AddMove(BoardManager.Singltone.GetCell(row, col), CurrentPlayerTurnID);
@@ -315,72 +251,6 @@ public class GameManager : MonoBehaviour
         PassMoveToNextPlayer();
     }
 
-    public void ApplyMultipleDamages(List<int> victimPlayerIDs)
-    {
-        if (victimPlayerIDs == null || victimPlayerIDs.Count == 0)
-        {
-            Debug.LogError("PlayerIDs is null or not found");
-            return;
-        }
-
-        Debug.Log($"[ApplyMultipleDamages] Наносим урон {victimPlayerIDs.Count} игрокам: [{string.Join(", ", victimPlayerIDs)}]");
-
-        var uniqueVictims = new HashSet<int>(victimPlayerIDs);
-
-        foreach (int playerId in uniqueVictims)
-        {
-            hPHistoryManager.Damage(playerId);
-            Debug.Log($"У игрока с айди {playerId} осталось хп: {hPHistoryManager.GetHP(playerId)}");
-        }
-
-        SetPlayersHP();
-
-        bool player0Lost = hPHistoryManager.LosePlayer(0);
-        bool player1Lost = hPHistoryManager.LosePlayer(1);
-
-        if (player0Lost && player1Lost)
-        {
-            Debug.Log("Оба игрока проиграли! Ничья.");
-            GameOver();
-            UIManager.Singletone.SetDrawText("Ничья");
-        }
-        else if (player0Lost)
-        {
-            Debug.Log("Игрок 0 проиграл! Игрок 1 победил.");
-            GameOver();
-            SetWin(1);
-            UIManager.Singletone.SetWinText();
-        }
-        else if (player1Lost)
-        {
-            Debug.Log("Игрок 1 проиграл! Игрок 0 победил.");
-            GameOver();
-            SetWin(0);
-            UIManager.Singletone.SetWinText();
-        }
-        else
-        {
-            StartCoroutine(DamageDelay());
-        }
-    }
-
-    private IEnumerator DamageDelay(System.Action onDamageComplete = null)
-    {
-        isBlocking = true;
-        BoardManager.Singltone.BlockAllButtons();
-        UIManager.Singletone.BlockSlideButton();
-        UIManager.Singletone.BlockShotButton();
-
-        yield return new WaitForSeconds(3f);
-
-        UpdateSkillsButtonState();
-        isBlocking = false;
-        cellHistoryManager.Clear();
-        BoardManager.Singltone.ClearAndUnbloackCells();
-
-        onDamageComplete?.Invoke();
-    }
-
     public IEnumerator PlayerSkipMove()
     {
         while (IsAnimating)
@@ -399,9 +269,15 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void HandleSkipTurn()
+    {
+        cellHistoryManager.SkipTurn(CurrentPlayerTurnID);
+        ChangeTurnIndex();
+    }
+
+    // =============== SKILL MECHANICS ===============
     public void ApplyShot()
     {
-
         // Только клиент, который нажал, управляет UI и кулдауном
         UIManager.Singletone.BlockShotButton();
         SkillCooldownManager.OnShotUsed(TurnIndex);
@@ -418,19 +294,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
-    private void UpdateShotButtonText()
-    {
-        string newText = SkillCooldownManager.GetShotButtonText(TurnIndex);
-        if (newText != lastShotButtonText)
-        {
-            UIManager.Singletone.SetShotCooldownText(newText);
-            lastShotButtonText = newText;
-        }
-    }
-
     public IEnumerator ShootThreeArrowsAndFill()
     {
+        UIManager.Singletone.BlockSlideButton();
+        UIManager.Singletone.BlockShotButton();
+        UIManager.Singletone.BlockShuffleButton();
+
         int shooterID = CurrentPlayerTurnID;
         int opponentID = 1 - shooterID;
 
@@ -595,11 +464,6 @@ public class GameManager : MonoBehaviour
         BoardManager.Singltone.ApplyGravity();
     }
 
-    public void ShuffleAllCells()
-    {
-        BoardManager.Singltone.ShuffleAllCells();
-    }
-
     public void ApplyShuffle()
     {
         if (NetworkPlayer.Singletone.IsMultiplayer())
@@ -611,35 +475,102 @@ public class GameManager : MonoBehaviour
             ShuffleAllCells();
         }
 
-        //// Обновляем UI: блокируем кнопку и т.д., если нужно
-        //UIManager.Singletone.BlockSlideButton(); // или отдельная кнопка для shuffle
-        //SkillCooldownManager.OnSlideUsed(TurnIndex); // или свой кулдаун, если будет
-        //UpdateSlideButtonText(); // или отдельный текст
+        UIManager.Singletone.BlockShuffleButton();
+        SkillCooldownManager.OnShuffleUsed(TurnIndex);
+        UpdateShuffleButtonText();
     }
 
-    public void HandleSkipTurn()
+    public void ShuffleAllCells()
     {
-        cellHistoryManager.SkipTurn(CurrentPlayerTurnID);
-        ChangeTurnIndex();
+        BoardManager.Singltone.ShuffleAllCells();
     }
 
-    public void UpdateOffSet(int clientID)
+    // =============== DAMAGE & HP SYSTEM ===============
+    private void SetPlayersHP()
     {
-        startOffSet = clientID;
-        UpdateCurrentPlayerID(clientID);
-        UIManager.Singletone.HideRestartButton();
+        if (NetworkPlayer.Singletone.IsMultiplayer())
+        {
+            var opId = NetworkManager.Singleton.LocalClientId == 0 ? 1 : 0;
+            var playerHP = hPHistoryManager.GetHP((int)NetworkManager.Singleton.LocalClientId);
+            int opponentHP = hPHistoryManager.GetHP(opId);
+            UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
+        }
+        else
+        {
+            int playerHP = hPHistoryManager.GetHP(0); // игрок (человек)
+            int opponentHP = hPHistoryManager.GetHP(1); // бот
+            UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
+        }
     }
 
-    public void BeginAnimation()
+    public void ApplyMultipleDamages(List<int> victimPlayerIDs)
     {
-        activeAnimations++;
+        if (victimPlayerIDs == null || victimPlayerIDs.Count == 0)
+        {
+            Debug.LogError("PlayerIDs is null or not found");
+            return;
+        }
+
+        Debug.Log($"[ApplyMultipleDamages] Наносим урон {victimPlayerIDs.Count} игрокам: [{string.Join(", ", victimPlayerIDs)}]");
+
+        var uniqueVictims = new HashSet<int>(victimPlayerIDs);
+
+        foreach (int playerId in uniqueVictims)
+        {
+            hPHistoryManager.Damage(playerId);
+            Debug.Log($"У игрока с айди {playerId} осталось хп: {hPHistoryManager.GetHP(playerId)}");
+        }
+
+        SetPlayersHP();
+
+        bool player0Lost = hPHistoryManager.LosePlayer(0);
+        bool player1Lost = hPHistoryManager.LosePlayer(1);
+
+        if (player0Lost && player1Lost)
+        {
+            Debug.Log("Оба игрока проиграли! Ничья.");
+            GameOver();
+            UIManager.Singletone.SetDrawText("Ничья");
+        }
+        else if (player0Lost)
+        {
+            Debug.Log("Игрок 0 проиграл! Игрок 1 победил.");
+            GameOver();
+            SetWin(1);
+            UIManager.Singletone.SetWinText();
+        }
+        else if (player1Lost)
+        {
+            Debug.Log("Игрок 1 проиграл! Игрок 0 победил.");
+            GameOver();
+            SetWin(0);
+            UIManager.Singletone.SetWinText();
+        }
+        else
+        {
+            StartCoroutine(DamageDelay());
+        }
     }
 
-    public void EndAnimation()
+    private IEnumerator DamageDelay(System.Action onDamageComplete = null)
     {
-        activeAnimations = Mathf.Max(0, activeAnimations - 1);
+        isBlocking = true;
+        BoardManager.Singltone.BlockAllButtons();
+        UIManager.Singletone.BlockSlideButton();
+        UIManager.Singletone.BlockShotButton();
+        UIManager.Singletone.BlockShuffleButton();
+
+        yield return new WaitForSeconds(3f);
+
+        UpdateSkillsButtonState();
+        isBlocking = false;
+        cellHistoryManager.Clear();
+        BoardManager.Singltone.ClearAndUnbloackCells();
+
+        onDamageComplete?.Invoke();
     }
 
+    // =============== UI & BUTTON STATE MANAGEMENT ===============
     public void UpdateUI()
     {
         UIManager.Singletone.HideActiveSessionInfo();
@@ -649,6 +580,130 @@ public class GameManager : MonoBehaviour
         UIManager.Singletone.ShowHPBar();
         UIManager.Singletone.ShowSlideButton();
         UIManager.Singletone.ShowShotButton();
+        UIManager.Singletone.ShowShuffleButton();
     }
 
+    private void UpdateSkillsButtonState()
+    {
+        if (IsBlocking)
+        {
+            UIManager.Singletone.BlockSlideButton();
+            UIManager.Singletone.BlockShotButton();
+            UIManager.Singletone.BlockShuffleButton();
+            StartCoroutine(WaitForBlockingEnd());
+            return;
+        }
+
+        CheckSlideButton();
+        CheckShotButton();
+        CheckShuffleButton();
+    }
+
+    private IEnumerator WaitForBlockingEnd()
+    {
+        yield return new WaitUntil(() => !IsBlocking);
+        CheckSlideButton();
+        CheckShotButton();
+        CheckShuffleButton();
+    }
+
+    private void CheckShotButton()
+    {
+        if (IsOurTurn())
+        {
+            if (!SkillCooldownManager.IsShotOnCooldown())
+            {
+                UIManager.Singletone.UnblockShotButton();
+            }
+            else
+            {
+                UIManager.Singletone.BlockShotButton();
+            }
+        }
+        else
+        {
+            UIManager.Singletone.BlockShotButton();
+        }
+    }
+
+    private void CheckSlideButton()
+    {
+        if (IsOurTurn())
+        {
+            if (!SkillCooldownManager.IsSlideOnCooldown())
+            {
+                UIManager.Singletone.UnblockSlideButton();
+            }
+        }
+        else
+        {
+            UIManager.Singletone.BlockSlideButton();
+        }
+    }
+
+    private void CheckShuffleButton()
+    {
+        if (IsOurTurn())
+        {
+            if (!SkillCooldownManager.IsShuffleOnCooldown())
+            {
+                UIManager.Singletone.UnblockShuffleButton();
+            }
+        }
+        else
+        {
+            UIManager.Singletone.BlockShuffleButton();
+        }
+    }
+
+    // =============== COOLDOWN TEXT UPDATES ===============
+    private void UpdateSlideButtonText()
+    {
+        string newText = SkillCooldownManager.GetSlideButtonText(TurnIndex);
+
+        if (newText != lastSlideButtonText)
+        {
+            UIManager.Singletone.SetCooldownText(newText);
+            lastSlideButtonText = newText;
+        }
+    }
+
+    private void UpdateShotButtonText()
+    {
+        string newText = SkillCooldownManager.GetShotButtonText(TurnIndex);
+        if (newText != lastShotButtonText)
+        {
+            UIManager.Singletone.SetShotCooldownText(newText);
+            lastShotButtonText = newText;
+        }
+    }
+
+    private void UpdateShuffleButtonText()
+    {
+        string newText = SkillCooldownManager.GetShuffleButtonText(TurnIndex);
+        if (newText != lastShuffleButtonText)
+        {
+            UIManager.Singletone.SetShuffleCooldownText(newText);
+            lastShuffleButtonText = newText;
+        }
+    }
+
+    // =============== TIMER ===============
+    public void StartTimer()
+    {
+        if (!IsOurTurn())
+        {
+            return;
+        }
+
+        TimerController.Singletone.StartTime();
+    }
+
+    // =============== OFFSET & INIT SYNC ===============
+    public void UpdateOffSet(int clientID)
+    {
+        startOffSet = clientID;
+        UpdateCurrentPlayerID(clientID);
+        UIManager.Singletone.HideRestartButton();
+    }
 }

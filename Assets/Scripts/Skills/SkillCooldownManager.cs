@@ -8,6 +8,10 @@
     private int shotCooldownTurnIndex = -1;
     private bool isShotOnCooldown = false;
 
+    // === Shuffle ===
+    private int shuffleCooldownTurnIndex = -1;
+    private bool isShuffleOnCooldown = false;
+
     private int startOffSet;
 
     public void Initialize(int offset)
@@ -22,6 +26,8 @@
         isSlideOnCooldown = false;
         shotCooldownTurnIndex = -1;
         isShotOnCooldown = false;
+        shuffleCooldownTurnIndex = -1;
+        isShuffleOnCooldown = false;
     }
 
     // === Слайд: текст ===
@@ -64,6 +70,29 @@
         };
     }
 
+    // === Shuffle: текст ===
+    public string GetShuffleButtonText(int currentTurnIndex)
+    {
+        if (!isShuffleOnCooldown)
+            return "Shuffle";
+
+        int playerWhoUsedShuffle = (shuffleCooldownTurnIndex + startOffSet) % 2;
+        int turnsByThatPlayer = CountPlayerTurns(shuffleCooldownTurnIndex + 1, currentTurnIndex, playerWhoUsedShuffle);
+        int remaining = 7 - turnsByThatPlayer;
+
+        return remaining switch
+        {
+            7 => "In 7 turns",
+            6 => "In 6 turns",
+            5 => "In 5 turns",
+            4 => "In 4 turns",
+            3 => "In 3 turns",
+            2 => "In 2 turns",
+            1 => "Next turn",
+            _ => "Shuffle"
+        };
+    }
+
     private int CountPlayerTurns(int fromTurn, int toTurn, int playerId)
     {
         int count = 0;
@@ -90,6 +119,13 @@
         isShotOnCooldown = true;
     }
 
+    // === Shuffle: использование ===
+    public void OnShuffleUsed(int currentTurnIndex)
+    {
+        shuffleCooldownTurnIndex = currentTurnIndex;
+        isShuffleOnCooldown = true;
+    }
+
     // === Слайд: проверка снятия ===
     public bool ShouldRemoveSlideCooldown(int currentTurnIndex, int currentPlayerID)
     {
@@ -108,19 +144,22 @@
         return turnsByThatPlayer >= 5;
     }
 
-    // === Слайд: сброс ===
-    public void RemoveSlideCooldown()
+    // === Shuffle: проверка снятия ===
+    public bool ShouldRemoveShuffleCooldown(int currentTurnIndex, int currentPlayerID)
     {
-        isSlideOnCooldown = false;
+        if (!isShuffleOnCooldown) return false;
+        int playerWhoUsedShuffle = (shuffleCooldownTurnIndex + startOffSet) % 2;
+        int turnsByThatPlayer = CountPlayerTurns(shuffleCooldownTurnIndex + 1, currentTurnIndex, playerWhoUsedShuffle);
+        return turnsByThatPlayer >= 7;
     }
 
-    // === Выстрел: сброс ===
-    public void RemoveShotCooldown()
-    {
-        isShotOnCooldown = false;
-    }
+    // === Сброс кулдаунов ===
+    public void RemoveSlideCooldown() => isSlideOnCooldown = false;
+    public void RemoveShotCooldown() => isShotOnCooldown = false;
+    public void RemoveShuffleCooldown() => isShuffleOnCooldown = false;
 
     // === Геттеры ===
     public bool IsSlideOnCooldown() => isSlideOnCooldown;
     public bool IsShotOnCooldown() => isShotOnCooldown;
+    public bool IsShuffleOnCooldown() => isShuffleOnCooldown;
 }

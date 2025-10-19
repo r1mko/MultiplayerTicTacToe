@@ -6,6 +6,7 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager Singletone;
 
+    // === UI References ===
     [SerializeField] private Slider playerHPSlider;
     [SerializeField] private Slider opponentHPSlider;
     [SerializeField] private Button restartButton;
@@ -24,17 +25,26 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text currentPlayerTextID;
     [SerializeField] private TMP_Text slideButtonText;
     [SerializeField] private TMP_Text shotButtonText;
+    [SerializeField] private TMP_Text shuffleButtonText;
+
+    // ======================
+    // === Инициализация ===
+    // ======================
 
     private void Awake()
     {
         Singletone = this;
+
+        // Подписка на события кнопок
         restartButton.onClick.AddListener(OnRestart);
         hostButton.onClick.AddListener(OnHost);
         singlePlayerButton.onClick.AddListener(OnSingle);
         clientButton.onClick.AddListener(OnClient);
         slideButton.onClick.AddListener(Slide);
         shotButton.onClick.AddListener(Shot);
-        shuffleButton.onClick.AddListener(Reverse);
+        shuffleButton.onClick.AddListener(Shuffle);
+
+        // Начальное состояние UI
         HideRestartButton();
         HideHPBar();
         HideMoveInfo();
@@ -43,9 +53,14 @@ public class UIManager : MonoBehaviour
         HideTimerText();
         HideSlideButton();
         HideShotButton();
+        HideShuffleButton();
         ShowActiveSessionInfo();
         ShowNavigationPanel();
     }
+
+    // ======================
+    // === Навигация ===
+    // ======================
 
     private void OnSingle()
     {
@@ -70,6 +85,20 @@ public class UIManager : MonoBehaviour
         SessionManager.Instance.FindAndJoinSessionButton();
     }
 
+    public void ShowNavigationPanel()
+    {
+        navigationPanel.SetActive(true);
+    }
+
+    public void HideNavigationPanel()
+    {
+        navigationPanel.SetActive(false);
+    }
+
+    // ==============================
+    // === Игровая информация ===
+    // ==============================
+
     public void UpdateCurrentPlayerText()
     {
         if (GameManager.Singletone.IsOurTurn())
@@ -80,7 +109,6 @@ public class UIManager : MonoBehaviour
         {
             currentPlayerTextID.text = "Ход противника";
         }
-
     }
 
     public void SetWinText()
@@ -95,48 +123,9 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void SetCooldownText(string text)
-    {
-        slideButtonText.text = text;
-    }
-
     public void SetDrawText(string text)
     {
         currentPlayerTextID.text = text;
-    }
-    public void ShowRestartButton()
-    {
-        restartButton.gameObject.SetActive(true);
-    }
-
-    public void HideRestartButton()
-    {
-        restartButton.gameObject.SetActive(false);
-    }
-
-    public void ShowNavigationPanel()
-    {
-        navigationPanel.SetActive(true);
-    }
-
-    public void HideNavigationPanel()
-    {
-        navigationPanel.SetActive(false);
-    }
-
-    public void ShowActiveSessionInfo()
-    {
-        sessionInfoText.gameObject.SetActive(true);
-    }
-
-    public void HideActiveSessionInfo()
-    {
-        sessionInfoText.gameObject.SetActive(false);
-    }
-
-    public void SetSessionInfoText(string info)
-    {
-        sessionInfoText.text = info;
     }
 
     public void ShowMoveInfo()
@@ -176,6 +165,10 @@ public class UIManager : MonoBehaviour
         smileScreen.SetActive(false);
     }
 
+    // ======================
+    // === Таймер ===
+    // ======================
+
     public void SetTimerText(double time)
     {
         timerText.text = time.ToString();
@@ -184,14 +177,16 @@ public class UIManager : MonoBehaviour
     public void HideTimerText()
     {
         timerText.gameObject.SetActive(false);
-       // Debug.Log("Вызвали скрытие таймера");
     }
 
     public void ShowTimerText()
     {
         timerText.gameObject.SetActive(true);
-        //Debug.Log("Вызвали отображение таймера");
     }
+
+    // ======================
+    // === HP-бары ===
+    // ======================
 
     public void SetPlayersHP(int player, int opponent)
     {
@@ -207,29 +202,64 @@ public class UIManager : MonoBehaviour
         playerHPSlider.gameObject.SetActive(true);
         opponentHPSlider.gameObject.SetActive(true);
     }
+
     public void HideHPBar()
     {
         playerHPSlider.gameObject.SetActive(false);
         opponentHPSlider.gameObject.SetActive(false);
     }
 
+    // ======================
+    // === Механика Slide ===
+    // ======================
+
     public void ShowSlideButton()
     {
         slideButton.gameObject.SetActive(true);
     }
+
     public void HideSlideButton()
     {
         slideButton.gameObject.SetActive(false);
-    }
-    
-    private void Reverse()
-    {
-        GameManager.Singletone.ApplyShuffle();
     }
 
     private void Slide()
     {
         GameManager.Singletone.ApplySlideGravity();
+    }
+
+    public void SetCooldownText(string text)
+    {
+        slideButtonText.text = text;
+    }
+
+    public void BlockSlideButton()
+    {
+        slideButton.interactable = false;
+    }
+
+    public void UnblockSlideButton()
+    {
+        slideButton.interactable = true;
+    }
+
+    // ======================
+    // === Механика Shot ===
+    // ======================
+
+    public void ShowShotButton()
+    {
+        shotButton.gameObject.SetActive(true);
+    }
+
+    public void HideShotButton()
+    {
+        shotButton.gameObject.SetActive(false);
+    }
+
+    private void Shot()
+    {
+        GameManager.Singletone.ApplyShot();
     }
 
     public void SetShotCooldownText(string text)
@@ -247,29 +277,76 @@ public class UIManager : MonoBehaviour
         shotButton.interactable = true;
     }
 
-    public void ShowShotButton()
+    // =========================
+    // === Механика Shuffle ===
+    // =========================
+
+    public void ShowShuffleButton()
     {
-        shotButton.gameObject.SetActive(true);
-    }
-    public void HideShotButton()
-    {
-        shotButton.gameObject.SetActive(false);
+        shuffleButton.gameObject.SetActive(true);
     }
 
-    private void Shot()
+    public void HideShuffleButton()
     {
-        GameManager.Singletone.ApplyShot();
+        shuffleButton.gameObject.SetActive(false);
     }
 
-    public void BlockSlideButton()
+    private void Shuffle()
     {
-        slideButton.interactable = false;
+        GameManager.Singletone.ApplyShuffle();
     }
 
-    public void UnblockSlideButton()
+    public void SetShuffleCooldownText(string text)
     {
-        slideButton.interactable = true;
+        shuffleButtonText.text = text;
     }
+
+    public void BlockShuffleButton()
+    {
+        shuffleButton.interactable = false;
+    }
+
+    public void UnblockShuffleButton()
+    {
+        shuffleButton.interactable = true;
+    }
+
+    // ======================
+    // === Сессия ===
+    // ======================
+
+    public void ShowActiveSessionInfo()
+    {
+        sessionInfoText.gameObject.SetActive(true);
+    }
+
+    public void HideActiveSessionInfo()
+    {
+        sessionInfoText.gameObject.SetActive(false);
+    }
+
+    public void SetSessionInfoText(string info)
+    {
+        sessionInfoText.text = info;
+    }
+
+    // ======================
+    // === Кнопка Restart ===
+    // ======================
+
+    public void ShowRestartButton()
+    {
+        restartButton.gameObject.SetActive(true);
+    }
+
+    public void HideRestartButton()
+    {
+        restartButton.gameObject.SetActive(false);
+    }
+
+    // ======================
+    // === Очистка ===
+    // ======================
 
     private void OnDestroy()
     {
@@ -281,5 +358,4 @@ public class UIManager : MonoBehaviour
         shotButton.onClick.RemoveAllListeners();
         shuffleButton.onClick.RemoveAllListeners();
     }
-
 }
