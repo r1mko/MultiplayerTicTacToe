@@ -211,7 +211,7 @@ GameObject:
   - component: {fileID: 273292927}
   - component: {fileID: 273292926}
   m_Layer: 5
-  m_Name: MainCanvas
+  m_Name: GameCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -977,6 +977,7 @@ MonoBehaviour:
   CurrentPlayerTurnID: 0
   TurnIndex: 0
   Canvas: {fileID: 273292928}
+  ShotPrefab: {fileID: 4426109018450759398, guid: c556342e65514a24a8b93e1c13d48bff, type: 3}
 --- !u!4 &1762305792
 Transform:
   m_ObjectHideFlags: 0

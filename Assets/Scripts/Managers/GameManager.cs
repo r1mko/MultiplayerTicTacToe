@@ -31,6 +31,7 @@ public class GameManager : MonoBehaviour
     public int CurrentPlayerTurnID;
     public int TurnIndex;
     public Canvas Canvas;
+    public GameObject ShotPrefab;
 
     private int startOffSet;
     private const int ArrowCount = 3;
@@ -416,8 +417,8 @@ public class GameManager : MonoBehaviour
         Vector2 startPosition = new Vector2(0, -canvasRect.rect.height / 2 - 50);
         Vector2 endPosition = BoardManager.Singltone.GetCellScreenPosition(targetCell.row, targetCell.coll);
 
-        GameObject shot = new GameObject("Shot");
-        Image image = shot.AddComponent<Image>();
+        GameObject shot = Instantiate(ShotPrefab);
+        Image image = shot.GetComponent<Image>();
         image.color = new Color(1f, 0.2f, 0.3f);
         RectTransform rectTransform = shot.GetComponent<RectTransform>();
         rectTransform.SetParent(Canvas.transform, false);
