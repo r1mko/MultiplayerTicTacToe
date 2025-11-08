@@ -225,7 +225,7 @@ public class GameManager : MonoBehaviour
 
         if (BoardManager.Singltone.IsRow(row, col))
         {
-            SpawnWinLine();
+            SpawnWinLines();
             int playerID = CurrentPlayerTurnID;
             int opponentID = 1 - playerID;
             hPHistoryManager.Damage(opponentID);
@@ -383,7 +383,7 @@ public class GameManager : MonoBehaviour
             }
             else
             {
-                SpawnWinLine();
+                SpawnWinLines();
                 hPHistoryManager.Damage(opponentID);
                 SetPlayersHP();
 
@@ -510,7 +510,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void SpawnWinLine()
+    private void SpawnWinLines()
     {
         if (winLinePrefab == null)
         {
@@ -518,28 +518,33 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        WinLineType type = BoardManager.Singltone.GetAndResetWinLineType();
-        if (type == WinLineType.None) return;
+        List<WinLineType> winTypes = BoardManager.Singltone.GetAllWinLines();
+        if (winTypes.Count == 0) return;
 
-        WinLineConfig config = System.Array.Find(
-            Singltone.winLineConfigs,
-            c => c.type == type
-        );
-
-        if (config.type == WinLineType.None)
+        foreach (WinLineType type in winTypes)
         {
-            Debug.LogWarning($"No config found for WinLineType: {type}");
-            return;
+            WinLineConfig config = System.Array.Find(
+                BoardManager.Singltone.winLineConfigs,
+                c => c.type == type
+            );
+
+            if (config.type == WinLineType.None)
+            {
+                Debug.LogWarning($"No config found for WinLineType: {type}");
+                continue;
+            }
+
+            GameObject winLine = Instantiate(winLinePrefab, Canvas.transform);
+            RectTransform rt = winLine.GetComponent<RectTransform>();
+
+            rt.anchoredPosition = config.positionOffset;
+            rt.localEulerAngles = new Vector3(0, 0, config.rotation);
+
+            Destroy(winLine, 3f);
         }
-
-        GameObject winLine = Instantiate(winLinePrefab, Canvas.transform);
-        RectTransform rt = winLine.GetComponent<RectTransform>();
-
-        rt.anchoredPosition = config.positionOffset;
-        rt.localEulerAngles = new Vector3(0, 0, config.rotation);
-
-        Destroy(winLine, 3f);
     }
+
+
 
     public void ApplyMultipleDamages(List<int> victimPlayerIDs)
     {
@@ -559,6 +564,7 @@ public class GameManager : MonoBehaviour
             Debug.Log($"У игрока с айди {playerId} осталось хп: {hPHistoryManager.GetHP(playerId)}");
         }
 
+        SpawnWinLines();
         SetPlayersHP();
 
         bool player0Lost = hPHistoryManager.LosePlayer(0);

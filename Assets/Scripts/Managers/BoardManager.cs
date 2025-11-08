@@ -27,15 +27,6 @@ public class BoardManager : MonoBehaviour
 
     public WinLineConfig[] winLineConfigs;
 
-    private WinLineType currentWinLineType = WinLineType.None;
-
-    public WinLineType GetAndResetWinLineType()
-    {
-        WinLineType result = currentWinLineType;
-        currentWinLineType = WinLineType.None;
-        return result;
-    }
-
     [SerializeField] private GameObject board;
     public Canvas Canvas;
 
@@ -157,13 +148,6 @@ public class BoardManager : MonoBehaviour
             buttons[row, 1].IndexPlayer == indexPlayer &&
             buttons[row, 2].IndexPlayer == indexPlayer)
         {
-            currentWinLineType = row switch
-            {
-                0 => WinLineType.TopRow,
-                1 => WinLineType.MiddleRow,
-                2 => WinLineType.BottomRow,
-                _ => WinLineType.None
-            };
             return true;
         }
 
@@ -173,13 +157,6 @@ public class BoardManager : MonoBehaviour
             buttons[1, column].IndexPlayer == indexPlayer &&
             buttons[2, column].IndexPlayer == indexPlayer)
         {
-            currentWinLineType = column switch
-            {
-                0 => WinLineType.LeftColumn,
-                1 => WinLineType.MiddleColumn,
-                2 => WinLineType.RightColumn,
-                _ => WinLineType.None
-            };
             return true;
         }
 
@@ -190,7 +167,6 @@ public class BoardManager : MonoBehaviour
             buttons[1, 1].IndexPlayer == indexPlayer &&
             buttons[2, 2].IndexPlayer == indexPlayer)
         {
-            currentWinLineType = WinLineType.DiagonalMain;
             return true;
         }
 
@@ -201,11 +177,89 @@ public class BoardManager : MonoBehaviour
             buttons[1, 1].IndexPlayer == indexPlayer &&
             buttons[2, 0].IndexPlayer == indexPlayer)
         {
-            currentWinLineType = WinLineType.DiagonalAnti;
             return true;
         }
 
         return false;
+    }
+
+    public List<WinLineType> GetAllWinLines()
+    {
+        List<WinLineType> winLines = new List<WinLineType>();
+
+        // Проверяем горизонтали
+        for (int r = 0; r < 3; r++)
+        {
+            if (buttons[r, 0].IsFillCell && buttons[r, 1].IsFillCell && buttons[r, 2].IsFillCell)
+            {
+                int p = buttons[r, 0].IndexPlayer;
+                if (buttons[r, 1].IndexPlayer == p && buttons[r, 2].IndexPlayer == p)
+                {
+                    winLines.Add(r switch { 0 => WinLineType.TopRow, 1 => WinLineType.MiddleRow, 2 => WinLineType.BottomRow, _ => WinLineType.None });
+                }
+            }
+        }
+
+        // Проверяем вертикали
+        for (int c = 0; c < 3; c++)
+        {
+            if (buttons[0, c].IsFillCell && buttons[1, c].IsFillCell && buttons[2, c].IsFillCell)
+            {
+                int p = buttons[0, c].IndexPlayer;
+                if (buttons[1, c].IndexPlayer == p && buttons[2, c].IndexPlayer == p)
+                {
+                    winLines.Add(c switch { 0 => WinLineType.LeftColumn, 1 => WinLineType.MiddleColumn, 2 => WinLineType.RightColumn, _ => WinLineType.None });
+                }
+            }
+        }
+
+        // Главная диагональ
+        if (buttons[0, 0].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 2].IsFillCell)
+        {
+            int p = buttons[0, 0].IndexPlayer;
+            if (buttons[1, 1].IndexPlayer == p && buttons[2, 2].IndexPlayer == p)
+            {
+                winLines.Add(WinLineType.DiagonalMain);
+            }
+        }
+
+        // Побочная диагональ
+        if (buttons[0, 2].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 0].IsFillCell)
+        {
+            int p = buttons[0, 2].IndexPlayer;
+            if (buttons[1, 1].IndexPlayer == p && buttons[2, 0].IndexPlayer == p)
+            {
+                winLines.Add(WinLineType.DiagonalAnti);
+            }
+        }
+
+        return winLines;
+    }
+    public int GetWinnerFromLineType(WinLineType type)
+    {
+        switch (type)
+        {
+            case WinLineType.TopRow:
+            case WinLineType.MiddleRow:
+            case WinLineType.BottomRow:
+                int row = type == WinLineType.TopRow ? 0 : (type == WinLineType.MiddleRow ? 1 : 2);
+                return buttons[row, 0].IsFillCell ? buttons[row, 0].IndexPlayer : -1;
+
+            case WinLineType.LeftColumn:
+            case WinLineType.MiddleColumn:
+            case WinLineType.RightColumn:
+                int col = type == WinLineType.LeftColumn ? 0 : (type == WinLineType.MiddleColumn ? 1 : 2);
+                return buttons[0, col].IsFillCell ? buttons[0, col].IndexPlayer : -1;
+
+            case WinLineType.DiagonalMain:
+                return buttons[0, 0].IsFillCell ? buttons[0, 0].IndexPlayer : -1;
+
+            case WinLineType.DiagonalAnti:
+                return buttons[0, 2].IsFillCell ? buttons[0, 2].IndexPlayer : -1;
+
+            default:
+                return -1;
+        }
     }
 
     public bool IsGameDraw()
