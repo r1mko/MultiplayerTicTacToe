@@ -45,7 +45,7 @@ public class TimerController : MonoBehaviour
         double remainingTime = endTime - GetTime();
         if (remainingTime <= 0)
         {
-            GameManager.Singletone.PlayerSkipMove();
+            GameManager.Singletone.StartCoroutine(GameManager.Singletone.PlayerSkipMove());
             EndTime();
             return;
         }

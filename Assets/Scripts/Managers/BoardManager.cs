@@ -1,16 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using Unity.Netcode;
-using UnityEngine.UI;
-using TMPro;
 public class BoardManager : MonoBehaviour
 {
     [SerializeField] private GameObject board;
+    public Canvas Canvas;
 
     public static BoardManager Singltone;
 
-    Cell[,] buttons = new Cell[3, 3];
+    private Cell[,] buttons = new Cell[3, 3];
 
     private void Awake()
     {
@@ -52,6 +50,44 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Возвращает позицию центра ячейки в координатах Canvas (для UI)
+    /// </summary>
+    public Vector2 GetCellScreenPosition(int row, int col)
+    {
+        if (row < 0 || row >= 3 || col < 0 || col >= 3) return Vector2.zero;
+
+        RectTransform cellRect = buttons[row, col].GetComponent<RectTransform>();
+        Vector3[] corners = new Vector3[4];
+        cellRect.GetWorldCorners(corners);
+
+        // Центр ячейки в мировых координатах
+        Vector3 worldCenter = (corners[0] + corners[2]) / 2f;
+
+        // Преобразуем в локальные координаты Canvas
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            Canvas.transform as RectTransform,
+            worldCenter,
+            null,
+            out Vector2 localPosition
+        );
+
+        return localPosition;
+    }
+
+    public List<Cell> GetAllCells()
+    {
+        List<Cell> allCells = new List<Cell>();
+        for (int i = 0; i < buttons.GetLength(0); i++)
+        {
+            for (int j = 0; j < buttons.GetLength(1); j++)
+            {
+                allCells.Add(buttons[i, j]);
+            }
+        }
+        return allCells;
+    }
+
     public void OnClickCell(int row, int coll, Cell cell)
     {
         if (!GameManager.Singletone.IsOurTurn())
@@ -77,38 +113,64 @@ public class BoardManager : MonoBehaviour
 
     public bool IsRow(int row, int column)
     {
-        int indexPlayer = buttons[row, column].IndexPlayer;
-
-        //проверяем столбцы
-        if (buttons[0, column].IsSameCell(indexPlayer) &&
-            buttons[1, column].IsSameCell(indexPlayer) &&
-            buttons[2, column].IsSameCell(indexPlayer))
+        Cell cell = buttons[row, column];
+        if (!cell.IsFillCell)
         {
+            Debug.Log($"[IsRow] Ячейка ({row},{column}) пуста — не может быть частью ряда");
+            return false;
+        }
+
+        int indexPlayer = cell.IndexPlayer;
+        Debug.Log($"[IsRow] Проверяем ячейку ({row},{column}), игрок: {indexPlayer}");
+
+        // Проверка строки
+        if (buttons[row, 0].IsFillCell &&
+            buttons[row, 1].IsFillCell &&
+            buttons[row, 2].IsFillCell &&
+            buttons[row, 0].IndexPlayer == indexPlayer &&
+            buttons[row, 1].IndexPlayer == indexPlayer &&
+            buttons[row, 2].IndexPlayer == indexPlayer)
+        {
+            Debug.Log($"[IsRow] Горизонтальный ряд найден в строке {row}!");
             return true;
         }
 
-        //проверяем ряды
-        else if (buttons[row, 0].IsSameCell(indexPlayer) &&
-                 buttons[row, 1].IsSameCell(indexPlayer) &&
-                 buttons[row, 2].IsSameCell(indexPlayer))
+        // Проверка столбца
+        if (buttons[0, column].IsFillCell &&
+            buttons[1, column].IsFillCell &&
+            buttons[2, column].IsFillCell &&
+            buttons[0, column].IndexPlayer == indexPlayer &&
+            buttons[1, column].IndexPlayer == indexPlayer &&
+            buttons[2, column].IndexPlayer == indexPlayer)
         {
+            Debug.Log($"[IsRow] Вертикальный ряд найден в столбце {column}!");
             return true;
         }
 
-        //проверяем первую диагональ
-        else if (buttons[0, 0].IsSameCell(indexPlayer) &&
-                 buttons[1, 1].IsSameCell(indexPlayer) &&
-                 buttons[2, 2].IsSameCell(indexPlayer))
+        // Диагональ 0,0 → 2,2
+        if (row == 1 && column == 1 || row == 0 && column == 0 || row == 2 && column == 2)
         {
-            return true;
+            if (buttons[0, 0].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 2].IsFillCell &&
+                buttons[0, 0].IndexPlayer == indexPlayer &&
+                buttons[1, 1].IndexPlayer == indexPlayer &&
+                buttons[2, 2].IndexPlayer == indexPlayer)
+            {
+                Debug.Log("[IsRow] Диагональ 0,0 → 2,2 собрана!");
+                return true;
+            }
         }
 
-        //проверяем вторую диагональ
-        else if (buttons[0, 2].IsSameCell(indexPlayer) &&
-                 buttons[1, 1].IsSameCell(indexPlayer) &&
-                 buttons[2, 0].IsSameCell(indexPlayer))
+        // Диагональ 0,2 → 2,0
+        if ((row == 0 && column == 2) || (row == 2 && column == 0) || (row == 1 && column == 1))
         {
-            return true;
+            if (buttons[0, 2].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 0].IsFillCell &&
+                buttons[0, 2].IndexPlayer == indexPlayer &&
+                buttons[1, 1].IndexPlayer == indexPlayer &&
+                buttons[2, 0].IndexPlayer == indexPlayer)
+            {
+                Debug.Log("[IsRow] Диагональ 0,2 → 2,0 собрана!");
+                return true;
+            }
         }
 
         return false;
@@ -196,5 +258,249 @@ public class BoardManager : MonoBehaviour
         }
 
         return board;
+    }
+
+    public void ApplyGravity()
+    {
+        bool changes = false;
+        Dictionary<Cell, Cell> cellRemap = new Dictionary<Cell, Cell>();
+
+        for (int j = 0; j < 3; j++)
+        {
+            List<Cell> columnCells = new List<Cell>();
+
+            // Собираем заполненные клетки сверху вниз (по возрастанию row)
+            for (int i = 0; i < 3; i++)
+            {
+                if (buttons[i, j].IsFillCell)
+                {
+                    columnCells.Add(buttons[i, j]);
+                }
+            }
+
+            if (columnCells.Count == 0) continue;
+
+            // Проверяем, нужно ли двигать
+            bool needToMove = false;
+            int expectedRow = 2;
+            for (int k = columnCells.Count - 1; k >= 0; k--)
+            {
+                if (columnCells[k].row != expectedRow)
+                {
+                    needToMove = true;
+                    break;
+                }
+                expectedRow--;
+            }
+
+            if (!needToMove) continue;
+
+            // Очищаем столбец
+            for (int i = 0; i < 3; i++)
+            {
+                buttons[i, j].Clear();
+            }
+
+            // Заполняем снизу вверх, начиная с самой нижней фишки
+            int fillRow = 2;
+            for (int k = columnCells.Count - 1; k >= 0; k--)
+            {
+                Cell cell = columnCells[k];
+                Cell targetCell = buttons[fillRow, j];
+                targetCell.Fill(cell.IndexPlayer); // ← сохраняем оригинального владельца
+
+                if (cell.row != fillRow)
+                {
+                    cellRemap[cell] = targetCell;
+                    changes = true;
+                }
+
+                fillRow--;
+            }
+        }
+
+        if (!changes)
+        {
+            Debug.Log("Гравитация: всё на месте.");
+            return;
+        }
+
+        Debug.Log("Гравитация: фишки упали. Обновляем историю...");
+
+        // Обновляем CellHistory
+        var cellHistory = GameManager.Singletone.cellHistoryManager.CellHistory;
+        foreach (var playerEntry in cellHistory)
+        {
+            for (int i = 0; i < playerEntry.Value.Count; i++)
+            {
+                if (playerEntry.Value[i] != null && cellRemap.TryGetValue(playerEntry.Value[i], out Cell newCell))
+                {
+                    playerEntry.Value[i] = newCell;
+                }
+            }
+        }
+
+        GameManager.Singletone.cellHistoryManager.CheckCellHistory();
+
+        // === СБОР ЖЕРТВ УРОНА ===
+        List<int> victims = new List<int>();
+        HashSet<int> winners = new HashSet<int>(); // Чтобы не дублировать
+
+        foreach (var (oldCell, newCell) in cellRemap)
+        {
+            if (IsRow(newCell.row, newCell.coll))
+            {
+                int ownerOfWinningRow = newCell.IndexPlayer;
+                if (!winners.Contains(ownerOfWinningRow))
+                {
+                    winners.Add(ownerOfWinningRow);
+                    int opponentID = 1 - ownerOfWinningRow;
+                    victims.Add(opponentID);
+                    Debug.Log($"Игрок {ownerOfWinningRow} собрал ряд после гравитации! Игроку {opponentID} будет нанесён урон!");
+                }
+            }
+        }
+
+        // === ЕДИНЫЙ ВЫЗОВ УРОНА ТОЛЬКО ЕСЛИ ЕСТЬ ЖЕРТВЫ ===
+        if (victims.Count > 0)
+        {
+            if (NetworkPlayer.Singletone.IsMultiplayer())
+            {
+                if (NetworkPlayer.Singletone.IsServer)
+                {
+                    int[] victimsArray = victims.ToArray();
+                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victimsArray);
+                }
+            }
+            else
+            {
+                GameManager.Singletone.ApplyMultipleDamages(victims);
+            }
+        }
+        else
+        {
+            Debug.Log("После гравитации ни одна линия не собрана. Продолжаем игру.");
+        }
+    }
+
+    public void ShuffleAllCells()
+    {
+        // 1. Собираем все заполненные фишки (сохраняем владельца)
+        List<(int playerID, Cell originalCell)> filledData = new List<(int, Cell)>();
+        List<Cell> allCells = new List<Cell>();
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                Cell cell = buttons[i, j];
+                allCells.Add(cell);
+                if (cell.IsFillCell)
+                {
+                    filledData.Add((cell.IndexPlayer, cell));
+                }
+            }
+        }
+
+        int filledCount = filledData.Count;
+        if (filledCount == 0)
+        {
+            Debug.Log("[Shuffle] Нет фишек для перемешивания.");
+            return;
+        }
+
+        // 2. Создаём копию списка всех ячеек и перемешиваем её
+        List<Cell> shuffledCells = new List<Cell>(allCells);
+        int seed = GameManager.Singletone.TurnIndex;
+        System.Random rng = new System.Random(seed);
+
+        // Fisher-Yates shuffle
+        for (int i = shuffledCells.Count - 1; i > 0; i--)
+        {
+            int j = rng.Next(0, i + 1);
+            (shuffledCells[i], shuffledCells[j]) = (shuffledCells[j], shuffledCells[i]);
+        }
+
+        // 3. Берём первые `filledCount` ячеек как цели
+        List<Cell> targetCells = shuffledCells.GetRange(0, filledCount);
+
+        // 4. Очищаем ВСЁ поле
+        foreach (var cell in allCells)
+        {
+            cell.Clear();
+        }
+
+        // 5. Сопоставляем каждую фишку с новой ячейкой
+        Dictionary<Cell, Cell> cellRemap = new Dictionary<Cell, Cell>();
+
+        for (int i = 0; i < filledCount; i++)
+        {
+            var (playerID, oldCell) = filledData[i];
+            Cell newCell = targetCells[i];
+
+            // Заполняем новую ячейку
+            newCell.Fill(playerID);
+
+            // Если позиция изменилась — запоминаем для обновления истории
+            if (oldCell != newCell)
+            {
+                cellRemap[oldCell] = newCell;
+            }
+        }
+
+        // 6. Обновляем CellHistory
+        var cellHistory = GameManager.Singletone.cellHistoryManager.CellHistory;
+        foreach (var kvp in cellHistory)
+        {
+            for (int i = 0; i < kvp.Value.Count; i++)
+            {
+                Cell histCell = kvp.Value[i];
+                if (histCell != null && cellRemap.TryGetValue(histCell, out Cell newHistCell))
+                {
+                    kvp.Value[i] = newHistCell;
+                }
+            }
+        }
+
+        GameManager.Singletone.cellHistoryManager.CheckCellHistory();
+
+        Debug.Log($"[Shuffle] Перемешано {filledCount} фишек с seed={seed}. Новые позиции: {string.Join(", ", targetCells.Select(c => $"({c.row},{c.coll})"))}");
+
+        // 7. Проверка рядов и урон — как в ApplyGravity
+        List<int> victims = new List<int>();
+        HashSet<int> winners = new HashSet<int>();
+
+        foreach (Cell newCell in targetCells)
+        {
+            if (IsRow(newCell.row, newCell.coll))
+            {
+                int winner = newCell.IndexPlayer;
+                if (!winners.Contains(winner))
+                {
+                    winners.Add(winner);
+                    victims.Add(1 - winner);
+                    Debug.Log($"[Shuffle] Ряд собран игроком {winner} в ({newCell.row},{newCell.coll})!");
+                }
+            }
+        }
+
+        if (victims.Count > 0)
+        {
+            if (NetworkPlayer.Singletone.IsMultiplayer())
+            {
+                if (NetworkPlayer.Singletone.IsServer)
+                {
+                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victims.ToArray());
+                }
+            }
+            else
+            {
+                GameManager.Singletone.ApplyMultipleDamages(victims);
+            }
+        }
+        else
+        {
+            Debug.Log("[Shuffle] Ни одного ряда после перемешивания.");
+        }
     }
 }

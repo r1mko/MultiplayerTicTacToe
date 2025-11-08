@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityUtils;
@@ -26,7 +27,6 @@ public class NetworkPlayer : NetworkBehaviour
         }
     }
 
-
     private bool CheckTwoPlayers()
     {
         if (!IsServer)
@@ -41,12 +41,29 @@ public class NetworkPlayer : NetworkBehaviour
         return false;
     }
 
-
     //rpc region
     [Rpc(SendTo.Everyone)]
     public void OnClickRpc(int row, int col)
     {
         GameManager.Singletone.OnClick(row, col);
+    }
+
+    [Rpc(SendTo.Everyone)]
+    public void ApplyGravitySlideRpc()
+    {
+        GameManager.Singletone.SlideGravity();
+    }
+
+    [Rpc(SendTo.Everyone)]
+    public void ApplyShotRpc()
+    {
+        GameManager.Singletone.StartCoroutine(GameManager.Singletone.ShootThreeArrowsAndFill());
+    }
+
+    [Rpc(SendTo.Everyone)]
+    public void ApplyShuffleRpc()
+    {
+        GameManager.Singletone.ShuffleAllCells();
     }
 
     [Rpc(SendTo.Everyone)]
@@ -102,5 +119,12 @@ public class NetworkPlayer : NetworkBehaviour
     public void UpdateOffSetRpc(int clientID)
     {
         GameManager.Singletone.UpdateOffSet(clientID);
+    }
+
+    [Rpc(SendTo.Everyone)]
+    public void TriggerMultipleDamageRpc(int[] victimIDs)
+    {
+        List<int> victims = new List<int>(victimIDs);
+        GameManager.Singletone.ApplyMultipleDamages(victims);
     }
 }

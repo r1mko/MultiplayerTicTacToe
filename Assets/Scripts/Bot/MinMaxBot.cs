@@ -36,7 +36,8 @@ public class MinmaxBot : MonoBehaviour
         if (bestMove != null)
         {
             GameManager.Singletone.OnClick(bestMove.row, bestMove.coll);
-
+            //var move = GetRandomEmptyCell();
+            //GameManager.Singletone.OnClick(move.row, move.coll);
             botMoveCount++;
         }
         else
@@ -45,6 +46,32 @@ public class MinmaxBot : MonoBehaviour
         }
 
         botTurnCoroutine = null;
+    }
+
+    private Cell GetRandomEmptyCell() //для теста механик, бот с выбором рандомной клетки
+    {
+        List<Cell> emptyCells = new List<Cell>();
+
+        for (int r = 0; r < 3; r++)
+        {
+            for (int c = 0; c < 3; c++)
+            {
+                var cell = BoardManager.Singltone.GetCell(r, c);
+                if (!cell.IsFillCell)
+                {
+                    emptyCells.Add(cell);
+                }
+            }
+        }
+
+        if (emptyCells.Count == 0)
+        {
+            Debug.Log("Нет пустых клеток для хода.");
+            return null;
+        }
+
+        // Возвращаем случайную пустую клетку
+        return emptyCells[UnityEngine.Random.Range(0, emptyCells.Count)];
     }
 
     private Cell FindBestMove()
@@ -60,7 +87,6 @@ public class MinmaxBot : MonoBehaviour
 
         // Определяем текущую максимальную глубину
         int currentMaxDepth = GetCurrentSearchDepth();
-        Debug.Log($"Сделали ход с глубиной {currentMaxDepth}");
 
         for (int r = 0; r < 3; r++)
         {

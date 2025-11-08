@@ -13,7 +13,7 @@ public class CellHistoryManager
         }
     }
 
-    public void Add(Cell cell, int playerID)
+    public void AddMove(Cell cell, int playerID)
     {
         if (!CellHistory.ContainsKey(playerID))
         {
@@ -23,37 +23,50 @@ public class CellHistoryManager
         CheckCellHistory();
     }
 
+    public void AddMoveToBothPlayers(Cell cell)
+    {
+        for (int playerId = 0; playerId <= 1; playerId++)
+        {
+            if (!CellHistory.ContainsKey(playerId))
+            {
+                CellHistory.Add(playerId, new List<Cell>());
+            }
+            CellHistory[playerId].Insert(0, cell);
+        }
+
+        CheckCellHistory();
+    }
+
+
     public void CheckCellHistory()
     {
         foreach (var item in CellHistory)
         {
-            if (item.Value.Count < 3)
+            if (item.Value.Count >= 3)
             {
-                return;
-            }
-
-            if (item.Value[2] != null)
-            {
-                item.Value[2].PreDestroy();
-                item.Value[2].MarkForDestruction(true);
-            }
-
-            if (item.Value.Count == 4)
-            {
-                if (item.Value[3] != null)
+                if (item.Value[2] != null)
                 {
-                    item.Value[3].Clear();
-                    item.Value[3].Unblock();
-                    item.Value[3].MarkForDestruction(false);
+                    item.Value[2].PreDestroy();
+                    item.Value[2].MarkForDestruction(true);
                 }
-                item.Value.RemoveAt(3);
+
+                if (item.Value.Count == 4)
+                {
+                    if (item.Value[3] != null)
+                    {
+                        item.Value[3].Clear();
+                        item.Value[3].Unblock();
+                        item.Value[3].MarkForDestruction(false);
+                    }
+                    item.Value.RemoveAt(3);
+                }
             }
         }
     }
 
     public void SkipTurn(int playerID)
     {
-        Add(null, playerID); 
+        AddMove(null, playerID); 
     }
 
     public void Clear()
@@ -61,4 +74,45 @@ public class CellHistoryManager
         CellHistory = new Dictionary<int, List<Cell>>();
     }
 
+    public void RemoveMoveFromAnyPlayer(Cell cell)
+    {
+        foreach (var list in CellHistory.Values)
+        {
+            if (list.Contains(cell))
+            {
+                list.Remove(cell);
+                break;
+            }
+        }
+    }
+
+    public void RemoveMoveFromPlayer(Cell cell, int playerID)
+    {
+        if (CellHistory.ContainsKey(playerID) && CellHistory[playerID].Contains(cell))
+        {
+            CellHistory[playerID].Remove(cell);
+            Debug.Log($"[CellHistory] Удалена ячейка ({cell.row}, {cell.coll}) из истории игрока {playerID}.");
+        }
+        else
+        {
+            Debug.LogWarning($"[CellHistory] Ячейка ({cell.row}, {cell.coll}) не найдена в истории игрока {playerID} для удаления.");
+        }
+    }
+
+    public void ReplaceCellWithNull(Cell cell, int playerID)
+    {
+        if (!CellHistory.ContainsKey(playerID)) return;
+
+        var list = CellHistory[playerID];
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i] == cell)
+            {
+                list[i] = null;
+                Debug.Log($"[CellHistory] Ячейка ({cell.row}, {cell.coll}) заменена на null в истории игрока {playerID}.");
+                return;
+            }
+        }
+        Debug.LogWarning($"[CellHistory] Ячейка ({cell.row}, {cell.coll}) не найдена в истории игрока {playerID} для замены на null.");
+    }
 }

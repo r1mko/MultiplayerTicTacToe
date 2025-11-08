@@ -211,7 +211,7 @@ GameObject:
   - component: {fileID: 273292927}
   - component: {fileID: 273292926}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: GameCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -660,6 +660,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2851367288205508246, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: m_VertexColorAlwaysGammaSpace
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2851367288205508246, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 4307540391768803751, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -768,6 +776,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: Canvas
+      value: 
+      objectReference: {fileID: 273292928}
     - target: {fileID: 8165599444107387252, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -964,6 +976,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentPlayerTurnID: 0
   TurnIndex: 0
+  Canvas: {fileID: 273292928}
+  ShotPrefab: {fileID: 4426109018450759398, guid: c556342e65514a24a8b93e1c13d48bff, type: 3}
 --- !u!4 &1762305792
 Transform:
   m_ObjectHideFlags: 0
@@ -1068,7 +1082,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a625ea36b729e8747890dca255ee310a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  duration: 16
+  duration: 31
 --- !u!1001 &7576674325887130073
 PrefabInstance:
   m_ObjectHideFlags: 0
