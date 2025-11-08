@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
+using static BoardManager;
 
 public class GameManager : MonoBehaviour
 {
@@ -31,11 +32,14 @@ public class GameManager : MonoBehaviour
     public int CurrentPlayerTurnID;
     public int TurnIndex;
     public Canvas Canvas;
-    public GameObject ShotPrefab;
 
     private int startOffSet;
     private const int ArrowCount = 3;
     private int[] wins = new int[] { 0, 0 };
+
+    // =============== EFFECTS ===============
+    [SerializeField] private GameObject winLinePrefab;
+    [SerializeField] private GameObject shotPrefab;
 
     // =============== MANAGERS ===============
     private HPHistoryManager hPHistoryManager;
@@ -221,6 +225,7 @@ public class GameManager : MonoBehaviour
 
         if (BoardManager.Singltone.IsRow(row, col))
         {
+            SpawnWinLine();
             int playerID = CurrentPlayerTurnID;
             int opponentID = 1 - playerID;
             hPHistoryManager.Damage(opponentID);
@@ -378,6 +383,7 @@ public class GameManager : MonoBehaviour
             }
             else
             {
+                SpawnWinLine();
                 hPHistoryManager.Damage(opponentID);
                 SetPlayersHP();
 
@@ -417,7 +423,7 @@ public class GameManager : MonoBehaviour
         Vector2 startPosition = new Vector2(0, -canvasRect.rect.height / 2 - 50);
         Vector2 endPosition = BoardManager.Singltone.GetCellScreenPosition(targetCell.row, targetCell.coll);
 
-        GameObject shot = Instantiate(ShotPrefab);
+        GameObject shot = Instantiate(shotPrefab);
         Image image = shot.GetComponent<Image>();
         image.color = new Color(1f, 0.2f, 0.3f);
         RectTransform rectTransform = shot.GetComponent<RectTransform>();
@@ -502,6 +508,37 @@ public class GameManager : MonoBehaviour
             int opponentHP = hPHistoryManager.GetHP(1); // бот
             UIManager.Singletone.SetPlayersHP(playerHP, opponentHP);
         }
+    }
+
+    private void SpawnWinLine()
+    {
+        if (winLinePrefab == null)
+        {
+            Debug.LogError("winLinePrefab not assigned!");
+            return;
+        }
+
+        WinLineType type = BoardManager.Singltone.GetAndResetWinLineType();
+        if (type == WinLineType.None) return;
+
+        WinLineConfig config = System.Array.Find(
+            Singltone.winLineConfigs,
+            c => c.type == type
+        );
+
+        if (config.type == WinLineType.None)
+        {
+            Debug.LogWarning($"No config found for WinLineType: {type}");
+            return;
+        }
+
+        GameObject winLine = Instantiate(winLinePrefab, Canvas.transform);
+        RectTransform rt = winLine.GetComponent<RectTransform>();
+
+        rt.anchoredPosition = config.positionOffset;
+        rt.localEulerAngles = new Vector3(0, 0, config.rotation);
+
+        Destroy(winLine, 3f);
     }
 
     public void ApplyMultipleDamages(List<int> victimPlayerIDs)

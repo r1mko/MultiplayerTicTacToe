@@ -3,6 +3,39 @@ using System.Linq;
 using UnityEngine;
 public class BoardManager : MonoBehaviour
 {
+
+    public enum WinLineType
+    {
+        None,
+        TopRow,
+        MiddleRow,
+        BottomRow,
+        LeftColumn,
+        MiddleColumn,
+        RightColumn,
+        DiagonalMain,      // 0,0 → 2,2
+        DiagonalAnti       // 0,2 → 2,0
+    }
+
+    [System.Serializable]
+    public struct WinLineConfig
+    {
+        public WinLineType type;
+        public Vector2 positionOffset;
+        public float rotation;
+    }
+
+    public WinLineConfig[] winLineConfigs;
+
+    private WinLineType currentWinLineType = WinLineType.None;
+
+    public WinLineType GetAndResetWinLineType()
+    {
+        WinLineType result = currentWinLineType;
+        currentWinLineType = WinLineType.None;
+        return result;
+    }
+
     [SerializeField] private GameObject board;
     public Canvas Canvas;
 
@@ -114,63 +147,62 @@ public class BoardManager : MonoBehaviour
     public bool IsRow(int row, int column)
     {
         Cell cell = buttons[row, column];
-        if (!cell.IsFillCell)
-        {
-            Debug.Log($"[IsRow] Ячейка ({row},{column}) пуста — не может быть частью ряда");
-            return false;
-        }
+        if (!cell.IsFillCell) return false;
 
         int indexPlayer = cell.IndexPlayer;
-        Debug.Log($"[IsRow] Проверяем ячейку ({row},{column}), игрок: {indexPlayer}");
 
-        // Проверка строки
-        if (buttons[row, 0].IsFillCell &&
-            buttons[row, 1].IsFillCell &&
-            buttons[row, 2].IsFillCell &&
+        // Горизонталь
+        if (buttons[row, 0].IsFillCell && buttons[row, 1].IsFillCell && buttons[row, 2].IsFillCell &&
             buttons[row, 0].IndexPlayer == indexPlayer &&
             buttons[row, 1].IndexPlayer == indexPlayer &&
             buttons[row, 2].IndexPlayer == indexPlayer)
         {
-            Debug.Log($"[IsRow] Горизонтальный ряд найден в строке {row}!");
+            currentWinLineType = row switch
+            {
+                0 => WinLineType.TopRow,
+                1 => WinLineType.MiddleRow,
+                2 => WinLineType.BottomRow,
+                _ => WinLineType.None
+            };
             return true;
         }
 
-        // Проверка столбца
-        if (buttons[0, column].IsFillCell &&
-            buttons[1, column].IsFillCell &&
-            buttons[2, column].IsFillCell &&
+        // Вертикаль
+        if (buttons[0, column].IsFillCell && buttons[1, column].IsFillCell && buttons[2, column].IsFillCell &&
             buttons[0, column].IndexPlayer == indexPlayer &&
             buttons[1, column].IndexPlayer == indexPlayer &&
             buttons[2, column].IndexPlayer == indexPlayer)
         {
-            Debug.Log($"[IsRow] Вертикальный ряд найден в столбце {column}!");
+            currentWinLineType = column switch
+            {
+                0 => WinLineType.LeftColumn,
+                1 => WinLineType.MiddleColumn,
+                2 => WinLineType.RightColumn,
+                _ => WinLineType.None
+            };
             return true;
         }
 
-        // Диагональ 0,0 → 2,2
-        if (row == 1 && column == 1 || row == 0 && column == 0 || row == 2 && column == 2)
+        // Главная диагональ
+        if (row == column &&
+            buttons[0, 0].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 2].IsFillCell &&
+            buttons[0, 0].IndexPlayer == indexPlayer &&
+            buttons[1, 1].IndexPlayer == indexPlayer &&
+            buttons[2, 2].IndexPlayer == indexPlayer)
         {
-            if (buttons[0, 0].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 2].IsFillCell &&
-                buttons[0, 0].IndexPlayer == indexPlayer &&
-                buttons[1, 1].IndexPlayer == indexPlayer &&
-                buttons[2, 2].IndexPlayer == indexPlayer)
-            {
-                Debug.Log("[IsRow] Диагональ 0,0 → 2,2 собрана!");
-                return true;
-            }
+            currentWinLineType = WinLineType.DiagonalMain;
+            return true;
         }
 
-        // Диагональ 0,2 → 2,0
-        if ((row == 0 && column == 2) || (row == 2 && column == 0) || (row == 1 && column == 1))
+        // Побочная диагональ
+        if (row + column == 2 &&
+            buttons[0, 2].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 0].IsFillCell &&
+            buttons[0, 2].IndexPlayer == indexPlayer &&
+            buttons[1, 1].IndexPlayer == indexPlayer &&
+            buttons[2, 0].IndexPlayer == indexPlayer)
         {
-            if (buttons[0, 2].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 0].IsFillCell &&
-                buttons[0, 2].IndexPlayer == indexPlayer &&
-                buttons[1, 1].IndexPlayer == indexPlayer &&
-                buttons[2, 0].IndexPlayer == indexPlayer)
-            {
-                Debug.Log("[IsRow] Диагональ 0,2 → 2,0 собрана!");
-                return true;
-            }
+            currentWinLineType = WinLineType.DiagonalAnti;
+            return true;
         }
 
         return false;
