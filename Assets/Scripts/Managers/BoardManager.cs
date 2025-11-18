@@ -350,7 +350,7 @@ public class BoardManager : MonoBehaviour
 
     public void ApplyGravity()
     {
-        // 1. Вычисляем, КАКИЕ фишки и КУДА переместятся (логика без изменений)
+        // 1. Вычисляем, КАКИЕ фишки и КУДА переместятся
         bool changes = false;
         Dictionary<Cell, Cell> cellRemap = new Dictionary<Cell, Cell>();
 
@@ -381,7 +381,6 @@ public class BoardManager : MonoBehaviour
 
             if (!needToMove) continue;
 
-            // Заполняем снизу вверх, запоминая, куда фишки переместятся
             int fillRow = 2;
             for (int k = columnCells.Count - 1; k >= 0; k--)
             {
@@ -390,7 +389,7 @@ public class BoardManager : MonoBehaviour
 
                 if (oldCell.row != fillRow)
                 {
-                    cellRemap[oldCell] = targetCell; // Запоминаем, куда переместится фишка
+                    cellRemap[oldCell] = targetCell;
                     changes = true;
                 }
                 fillRow--;
@@ -405,11 +404,16 @@ public class BoardManager : MonoBehaviour
 
         Debug.Log("Гравитация: фишки упали. Запускаем анимации...");
 
-        // 2. Запускаем анимации и сохраняем корутины
+        // 2. Скрываем оригинальные фишки перед анимацией
+        foreach (var (oldCell, newCell) in cellRemap)
+        {
+            oldCell.HideAll();
+        }
+
+        // 3. Запускаем анимации
         List<Coroutine> runningAnimations = new List<Coroutine>();
         foreach (var (oldCell, newCell) in cellRemap)
         {
-            // Создаём дубликат фишки в старой ячейке
             GameObject chipGO = oldCell.CreateChipVisualCopy();
             if (chipGO != null)
             {
@@ -418,7 +422,7 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        // 3. Ждём завершения всех анимаций
+        // 4. Ждём завершения всех анимаций
         StartCoroutine(WaitForAllAnimationsAndThen(runningAnimations, cellRemap));
     }
 
@@ -448,14 +452,13 @@ public class BoardManager : MonoBehaviour
         Destroy(chipGO);
     }
 
-    // Вспомогательная корутина, которая ждёт все анимации и затем выполняет логику
     private IEnumerator WaitForAllAnimationsAndThen(List<Coroutine> animations, Dictionary<Cell, Cell> cellRemap)
     {
         foreach (var anim in animations)
         {
             if (anim != null)
             {
-                yield return anim; // Ждём завершения каждой корутины
+                yield return anim;
             }
         }
 
@@ -487,7 +490,7 @@ public class BoardManager : MonoBehaviour
             {
                 Cell oldCell = columnCells[k];
                 Cell targetCell = buttons[fillRow, j];
-                targetCell.Fill(oldCell.IndexPlayer); // <-- Fill вызывается ПОСЛЕ анимации завершена
+                targetCell.Fill(oldCell.IndexPlayer);
                 fillRow--;
             }
         }
