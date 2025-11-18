@@ -780,6 +780,94 @@ PrefabInstance:
       propertyPath: Canvas
       value: 
       objectReference: {fileID: 273292928}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.size
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[0].type
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[1].type
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[2].type
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[3].type
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[4].type
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[5].type
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[6].type
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[7].type
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[3].rotation
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[4].rotation
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[5].rotation
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[6].rotation
+      value: 135
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[7].rotation
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[0].positionOffset.y
+      value: 275
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[1].positionOffset.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[2].positionOffset.y
+      value: -275
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[3].positionOffset.x
+      value: -275
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[3].positionOffset.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[4].positionOffset.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[5].positionOffset.x
+      value: 275
+      objectReference: {fileID: 0}
+    - target: {fileID: 7762828406202007401, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
+      propertyPath: winLineConfigs.Array.data[6].positionOffset.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8165599444107387252, guid: a6c9a034e2a4a144b92aae369af2c72b, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -977,7 +1065,8 @@ MonoBehaviour:
   CurrentPlayerTurnID: 0
   TurnIndex: 0
   Canvas: {fileID: 273292928}
-  ShotPrefab: {fileID: 4426109018450759398, guid: c556342e65514a24a8b93e1c13d48bff, type: 3}
+  winLinePrefab: {fileID: 4163683164815435693, guid: 4c6a0fdeb2fb1424897049f5f7b3ae43, type: 3}
+  shotPrefab: {fileID: 4426109018450759398, guid: c556342e65514a24a8b93e1c13d48bff, type: 3}
 --- !u!4 &1762305792
 Transform:
   m_ObjectHideFlags: 0
