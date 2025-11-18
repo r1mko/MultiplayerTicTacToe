@@ -172,6 +172,39 @@ public class Cell: MonoBehaviour
         cellButton.onClick.AddListener(() => BoardManager.Singltone.OnClickCell(row, coll, this));
     }
 
+    // В Cell.cs
+
+    public GameObject CreateChipVisualCopy()
+    {
+        if (!IsFillCell) return null;
+
+        GameObject originalChip = fillView[_indexPlayer];
+        if (originalChip == null || !originalChip.activeInHierarchy) return null;
+
+        // Создаём дубликат объекта
+        GameObject chipCopy = Instantiate(originalChip, originalChip.transform.parent);
+        chipCopy.transform.position = originalChip.transform.position;
+        chipCopy.transform.rotation = originalChip.transform.rotation;
+        chipCopy.transform.localScale = originalChip.transform.localScale;
+
+        // Делаем копию интерактивной (если нужно), или наоборот, неинтерактивной
+        chipCopy.layer = originalChip.layer;
+        foreach (Transform child in chipCopy.transform)
+        {
+            child.gameObject.layer = originalChip.layer;
+        }
+
+        // Если у тебя TMP_Text, копируем цвет
+        var textCopy = chipCopy.GetComponent<TMP_Text>();
+        var textOriginal = originalChip.GetComponent<TMP_Text>();
+        if (textCopy != null && textOriginal != null)
+        {
+            textCopy.color = textOriginal.color;
+        }
+
+        return chipCopy;
+    }
+
 
     private void OnDestroy()
     {

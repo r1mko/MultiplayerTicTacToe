@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 public class BoardManager : MonoBehaviour
@@ -28,6 +29,7 @@ public class BoardManager : MonoBehaviour
     public WinLineConfig[] winLineConfigs;
 
     [SerializeField] private GameObject board;
+    private Dictionary<Cell, Transform> activeChipTransforms = new Dictionary<Cell, Transform>();
     public Canvas Canvas;
 
     public static BoardManager Singltone;
@@ -348,14 +350,13 @@ public class BoardManager : MonoBehaviour
 
     public void ApplyGravity()
     {
+        // 1. Вычисляем, КАКИЕ фишки и КУДА переместятся (логика без изменений)
         bool changes = false;
         Dictionary<Cell, Cell> cellRemap = new Dictionary<Cell, Cell>();
 
         for (int j = 0; j < 3; j++)
         {
             List<Cell> columnCells = new List<Cell>();
-
-            // Собираем заполненные клетки сверху вниз (по возрастанию row)
             for (int i = 0; i < 3; i++)
             {
                 if (buttons[i, j].IsFillCell)
@@ -366,7 +367,6 @@ public class BoardManager : MonoBehaviour
 
             if (columnCells.Count == 0) continue;
 
-            // Проверяем, нужно ли двигать
             bool needToMove = false;
             int expectedRow = 2;
             for (int k = columnCells.Count - 1; k >= 0; k--)
@@ -381,26 +381,18 @@ public class BoardManager : MonoBehaviour
 
             if (!needToMove) continue;
 
-            // Очищаем столбец
-            for (int i = 0; i < 3; i++)
-            {
-                buttons[i, j].Clear();
-            }
-
-            // Заполняем снизу вверх, начиная с самой нижней фишки
+            // Заполняем снизу вверх, запоминая, куда фишки переместятся
             int fillRow = 2;
             for (int k = columnCells.Count - 1; k >= 0; k--)
             {
-                Cell cell = columnCells[k];
+                Cell oldCell = columnCells[k];
                 Cell targetCell = buttons[fillRow, j];
-                targetCell.Fill(cell.IndexPlayer); // ← сохраняем оригинального владельца
 
-                if (cell.row != fillRow)
+                if (oldCell.row != fillRow)
                 {
-                    cellRemap[cell] = targetCell;
+                    cellRemap[oldCell] = targetCell; // Запоминаем, куда переместится фишка
                     changes = true;
                 }
-
                 fillRow--;
             }
         }
@@ -411,9 +403,96 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("Гравитация: фишки упали. Обновляем историю...");
+        Debug.Log("Гравитация: фишки упали. Запускаем анимации...");
 
-        // Обновляем CellHistory
+        // 2. Запускаем анимации и сохраняем корутины
+        List<Coroutine> runningAnimations = new List<Coroutine>();
+        foreach (var (oldCell, newCell) in cellRemap)
+        {
+            // Создаём дубликат фишки в старой ячейке
+            GameObject chipGO = oldCell.CreateChipVisualCopy();
+            if (chipGO != null)
+            {
+                Coroutine animCoroutine = StartCoroutine(AnimateMoveChip(chipGO, oldCell, newCell));
+                runningAnimations.Add(animCoroutine);
+            }
+        }
+
+        // 3. Ждём завершения всех анимаций
+        StartCoroutine(WaitForAllAnimationsAndThen(runningAnimations, cellRemap));
+    }
+
+    // Анимация дубликата фишки
+    private IEnumerator AnimateMoveChip(GameObject chipGO, Cell fromCell, Cell toCell, float duration = 0.3f)
+    {
+        // Получаем начальную и конечную позиции в координатах Canvas
+        Vector2 localStartPos = GetCellScreenPosition(fromCell.row, fromCell.coll);
+        Vector2 localEndPos = GetCellScreenPosition(toCell.row, toCell.coll);
+
+        // Переводим в мировые координаты
+        Vector3 startPos = Canvas.transform.TransformPoint(new Vector3(localStartPos.x, localStartPos.y, 0));
+        Vector3 endPos = Canvas.transform.TransformPoint(new Vector3(localEndPos.x, localEndPos.y, 0));
+
+        // Анимация
+        float elapsedTime = 0f;
+        while (elapsedTime < duration)
+        {
+            chipGO.transform.position = Vector3.Lerp(startPos, endPos, elapsedTime / duration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        chipGO.transform.position = endPos;
+
+        // Удаляем дубликат
+        Destroy(chipGO);
+    }
+
+    // Вспомогательная корутина, которая ждёт все анимации и затем выполняет логику
+    private IEnumerator WaitForAllAnimationsAndThen(List<Coroutine> animations, Dictionary<Cell, Cell> cellRemap)
+    {
+        foreach (var anim in animations)
+        {
+            if (anim != null)
+            {
+                yield return anim; // Ждём завершения каждой корутины
+            }
+        }
+
+        Debug.Log("Все анимации завершены. Обновляем логическое состояние доски.");
+
+        // 4. *После* завершения анимаций, меняем логическое состояние доски
+        for (int j = 0; j < 3; j++)
+        {
+            List<Cell> columnCells = new List<Cell>();
+            for (int i = 0; i < 3; i++)
+            {
+                if (buttons[i, j].IsFillCell)
+                {
+                    columnCells.Add(buttons[i, j]);
+                }
+            }
+
+            if (columnCells.Count == 0) continue;
+
+            // Очищаем столбец
+            for (int i = 0; i < 3; i++)
+            {
+                buttons[i, j].Clear();
+            }
+
+            // Заполняем снизу вверх
+            int fillRow = 2;
+            for (int k = columnCells.Count - 1; k >= 0; k--)
+            {
+                Cell oldCell = columnCells[k];
+                Cell targetCell = buttons[fillRow, j];
+                targetCell.Fill(oldCell.IndexPlayer); // <-- Fill вызывается ПОСЛЕ анимации завершена
+                fillRow--;
+            }
+        }
+
+        // 5. Обновляем CellHistory *после* Fill/Clear, но до CheckCellHistory
         var cellHistory = GameManager.Singletone.cellHistoryManager.CellHistory;
         foreach (var playerEntry in cellHistory)
         {
@@ -426,12 +505,12 @@ public class BoardManager : MonoBehaviour
             }
         }
 
+        // 6. *Только после обновления ссылок* вызываем CheckCellHistory
         GameManager.Singletone.cellHistoryManager.CheckCellHistory();
 
-        // === СБОР ЖЕРТВ УРОНА ===
+        // 7. Проверка рядов и урон (как у тебя есть)
         List<int> victims = new List<int>();
-        HashSet<int> winners = new HashSet<int>(); // Чтобы не дублировать
-
+        HashSet<int> winners = new HashSet<int>();
         foreach (var (oldCell, newCell) in cellRemap)
         {
             if (IsRow(newCell.row, newCell.coll))
@@ -447,7 +526,6 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        // === ЕДИНЫЙ ВЫЗОВ УРОНА ТОЛЬКО ЕСЛИ ЕСТЬ ЖЕРТВЫ ===
         if (victims.Count > 0)
         {
             if (NetworkPlayer.Singletone.IsMultiplayer())
@@ -589,4 +667,6 @@ public class BoardManager : MonoBehaviour
             Debug.Log("[Shuffle] Ни одного ряда после перемешивания.");
         }
     }
+
+
 }
