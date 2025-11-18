@@ -403,6 +403,7 @@ public class BoardManager : MonoBehaviour
         }
 
         Debug.Log("Гравитация: фишки упали. Запускаем анимации...");
+        GameManager.Singletone.BeginAnimation();
 
         // 2. Скрываем оригинальные фишки перед анимацией
         foreach (var (oldCell, newCell) in cellRemap)
@@ -548,6 +549,8 @@ public class BoardManager : MonoBehaviour
         {
             Debug.Log("После гравитации ни одна линия не собрана. Продолжаем игру.");
         }
+
+        GameManager.Singletone.EndAnimation();
     }
 
     public void ShuffleAllCells()
@@ -591,49 +594,90 @@ public class BoardManager : MonoBehaviour
         // 3. Берём первые `filledCount` ячеек как цели
         List<Cell> targetCells = shuffledCells.GetRange(0, filledCount);
 
-        // 4. Очищаем ВСЁ поле
-        foreach (var cell in allCells)
-        {
-            cell.Clear();
-        }
-
-        // 5. Сопоставляем каждую фишку с новой ячейкой
+        // 4. Создаём отображение: старая ячейка -> новая ячейка
         Dictionary<Cell, Cell> cellRemap = new Dictionary<Cell, Cell>();
-
         for (int i = 0; i < filledCount; i++)
         {
             var (playerID, oldCell) = filledData[i];
             Cell newCell = targetCells[i];
+            cellRemap[oldCell] = newCell;
+        }
 
-            // Заполняем новую ячейку
-            newCell.Fill(playerID);
+        GameManager.Singletone.BeginAnimation();
 
-            // Если позиция изменилась — запоминаем для обновления истории
-            if (oldCell != newCell)
+        // 5. Скрываем оригинальные фишки перед анимацией
+        foreach (var (oldCell, newCell) in cellRemap)
+        {
+            oldCell.HideAll();
+        }
+
+        // 6. Запускаем анимации перемещения копий фишек
+        List<Coroutine> runningAnimations = new List<Coroutine>();
+        foreach (var (oldCell, newCell) in cellRemap)
+        {
+            GameObject chipGO = oldCell.CreateChipVisualCopy();
+            if (chipGO != null)
             {
-                cellRemap[oldCell] = newCell;
+                Coroutine animCoroutine = StartCoroutine(AnimateMoveChip(chipGO, oldCell, newCell));
+                runningAnimations.Add(animCoroutine);
             }
         }
 
-        // 6. Обновляем CellHistory
-        var cellHistory = GameManager.Singletone.cellHistoryManager.CellHistory;
-        foreach (var kvp in cellHistory)
+        // 7. Ждём завершения всех анимаций и обновляем логику
+        StartCoroutine(WaitForAllAnimationsAndThenShuffle(runningAnimations, cellRemap, filledData, targetCells));
+    }
+
+    // Новый метод для ожидания анимаций и обновления логики после перемешивания
+    private IEnumerator WaitForAllAnimationsAndThenShuffle(List<Coroutine> animations, Dictionary<Cell, Cell> cellRemap, List<(int playerID, Cell originalCell)> filledData, List<Cell> targetCells)
+    {
+        foreach (var anim in animations)
         {
-            for (int i = 0; i < kvp.Value.Count; i++)
+            if (anim != null)
             {
-                Cell histCell = kvp.Value[i];
-                if (histCell != null && cellRemap.TryGetValue(histCell, out Cell newHistCell))
+                yield return anim;
+            }
+        }
+
+        Debug.Log("Все анимации перемешивания завершены. Обновляем логическое состояние доски.");
+
+        // 8. Очищаем ВСЁ поле
+        List<Cell> allCells = new List<Cell>();
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                Cell cell = buttons[i, j];
+                allCells.Add(cell);
+                cell.Clear();
+            }
+        }
+
+        // 9. Заполняем новые ячейки (логически)
+        foreach (var (playerID, oldCell) in filledData)
+        {
+            if (cellRemap.TryGetValue(oldCell, out Cell newCell))
+            {
+                newCell.Fill(playerID);
+            }
+        }
+
+        // 10. Обновляем CellHistory
+        var cellHistory = GameManager.Singletone.cellHistoryManager.CellHistory;
+        foreach (var playerEntry in cellHistory)
+        {
+            for (int i = 0; i < playerEntry.Value.Count; i++)
+            {
+                if (playerEntry.Value[i] != null && cellRemap.TryGetValue(playerEntry.Value[i], out Cell newCell))
                 {
-                    kvp.Value[i] = newHistCell;
+                    playerEntry.Value[i] = newCell;
                 }
             }
         }
 
+        // 11. *Только после обновления ссылок* вызываем CheckCellHistory
         GameManager.Singletone.cellHistoryManager.CheckCellHistory();
 
-        Debug.Log($"[Shuffle] Перемешано {filledCount} фишек с seed={seed}. Новые позиции: {string.Join(", ", targetCells.Select(c => $"({c.row},{c.coll})"))}");
-
-        // 7. Проверка рядов и урон — как в ApplyGravity
+        // 12. Проверка рядов и урон
         List<int> victims = new List<int>();
         HashSet<int> winners = new HashSet<int>();
 
@@ -669,7 +713,7 @@ public class BoardManager : MonoBehaviour
         {
             Debug.Log("[Shuffle] Ни одного ряда после перемешивания.");
         }
+
+        GameManager.Singletone.EndAnimation();
     }
-
-
 }
