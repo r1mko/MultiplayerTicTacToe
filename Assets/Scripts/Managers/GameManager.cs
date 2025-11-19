@@ -290,17 +290,18 @@ public class GameManager : MonoBehaviour
         UpdateShotButtonText();
         TimerController.Singletone.EndTime();
 
+        int determineRandom = Random.Range(1, 100);
         if (NetworkPlayer.Singletone.IsMultiplayer())
         {
-            NetworkPlayer.Singletone.ApplyShotRpc();
+            NetworkPlayer.Singletone.ApplyShotRpc(determineRandom);
         }
         else
         {
-            StartCoroutine(ShootThreeArrowsAndFill());
+            StartCoroutine(ShootThreeArrowsAndFill(determineRandom));
         }
     }
 
-    public IEnumerator ShootThreeArrowsAndFill()
+    public IEnumerator ShootThreeArrowsAndFill(int seed)
     {
         UIManager.Singletone.BlockSlideButton();
         UIManager.Singletone.BlockShotButton();
@@ -330,9 +331,7 @@ public class GameManager : MonoBehaviour
         List<Cell> allCells = new List<Cell>(BoardManager.Singltone.GetAllCells());
         if (allCells.Count == 0) yield break;
 
-        // Используем TurnIndex как seed → одинаково у всех!
-        System.Random deterministicRandom = new System.Random(TurnIndex);
-
+        System.Random deterministicRandom = new System.Random(seed);
         // Fisher-Yates shuffle с детерминированным рандомом
         for (int i = allCells.Count - 1; i > 0; i--)
         {
