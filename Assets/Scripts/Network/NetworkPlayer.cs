@@ -55,9 +55,9 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
-    public void ApplyShotRpc()
+    public void ApplyShotRpc(int seed)
     {
-        GameManager.Singletone.StartCoroutine(GameManager.Singletone.ShootThreeArrowsAndFill());
+        GameManager.Singletone.StartCoroutine(GameManager.Singletone.ShootThreeArrowsAndFill(seed));
     }
 
     [Rpc(SendTo.Everyone)]
