@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Cell: MonoBehaviour
+public class Cell : MonoBehaviour
 {
     [SerializeField] private Button cellButton;
     [SerializeField] private GameObject[] fillView;
@@ -21,8 +21,16 @@ public class Cell: MonoBehaviour
     public int IndexPlayer => _indexPlayer;
     public bool IsFillCell => _isFillCell;
 
-    private bool _isMarkedForDestruction = false;
-    public bool IsMarkedForDestruction => _isMarkedForDestruction;
+    private bool _isMarkedForDestruction;
+
+    public void Init(int row, int coll)
+    {
+        this.row = row;
+        this.coll = coll;
+        Clear();
+        Unblock();
+        cellButton.onClick.AddListener(() => BoardManager.Singltone.OnClickCell(row, coll, this));
+    }
 
     public void MarkForDestruction(bool mark)
     {
@@ -54,12 +62,12 @@ public class Cell: MonoBehaviour
     {
         cellButton.interactable = true;
     }
-    
 
-    internal void PreDestroy()
+
+    public void PreDestroy()
     {
         ChangeColorCell(preDestroyColor);
-        
+
         if (blinkCoroutine != null)
         {
             StopCoroutine(blinkCoroutine);
@@ -124,7 +132,6 @@ public class Cell: MonoBehaviour
         }
     }
 
-
     public void Fill(int indexPlayer)
     {
         HideAll();
@@ -142,34 +149,12 @@ public class Cell: MonoBehaviour
         }
     }
 
-    public bool IsEmpty()
-    {
-        return !_isFillCell;
-    }
-
-    public bool IsSameCell(int indexPlayer)
-    {
-        if (!IsFillCell)
-        {
-            return false;
-        }
-        return indexPlayer == IndexPlayer;
-    }
     public void HideAll()
     {
         foreach (var item in fillView)
         {
             item.SetActive(false);
         }
-    }
-
-    public void Init(int row, int coll)
-    {
-        this.row = row;
-        this.coll = coll;
-        Clear();
-        Unblock();
-        cellButton.onClick.AddListener(() => BoardManager.Singltone.OnClickCell(row, coll, this));
     }
 
     public GameObject CreateChipVisualCopy()
@@ -197,10 +182,9 @@ public class Cell: MonoBehaviour
         return chipCopy;
     }
 
-
     private void OnDestroy()
     {
         cellButton.onClick.RemoveAllListeners();
-    
-}
+
+    }
 }

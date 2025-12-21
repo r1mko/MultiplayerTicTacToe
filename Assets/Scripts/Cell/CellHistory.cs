@@ -5,14 +5,6 @@ public class CellHistoryManager
 {
     public Dictionary<int, List<Cell>> CellHistory = new Dictionary<int, List<Cell>>();
 
-    public void EnsurePlayerExists(int playerID)
-    {
-        if (!CellHistory.ContainsKey(playerID))
-        {
-            CellHistory[playerID] = new List<Cell>();
-        }
-    }
-
     public void AddMove(Cell cell, int playerID)
     {
         if (!CellHistory.ContainsKey(playerID))
@@ -22,21 +14,6 @@ public class CellHistoryManager
         CellHistory[playerID].Insert(0, cell);
         CheckCellHistory();
     }
-
-    public void AddMoveToBothPlayers(Cell cell)
-    {
-        for (int playerId = 0; playerId <= 1; playerId++)
-        {
-            if (!CellHistory.ContainsKey(playerId))
-            {
-                CellHistory.Add(playerId, new List<Cell>());
-            }
-            CellHistory[playerId].Insert(0, cell);
-        }
-
-        CheckCellHistory();
-    }
-
 
     public void CheckCellHistory()
     {
@@ -74,24 +51,11 @@ public class CellHistoryManager
         CellHistory = new Dictionary<int, List<Cell>>();
     }
 
-    public void RemoveMoveFromAnyPlayer(Cell cell)
-    {
-        foreach (var list in CellHistory.Values)
-        {
-            if (list.Contains(cell))
-            {
-                list.Remove(cell);
-                break;
-            }
-        }
-    }
-
     public void RemoveMoveFromPlayer(Cell cell, int playerID)
     {
         if (CellHistory.ContainsKey(playerID) && CellHistory[playerID].Contains(cell))
         {
             CellHistory[playerID].Remove(cell);
-            Debug.Log($"[CellHistory] Удалена ячейка ({cell.row}, {cell.coll}) из истории игрока {playerID}.");
         }
         else
         {
@@ -109,10 +73,8 @@ public class CellHistoryManager
             if (list[i] == cell)
             {
                 list[i] = null;
-                Debug.Log($"[CellHistory] Ячейка ({cell.row}, {cell.coll}) заменена на null в истории игрока {playerID}.");
                 return;
             }
         }
-        Debug.LogWarning($"[CellHistory] Ячейка ({cell.row}, {cell.coll}) не найдена в истории игрока {playerID} для замены на null.");
     }
 }
