@@ -63,13 +63,13 @@ public class Cell : MonoBehaviour
 
     public void CheckPreDestroyState(int turnIndex)
     {
-        isMarkedForDestruction = (turnIndex - cellSetAtTurn) == preDestroyTime * PlayerTurnInterval;
+        isMarkedForDestruction = (turnIndex - cellSetAtTurn) >= preDestroyTime * PlayerTurnInterval;
         if (isMarkedForDestruction) PreDestroy();
     }
 
     public bool CheckDestroyCell(int turnIndex)
     {
-        return (turnIndex - cellSetAtTurn) == DefaultCellLifeTime * PlayerTurnInterval;
+        return (turnIndex - cellSetAtTurn) >= DefaultCellLifeTime * PlayerTurnInterval;
     }
 
     public void Clear()

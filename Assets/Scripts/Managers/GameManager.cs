@@ -277,8 +277,8 @@ public class GameManager : MonoBehaviour
 
     public void HandleSkipTurn()
     {
-        cellHistoryManager.SkipTurn(CurrentPlayerTurnID);
         ChangeTurnIndex();
+        cellHistoryManager.CheckCellHistory(TurnIndex);
     }
 
     // =============== SKILL MECHANICS ===============

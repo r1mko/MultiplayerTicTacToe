@@ -12,9 +12,13 @@ public class CellHistoryManager
             CellHistory.Add(playerID, new List<Cell>());
         }
         CellHistory[playerID].Insert(0, cell);
-        cell.SetCell(turnIndex);
+        if (cell != null)
+        {
+            cell.SetCell(turnIndex);
+        }
         CheckCellHistory(turnIndex);
     }
+
     public void CheckCellHistory(int turnIndex)
     {
         foreach (var kvp in CellHistory)
@@ -25,12 +29,16 @@ public class CellHistoryManager
 
             foreach (var cell in playerCells)
             {
-                cell.CheckPreDestroyState(turnIndex);
-
-                if (cell.CheckDestroyCell(turnIndex))
+                if (cell != null)
                 {
-                    cellsToRemove.Add(cell);
+                    cell.CheckPreDestroyState(turnIndex);
+
+                    if (cell.CheckDestroyCell(turnIndex))
+                    {
+                        cellsToRemove.Add(cell);
+                    }
                 }
+
             }
 
             foreach (var cell in cellsToRemove)
@@ -43,12 +51,6 @@ public class CellHistoryManager
                 playerCells.Remove(cell);
             }
         }
-    }
-
-    //to do
-    public void SkipTurn(int playerID)
-    {
-        AddMove(null, playerID, -1); 
     }
 
     public void Clear()
