@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class Cell : MonoBehaviour
 {
+    private const int PlayerTurnInterval = 2;
+
     public int row;
     public int coll;
     public int IndexPlayer => indexPlayer;
@@ -59,20 +61,16 @@ public class Cell : MonoBehaviour
         cellSetAtTurn = turnIndex;
     }
 
-    public void CheckCellState(int turnIndex)
+    public void CheckPreDestroyState(int turnIndex)
     {
-        isMarkedForDestruction = turnIndex - cellSetAtTurn == preDestroyTime * 2 + GameManager.Singletone.GetOffSet();
-        if (isMarkedForDestruction)
-        {
-            PreDestroy();
-        }
-        Debug.Log($"Уничтожаем клетку в РЯДУ: {row}, СТОЛБЦЕ: {coll}? {isMarkedForDestruction}");
+        isMarkedForDestruction = (turnIndex - cellSetAtTurn) == preDestroyTime * PlayerTurnInterval;
+        if (isMarkedForDestruction) PreDestroy();
     }
 
-    //public void MarkForDestruction(bool mark)
-    //{
-    //    isMarkedForDestruction = mark;
-    //}
+    public bool CheckDestroyCell(int turnIndex)
+    {
+        return (turnIndex - cellSetAtTurn) == DefaultCellLifeTime * PlayerTurnInterval;
+    }
 
     public void Clear()
     {
