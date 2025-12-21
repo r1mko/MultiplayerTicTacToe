@@ -5,23 +5,28 @@ using UnityEngine.UI;
 
 public class Cell : MonoBehaviour
 {
+    public int row;
+    public int coll;
+    public int IndexPlayer => indexPlayer;
+    public bool IsFillCell => isFillCell;
+
+
     [SerializeField] private Button cellButton;
     [SerializeField] private GameObject[] fillView;
     [SerializeField] private Color preDestroyColor;
     [SerializeField] private Color defaultColor;
 
     private Coroutine blinkCoroutine = null;
+    private bool isFillCell;
+    private bool isMarkedForDestruction;
+    private int indexPlayer;
+    private int cellSetAtTurn;
+    private int offset;
 
-    private int _indexPlayer;
-    private bool _isFillCell;
+    public const int DefaultCellLifeTime = 3;
+    private int preDestroyTime => DefaultCellLifeTime - 1;
 
-    public int row;
-    public int coll;
 
-    public int IndexPlayer => _indexPlayer;
-    public bool IsFillCell => _isFillCell;
-
-    private bool _isMarkedForDestruction;
 
     public void Init(int row, int coll)
     {
@@ -32,10 +37,42 @@ public class Cell : MonoBehaviour
         cellButton.onClick.AddListener(() => BoardManager.Singltone.OnClickCell(row, coll, this));
     }
 
-    public void MarkForDestruction(bool mark)
+    public void Fill(int indexPlayer)
     {
-        _isMarkedForDestruction = mark;
+        HideAll();
+        Block();
+
+        this.indexPlayer = indexPlayer;
+        isFillCell = true;
+
+        for (int i = 0; i < fillView.Length; i++)
+        {
+            if (indexPlayer == i)
+            {
+                fillView[i].SetActive(true);
+            }
+        }
     }
+
+    public void SetCell(int turnIndex)
+    {
+        cellSetAtTurn = turnIndex;
+    }
+
+    public void CheckCellState(int turnIndex)
+    {
+        isMarkedForDestruction = turnIndex - cellSetAtTurn == preDestroyTime * 2 + GameManager.Singletone.GetOffSet();
+        if (isMarkedForDestruction)
+        {
+            PreDestroy();
+        }
+        Debug.Log($"Уничтожаем клетку в РЯДУ: {row}, СТОЛБЦЕ: {coll}? {isMarkedForDestruction}");
+    }
+
+    //public void MarkForDestruction(bool mark)
+    //{
+    //    isMarkedForDestruction = mark;
+    //}
 
     public void Clear()
     {
@@ -48,8 +85,9 @@ public class Cell : MonoBehaviour
         }
 
         ChangeColorCell(defaultColor);
-
-        _isFillCell = false;
+        cellSetAtTurn = -1;
+        isFillCell = false;
+        isMarkedForDestruction = false;
         Unblock();
     }
 
@@ -63,7 +101,6 @@ public class Cell : MonoBehaviour
         cellButton.interactable = true;
     }
 
-
     public void PreDestroy()
     {
         ChangeColorCell(preDestroyColor);
@@ -73,7 +110,7 @@ public class Cell : MonoBehaviour
             StopCoroutine(blinkCoroutine);
         }
 
-        blinkCoroutine = StartCoroutine(BlinkAnimation());
+        //blinkCoroutine = StartCoroutine(BlinkAnimation());
     }
 
     private void ChangeColorCell(Color color)
@@ -132,23 +169,6 @@ public class Cell : MonoBehaviour
         }
     }
 
-    public void Fill(int indexPlayer)
-    {
-        HideAll();
-        Block();
-
-        _indexPlayer = indexPlayer;
-        _isFillCell = true;
-
-        for (int i = 0; i < fillView.Length; i++)
-        {
-            if (indexPlayer == i)
-            {
-                fillView[i].SetActive(true);
-            }
-        }
-    }
-
     public void HideAll()
     {
         foreach (var item in fillView)
@@ -161,7 +181,7 @@ public class Cell : MonoBehaviour
     {
         if (!IsFillCell) return null;
 
-        GameObject originalChip = fillView[_indexPlayer];
+        GameObject originalChip = fillView[indexPlayer];
         if (originalChip == null) return null;
 
         // Создаём дубликат объекта

@@ -5,27 +5,33 @@ public class CellHistoryManager
 {
     public Dictionary<int, List<Cell>> CellHistory = new Dictionary<int, List<Cell>>();
 
-    public void AddMove(Cell cell, int playerID)
+    public void AddMove(Cell cell, int playerID, int turnIndex)
     {
         if (!CellHistory.ContainsKey(playerID))
         {
             CellHistory.Add(playerID, new List<Cell>());
         }
         CellHistory[playerID].Insert(0, cell);
-        CheckCellHistory();
+        cell.SetCell(turnIndex);
+        CheckCellHistory(turnIndex);
     }
 
-    public void CheckCellHistory()
+    public void CheckCellHistory(int turnIndex)
     {
         foreach (var item in CellHistory)
         {
+            foreach (var cell in item.Value)
+            {
+                cell.CheckCellState(turnIndex);
+            }
+
             if (item.Value.Count >= 3)
             {
-                if (item.Value[2] != null)
-                {
-                    item.Value[2].PreDestroy();
-                    item.Value[2].MarkForDestruction(true);
-                }
+                //if (item.Value[2] != null)
+                //{
+                //    item.Value[2].PreDestroy();
+                //    item.Value[2].MarkForDestruction(true);
+                //}
 
                 if (item.Value.Count == 4)
                 {
@@ -33,7 +39,7 @@ public class CellHistoryManager
                     {
                         item.Value[3].Clear();
                         item.Value[3].Unblock();
-                        item.Value[3].MarkForDestruction(false);
+                        //item.Value[3].MarkForDestruction(false);
                     }
                     item.Value.RemoveAt(3);
                 }
@@ -41,9 +47,10 @@ public class CellHistoryManager
         }
     }
 
+    //to do
     public void SkipTurn(int playerID)
     {
-        AddMove(null, playerID); 
+        AddMove(null, playerID, -1); 
     }
 
     public void Clear()

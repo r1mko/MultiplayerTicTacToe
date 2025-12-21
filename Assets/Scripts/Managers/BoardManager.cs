@@ -510,7 +510,7 @@ public class BoardManager : MonoBehaviour
         }
 
         // 6. *Только после обновления ссылок* вызываем CheckCellHistory
-        GameManager.Singletone.cellHistoryManager.CheckCellHistory();
+        GameManager.Singletone.cellHistoryManager.CheckCellHistory(GameManager.Singletone.TurnIndex);
 
         // 7. Проверка рядов и урон (как у тебя есть)
         List<int> victims = new List<int>();
@@ -675,7 +675,7 @@ public class BoardManager : MonoBehaviour
         }
 
         // 11. *Только после обновления ссылок* вызываем CheckCellHistory
-        GameManager.Singletone.cellHistoryManager.CheckCellHistory();
+        GameManager.Singletone.cellHistoryManager.CheckCellHistory(GameManager.Singletone.TurnIndex);
 
         // 12. Проверка рядов и урон
         List<int> victims = new List<int>();

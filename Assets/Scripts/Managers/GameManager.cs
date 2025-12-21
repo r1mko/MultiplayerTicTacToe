@@ -219,7 +219,7 @@ public class GameManager : MonoBehaviour
         }
         BoardManager.Singltone.FillCell(row, col, CurrentPlayerTurnID);
         ChangeTurnIndex();
-        cellHistoryManager.AddMove(BoardManager.Singltone.GetCell(row, col), CurrentPlayerTurnID);
+        cellHistoryManager.AddMove(BoardManager.Singltone.GetCell(row, col), CurrentPlayerTurnID, TurnIndex);
 
         TimerController.Singletone.EndTime();
 
@@ -356,7 +356,7 @@ public class GameManager : MonoBehaviour
             }
 
             BoardManager.Singltone.FillCell(target.row, target.coll, shooterID);
-            cellHistoryManager.AddMove(target, shooterID);
+            cellHistoryManager.AddMove(target, shooterID, TurnIndex);
             Debug.Log($"[Выстрел] Установлена моя фишка в ({target.row}, {target.coll})");
         }
 
@@ -748,5 +748,10 @@ public class GameManager : MonoBehaviour
         startOffSet = clientID;
         UpdateCurrentPlayerID(clientID);
         UIManager.Singletone.HideRestartButton();
+    }
+
+    public int GetOffSet()
+    {
+        return startOffSet;
     }
 }
