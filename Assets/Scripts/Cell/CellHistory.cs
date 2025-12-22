@@ -5,7 +5,7 @@ public class CellHistoryManager
 {
     public Dictionary<int, List<Cell>> CellHistory = new Dictionary<int, List<Cell>>();
 
-    public void AddMove(Cell cell, int playerID, int turnIndex)
+    public void AddMove(Cell cell, int playerID, int turnIndex, int lifetime)
     {
         if (!CellHistory.ContainsKey(playerID))
         {
@@ -14,6 +14,7 @@ public class CellHistoryManager
         CellHistory[playerID].Insert(0, cell);
         if (cell != null)
         {
+            cell.SetCellLifetime(lifetime);
             cell.SetCell(turnIndex);
         }
         CheckCellHistory(turnIndex);

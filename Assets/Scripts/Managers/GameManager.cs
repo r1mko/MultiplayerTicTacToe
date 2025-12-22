@@ -219,7 +219,7 @@ public class GameManager : MonoBehaviour
         }
         BoardManager.Singltone.FillCell(row, col, CurrentPlayerTurnID);
         ChangeTurnIndex();
-        cellHistoryManager.AddMove(BoardManager.Singltone.GetCell(row, col), CurrentPlayerTurnID, TurnIndex);
+        cellHistoryManager.AddMove(BoardManager.Singltone.GetCell(row, col), CurrentPlayerTurnID, TurnIndex, Consts.DefaultCellLifetime);
 
         TimerController.Singletone.EndTime();
 
@@ -232,7 +232,6 @@ public class GameManager : MonoBehaviour
             SetPlayersHP();
             if (hPHistoryManager.LosePlayer(opponentID))
             {
-                Debug.Log($"Игрок с айди {opponentID} умер");
                 GameOver();
                 SetWin(CurrentPlayerTurnID);
                 UIManager.Singletone.SetWinText();
@@ -324,7 +323,6 @@ public class GameManager : MonoBehaviour
         {
             cellHistoryManager.RemoveMoveFromPlayer(cell, shooterID);
             cell.Clear();
-            Debug.Log($"[Выстрел] Удалена моя фишка в ({cell.row}, {cell.coll}) перед выстрелом");
         }
 
         // === ШАГ 2: ВЫБИРАЕМ 3 СЛУЧАЙНЫЕ ЯЧЕЙКИ С ДЕТЕРМИНИРОВАННЫМ РАНДОМОМ ===
@@ -342,6 +340,7 @@ public class GameManager : MonoBehaviour
         int count = Mathf.Min(ArrowCount, allCells.Count);
         List<Cell> targets = allCells.GetRange(0, count);
 
+        var incrementLifetime = 0;
         // === ШАГ 3: АНИМАЦИЯ + ЗАПОЛНЕНИЕ ===
         foreach (Cell target in targets)
         {
@@ -352,12 +351,11 @@ public class GameManager : MonoBehaviour
                 int oldOwner = target.IndexPlayer;
                 cellHistoryManager.ReplaceCellWithNull(target, oldOwner);
                 target.Clear();
-                Debug.Log($"[Выстрел] Уничтожена фишка игрока {oldOwner} в ({target.row}, {target.coll})");
             }
 
             BoardManager.Singltone.FillCell(target.row, target.coll, shooterID);
-            cellHistoryManager.AddMove(target, shooterID, TurnIndex);
-            Debug.Log($"[Выстрел] Установлена моя фишка в ({target.row}, {target.coll})");
+            incrementLifetime++;
+            cellHistoryManager.AddMove(target, shooterID, TurnIndex + 1, incrementLifetime); // +1 нужен для удаления хода на ходу игрока, который его применил. т.к. в начале мы устанавливаем время жизни, а после меняем индекс
         }
 
         // === ШАГ 4–7: ПРОВЕРКИ И ПЕРЕДАЧА ХОДА (без изменений) ===
@@ -404,6 +402,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        //to do (в начале ничья, после победа-поражение)
         if (BoardManager.Singltone.IsGameDraw())
         {
             GameOver();
@@ -516,7 +515,7 @@ public class GameManager : MonoBehaviour
             Debug.LogError("winLinePrefab not assigned!");
             return;
         }
-
+        Debug.Log("<color=green>Спавним линии победы</color>");
         List<WinLineType> winTypes = BoardManager.Singltone.GetAllWinLines();
         if (winTypes.Count == 0) return;
 

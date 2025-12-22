@@ -25,8 +25,8 @@ public class Cell : MonoBehaviour
     private int cellSetAtTurn;
     private int offset;
 
-    public const int DefaultCellLifeTime = 3;
-    private int preDestroyTime => DefaultCellLifeTime - 1;
+    public int CellLifeTime = 3;
+    private int preDestroyTime => CellLifeTime - 1;
 
 
 
@@ -37,6 +37,11 @@ public class Cell : MonoBehaviour
         Clear();
         Unblock();
         cellButton.onClick.AddListener(() => BoardManager.Singltone.OnClickCell(row, coll, this));
+    }
+
+    public void SetCellLifetime(int playerTurns)
+    {
+        CellLifeTime = playerTurns;
     }
 
     public void Fill(int indexPlayer)
@@ -69,7 +74,7 @@ public class Cell : MonoBehaviour
 
     public bool CheckDestroyCell(int turnIndex)
     {
-        return (turnIndex - cellSetAtTurn) >= DefaultCellLifeTime * PlayerTurnInterval;
+        return (turnIndex - cellSetAtTurn) >= CellLifeTime * PlayerTurnInterval;
     }
 
     public void Clear()

@@ -141,7 +141,7 @@
         if (!isShotOnCooldown) return false;
         int playerWhoUsedShot = (shotCooldownTurnIndex + startOffSet) % 2;
         int turnsByThatPlayer = CountPlayerTurns(shotCooldownTurnIndex + 1, currentTurnIndex, playerWhoUsedShot);
-        return turnsByThatPlayer >= 5;
+        return turnsByThatPlayer >= 1;
     }
 
     // === Shuffle: проверка снятия ===
