@@ -444,7 +444,6 @@ public class GameManager : MonoBehaviour
 
         Destroy(shot);
         EndAnimation();
-        Debug.Log($"[Выстрел - Анимация] Попали в ячейку ({targetCell.row}, {targetCell.coll})");
         yield break;
     }
 
@@ -515,9 +514,13 @@ public class GameManager : MonoBehaviour
             Debug.LogError("winLinePrefab not assigned!");
             return;
         }
-        Debug.Log("<color=green>Спавним линии победы</color>");
+
         List<WinLineType> winTypes = BoardManager.Singltone.GetAllWinLines();
-        if (winTypes.Count == 0) return;
+        if (winTypes.Count == 0)
+        {
+            Debug.Log("<color=red>Обрываем метод, не найдена нужная линия</color>");
+            return;
+        }
 
         foreach (WinLineType type in winTypes)
         {
@@ -534,6 +537,8 @@ public class GameManager : MonoBehaviour
 
             GameObject winLine = Instantiate(winLinePrefab, Canvas.transform);
             RectTransform rt = winLine.GetComponent<RectTransform>();
+
+            Debug.Log("<color=green>Линия должна быть заспавнена</color>");
 
             rt.anchoredPosition = config.positionOffset;
             rt.localEulerAngles = new Vector3(0, 0, config.rotation);
