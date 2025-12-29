@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,7 +35,7 @@ public class GameManager : MonoBehaviour
     public Canvas Canvas;
 
     private int startOffSet;
-    private const int ArrowCount = 3;
+    private const int ArrowCount = 6;
     private int[] wins = new int[] { 0, 0 };
 
     // =============== EFFECTS ===============
@@ -225,7 +226,16 @@ public class GameManager : MonoBehaviour
 
         if (BoardManager.Singltone.IsRow(row, col))
         {
-            SpawnWinLines();
+            var winLines = BoardManager.Singltone.GetWinLinesAt(row, col);
+            if (winLines.Count > 0)
+            {
+                SpawnWinLines(winLines);
+            }
+            else
+            {
+                Debug.LogError("Не найден ни один ряд");
+            }
+
             int playerID = CurrentPlayerTurnID;
             int opponentID = 1 - playerID;
             hPHistoryManager.Damage(opponentID);
@@ -359,15 +369,17 @@ public class GameManager : MonoBehaviour
         }
 
         // === ШАГ 4–7: ПРОВЕРКИ И ПЕРЕДАЧА ХОДА (без изменений) ===
-        bool hasRow = false;
+        List<WinLineType> winLines = new List<WinLineType>();
         foreach (Cell cell in targets)
         {
-            if (BoardManager.Singltone.IsRow(cell.row, cell.coll))
+            var linesHere = BoardManager.Singltone.GetWinLinesAt(cell.row, cell.coll);
+            foreach (var line in linesHere)
             {
-                hasRow = true;
-                break;
+                if (!winLines.Contains(line))
+                    winLines.Add(line);
             }
         }
+        bool hasRow = winLines.Count > 0;
 
         if (hasRow)
         {
@@ -375,12 +387,13 @@ public class GameManager : MonoBehaviour
             {
                 if (NetworkPlayer.Singletone.IsServer)
                 {
-                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(new int[] { opponentID });
+                    int[] winLineInts = winLines.Select(w => (int)w).ToArray();
+                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(new int[] { opponentID }, winLineInts);
                 }
             }
             else
             {
-                SpawnWinLines();
+                SpawnWinLines(winLines);
                 hPHistoryManager.Damage(opponentID);
                 SetPlayersHP();
 
@@ -507,7 +520,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void SpawnWinLines()
+    public void SpawnWinLines(List<WinLineType> winTypes)
     {
         if (winLinePrefab == null)
         {
@@ -515,10 +528,9 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        List<WinLineType> winTypes = BoardManager.Singltone.GetAllWinLines();
-        if (winTypes.Count == 0)
+        if (winTypes == null || winTypes.Count == 0)
         {
-            Debug.Log("<color=red>Обрываем метод, не найдена нужная линия</color>"); //тут не находит иногда TO DO
+            Debug.LogWarning("SpawnWinLines called with empty winTypes list.");
             return;
         }
 
@@ -537,20 +549,17 @@ public class GameManager : MonoBehaviour
 
             GameObject winLine = Instantiate(winLinePrefab, Canvas.transform);
             RectTransform rt = winLine.GetComponent<RectTransform>();
-
-            Debug.Log("<color=green>Линия должна быть заспавнена</color>");
-
             rt.anchoredPosition = config.positionOffset;
             rt.localEulerAngles = new Vector3(0, 0, config.rotation);
-
             Destroy(winLine, 3f);
         }
     }
 
 
 
-    public void ApplyMultipleDamages(List<int> victimPlayerIDs)
+    public void ApplyMultipleDamages(List<int> victimPlayerIDs, List<WinLineType> winLines)
     {
+
         if (victimPlayerIDs == null || victimPlayerIDs.Count == 0)
         {
             Debug.LogError("PlayerIDs is null or not found");
@@ -567,7 +576,7 @@ public class GameManager : MonoBehaviour
             Debug.Log($"У игрока с айди {playerId} осталось хп: {hPHistoryManager.GetHP(playerId)}");
         }
 
-        SpawnWinLines();
+        SpawnWinLines(winLines);
         SetPlayersHP();
 
         bool player0Lost = hPHistoryManager.LosePlayer(0);

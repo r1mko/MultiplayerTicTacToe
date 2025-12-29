@@ -113,6 +113,7 @@ public class UIManager : MonoBehaviour
 
     public void SetWinText()
     {
+        Debug.Log("<color=green> Вызвали метод результата победы</color>");
         if (GameManager.Singletone.IsOurTurn())
         {
             currentPlayerTextID.text = "Вы победили!";

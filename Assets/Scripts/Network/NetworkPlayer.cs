@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityUtils;
+using static BoardManager;
 
 public class NetworkPlayer : NetworkBehaviour
 {
@@ -122,9 +123,19 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     [Rpc(SendTo.Everyone)]
-    public void TriggerMultipleDamageRpc(int[] victimIDs)
+    public void TriggerMultipleDamageRpc(int[] victimIDs, int[] winLineInts)
     {
         List<int> victims = new List<int>(victimIDs);
-        GameManager.Singletone.ApplyMultipleDamages(victims);
+
+        List<WinLineType> winLines = new List<WinLineType>();
+        foreach (int val in winLineInts)
+        {
+            if (System.Enum.IsDefined(typeof(WinLineType), val))
+            {
+                winLines.Add((WinLineType)val);
+            }
+        }
+
+        GameManager.Singletone.ApplyMultipleDamages(victims, winLines);
     }
 }

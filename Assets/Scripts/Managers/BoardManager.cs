@@ -185,58 +185,50 @@ public class BoardManager : MonoBehaviour
         return false;
     }
 
-    public List<WinLineType> GetAllWinLines()
+    // В BoardManager.cs
+    public List<WinLineType> GetWinLinesAt(int row, int col)
     {
-        List<WinLineType> winLines = new List<WinLineType>();
+        List<WinLineType> lines = new List<WinLineType>();
+        Cell cell = buttons[row, col];
+        if (!cell.IsFillCell) return lines;
 
-        // Проверяем горизонтали
-        for (int r = 0; r < 3; r++)
-        {
-            if (buttons[r, 0].IsFillCell && buttons[r, 1].IsFillCell && buttons[r, 2].IsFillCell)
-            {
-                int p = buttons[r, 0].IndexPlayer;
-                if (buttons[r, 1].IndexPlayer == p && buttons[r, 2].IndexPlayer == p)
-                {
-                    winLines.Add(r switch { 0 => WinLineType.TopRow, 1 => WinLineType.MiddleRow, 2 => WinLineType.BottomRow, _ => WinLineType.None });
-                }
-            }
-        }
+        int player = cell.IndexPlayer;
 
-        // Проверяем вертикали
-        for (int c = 0; c < 3; c++)
-        {
-            if (buttons[0, c].IsFillCell && buttons[1, c].IsFillCell && buttons[2, c].IsFillCell)
-            {
-                int p = buttons[0, c].IndexPlayer;
-                if (buttons[1, c].IndexPlayer == p && buttons[2, c].IndexPlayer == p)
-                {
-                    winLines.Add(c switch { 0 => WinLineType.LeftColumn, 1 => WinLineType.MiddleColumn, 2 => WinLineType.RightColumn, _ => WinLineType.None });
-                }
-            }
-        }
+        // Проверяем горизонталь
+        if (row == 0 && IsFullRowSame(0, player)) lines.Add(WinLineType.TopRow);
+        else if (row == 1 && IsFullRowSame(1, player)) lines.Add(WinLineType.MiddleRow);
+        else if (row == 2 && IsFullRowSame(2, player)) lines.Add(WinLineType.BottomRow);
 
-        // Главная диагональ
-        if (buttons[0, 0].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 2].IsFillCell)
-        {
-            int p = buttons[0, 0].IndexPlayer;
-            if (buttons[1, 1].IndexPlayer == p && buttons[2, 2].IndexPlayer == p)
-            {
-                winLines.Add(WinLineType.DiagonalMain);
-            }
-        }
+        // Проверяем вертикаль
+        if (col == 0 && IsFullColSame(0, player)) lines.Add(WinLineType.LeftColumn);
+        else if (col == 1 && IsFullColSame(1, player)) lines.Add(WinLineType.MiddleColumn);
+        else if (col == 2 && IsFullColSame(2, player)) lines.Add(WinLineType.RightColumn);
 
-        // Побочная диагональ
-        if (buttons[0, 2].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 0].IsFillCell)
-        {
-            int p = buttons[0, 2].IndexPlayer;
-            if (buttons[1, 1].IndexPlayer == p && buttons[2, 0].IndexPlayer == p)
-            {
-                winLines.Add(WinLineType.DiagonalAnti);
-            }
-        }
+        // Диагонали
+        if (row == col && IsFullMainDiagonalSame(player))
+            lines.Add(WinLineType.DiagonalMain);
 
-        return winLines;
+        if (row + col == 2 && IsFullAntiDiagonalSame(player))
+            lines.Add(WinLineType.DiagonalAnti);
+
+        return lines;
     }
+
+    private bool IsFullRowSame(int r, int player) =>
+        buttons[r, 0].IsFillCell && buttons[r, 1].IsFillCell && buttons[r, 2].IsFillCell &&
+        buttons[r, 0].IndexPlayer == player && buttons[r, 1].IndexPlayer == player && buttons[r, 2].IndexPlayer == player;
+
+    private bool IsFullColSame(int c, int player) =>
+        buttons[0, c].IsFillCell && buttons[1, c].IsFillCell && buttons[2, c].IsFillCell &&
+        buttons[0, c].IndexPlayer == player && buttons[1, c].IndexPlayer == player && buttons[2, c].IndexPlayer == player;
+
+    private bool IsFullMainDiagonalSame(int player) =>
+        buttons[0, 0].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 2].IsFillCell &&
+        buttons[0, 0].IndexPlayer == player && buttons[1, 1].IndexPlayer == player && buttons[2, 2].IndexPlayer == player;
+
+    private bool IsFullAntiDiagonalSame(int player) =>
+        buttons[0, 2].IsFillCell && buttons[1, 1].IsFillCell && buttons[2, 0].IsFillCell &&
+        buttons[0, 2].IndexPlayer == player && buttons[1, 1].IndexPlayer == player && buttons[2, 0].IndexPlayer == player;
     public int GetWinnerFromLineType(WinLineType type)
     {
         switch (type)
@@ -519,16 +511,23 @@ public class BoardManager : MonoBehaviour
         // 7. Проверка побед и урона
         List<int> victims = new List<int>();
         HashSet<int> winners = new HashSet<int>();
+        List<WinLineType> winLines = new List<WinLineType>();
+        HashSet<WinLineType> seenLines = new HashSet<WinLineType>();
+
         foreach (var (oldCell, newCell) in cellRemap)
         {
-            if (IsRow(newCell.row, newCell.coll))
+            var linesHere = BoardManager.Singltone.GetWinLinesAt(newCell.row, newCell.coll);
+            foreach (var line in linesHere)
             {
-                int ownerOfWinningRow = newCell.IndexPlayer;
-                if (!winners.Contains(ownerOfWinningRow))
+                if (seenLines.Add(line)) // гарантирует уникальность
                 {
-                    winners.Add(ownerOfWinningRow);
-                    victims.Add(1 - ownerOfWinningRow);
-                    Debug.Log($"Игрок {ownerOfWinningRow} собрал ряд после гравитации! Игроку {1 - ownerOfWinningRow} будет нанесён урон!");
+                    int winner = newCell.IndexPlayer;
+                    if (!winners.Contains(winner))
+                    {
+                        winners.Add(winner);
+                        victims.Add(1 - winner);
+                    }
+                    winLines.Add(line);
                 }
             }
         }
@@ -539,17 +538,14 @@ public class BoardManager : MonoBehaviour
             {
                 if (NetworkPlayer.Singletone.IsServer)
                 {
-                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victims.ToArray());
+                    int[] winLineInts = winLines.Select(w => (int)w).ToArray();
+                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victims.ToArray(), winLineInts);
                 }
             }
             else
             {
-                GameManager.Singletone.ApplyMultipleDamages(victims);
+                GameManager.Singletone.ApplyMultipleDamages(victims, winLines);
             }
-        }
-        else
-        {
-            Debug.Log("После гравитации ни одна линия не собрана. Продолжаем игру.");
         }
 
         GameManager.Singletone.EndAnimation();
@@ -685,16 +681,23 @@ public class BoardManager : MonoBehaviour
         // 12. Проверка побед и урона
         List<int> victims = new List<int>();
         HashSet<int> winners = new HashSet<int>();
+        List<WinLineType> winLines = new List<WinLineType>();
+        HashSet<WinLineType> seenLines = new HashSet<WinLineType>();
+
         foreach (Cell newCell in targetCells)
         {
-            if (IsRow(newCell.row, newCell.coll))
+            var linesHere = BoardManager.Singltone.GetWinLinesAt(newCell.row, newCell.coll);
+            foreach (var line in linesHere)
             {
-                int winner = newCell.IndexPlayer;
-                if (!winners.Contains(winner))
+                if (seenLines.Add(line))
                 {
-                    winners.Add(winner);
-                    victims.Add(1 - winner);
-                    Debug.Log($"[Shuffle] Ряд собран игроком {winner} в ({newCell.row},{newCell.coll})!");
+                    int winner = newCell.IndexPlayer;
+                    if (!winners.Contains(winner))
+                    {
+                        winners.Add(winner);
+                        victims.Add(1 - winner);
+                    }
+                    winLines.Add(line);
                 }
             }
         }
@@ -705,17 +708,14 @@ public class BoardManager : MonoBehaviour
             {
                 if (NetworkPlayer.Singletone.IsServer)
                 {
-                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victims.ToArray());
+                    int[] winLineInts = winLines.Select(w => (int)w).ToArray();
+                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victims.ToArray(), winLineInts);
                 }
             }
             else
             {
-                GameManager.Singletone.ApplyMultipleDamages(victims);
+                GameManager.Singletone.ApplyMultipleDamages(victims, winLines);
             }
-        }
-        else
-        {
-            Debug.Log("[Shuffle] Ни одного ряда после перемешивания.");
         }
 
         GameManager.Singletone.EndAnimation();
