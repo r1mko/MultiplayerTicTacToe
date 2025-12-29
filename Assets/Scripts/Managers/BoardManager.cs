@@ -558,7 +558,7 @@ public class BoardManager : MonoBehaviour
     public void ShuffleAllCells()
     {
         // 1. Собираем все заполненные фишки (сохраняем владельца)
-        List<(int playerID, Cell originalCell)> filledData = new List<(int, Cell)>();
+        List<(int playerID, int setTurn, int lifetime, Cell originalCell)> filledData = new List<(int, int, int, Cell)>();
         List<Cell> allCells = new List<Cell>();
 
         for (int i = 0; i < 3; i++)
@@ -569,7 +569,7 @@ public class BoardManager : MonoBehaviour
                 allCells.Add(cell);
                 if (cell.IsFillCell)
                 {
-                    filledData.Add((cell.IndexPlayer, cell));
+                    filledData.Add((cell.IndexPlayer, cell.cellSetAtTurn, cell.CellLifeTime, cell));
                 }
             }
         }
@@ -600,7 +600,7 @@ public class BoardManager : MonoBehaviour
         Dictionary<Cell, Cell> cellRemap = new Dictionary<Cell, Cell>();
         for (int i = 0; i < filledCount; i++)
         {
-            var (playerID, oldCell) = filledData[i];
+            Cell oldCell = filledData[i].originalCell;
             Cell newCell = targetCells[i];
             cellRemap[oldCell] = newCell;
         }
@@ -630,7 +630,11 @@ public class BoardManager : MonoBehaviour
     }
 
     // Новый метод для ожидания анимаций и обновления логики после перемешивания
-    private IEnumerator WaitForAllAnimationsAndThenShuffle(List<Coroutine> animations, Dictionary<Cell, Cell> cellRemap, List<(int playerID, Cell originalCell)> filledData, List<Cell> targetCells)
+    private IEnumerator WaitForAllAnimationsAndThenShuffle(
+        List<Coroutine> animations,
+        Dictionary<Cell, Cell> cellRemap,
+        List<(int playerID, int setTurn, int lifetime, Cell originalCell)> filledData,
+        List<Cell> targetCells)
     {
         foreach (var anim in animations)
         {
@@ -643,23 +647,22 @@ public class BoardManager : MonoBehaviour
         Debug.Log("Все анимации перемешивания завершены. Обновляем логическое состояние доски.");
 
         // 8. Очищаем ВСЁ поле
-        List<Cell> allCells = new List<Cell>();
         for (int i = 0; i < 3; i++)
         {
             for (int j = 0; j < 3; j++)
             {
-                Cell cell = buttons[i, j];
-                allCells.Add(cell);
-                cell.Clear();
+                buttons[i, j].Clear();
             }
         }
 
-        // 9. Заполняем новые ячейки (логически)
-        foreach (var (playerID, oldCell) in filledData)
+        // 9. Заполняем новые ячейки с сохранением времени жизни
+        foreach (var (playerID, setTurn, lifetime, oldCell) in filledData)
         {
             if (cellRemap.TryGetValue(oldCell, out Cell newCell))
             {
                 newCell.Fill(playerID);
+                newCell.SetCell(setTurn);
+                newCell.SetCellLifetime(lifetime);
             }
         }
 
@@ -676,13 +679,12 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        // 11. *Только после обновления ссылок* вызываем CheckCellHistory
+        // 11. Проверяем историю с актуальным TurnIndex
         GameManager.Singletone.cellHistoryManager.CheckCellHistory(GameManager.Singletone.TurnIndex);
 
-        // 12. Проверка рядов и урон
+        // 12. Проверка побед и урона
         List<int> victims = new List<int>();
         HashSet<int> winners = new HashSet<int>();
-
         foreach (Cell newCell in targetCells)
         {
             if (IsRow(newCell.row, newCell.coll))
