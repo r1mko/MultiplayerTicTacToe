@@ -9,9 +9,10 @@ public class Cell : MonoBehaviour
 
     public int row;
     public int coll;
+    public int CellLifeTime = 3;
+    public int cellSetAtTurn;
     public int IndexPlayer => indexPlayer;
     public bool IsFillCell => isFillCell;
-
 
     [SerializeField] private Button cellButton;
     [SerializeField] private GameObject[] fillView;
@@ -22,10 +23,9 @@ public class Cell : MonoBehaviour
     private bool isFillCell;
     private bool isMarkedForDestruction;
     private int indexPlayer;
-    private int cellSetAtTurn;
     private int offset;
 
-    public int CellLifeTime = 3;
+
     private int preDestroyTime => CellLifeTime - 1;
 
 

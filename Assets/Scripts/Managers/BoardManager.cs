@@ -465,19 +465,21 @@ public class BoardManager : MonoBehaviour
 
         Debug.Log("Все анимации завершены. Обновляем логическое состояние доски.");
 
-        // 4. *После* завершения анимаций, меняем логическое состояние доски
+        // 4. Обновляем логическое состояние с сохранением времени жизни
         for (int j = 0; j < 3; j++)
         {
-            List<Cell> columnCells = new List<Cell>();
+            // Собираем НЕПУСТЫЕ ячейки сверху вниз (сохраняем порядок)
+            List<(Cell oldCell, int playerID, int setTurn, int lifetime)> columnData = new List<(Cell, int, int, int)>();
             for (int i = 0; i < 3; i++)
             {
                 if (buttons[i, j].IsFillCell)
                 {
-                    columnCells.Add(buttons[i, j]);
+                    Cell cell = buttons[i, j];
+                    columnData.Add((cell, cell.IndexPlayer, cell.cellSetAtTurn, cell.CellLifeTime));
                 }
             }
 
-            if (columnCells.Count == 0) continue;
+            if (columnData.Count == 0) continue;
 
             // Очищаем столбец
             for (int i = 0; i < 3; i++)
@@ -485,18 +487,20 @@ public class BoardManager : MonoBehaviour
                 buttons[i, j].Clear();
             }
 
-            // Заполняем снизу вверх
-            int fillRow = 2;
-            for (int k = columnCells.Count - 1; k >= 0; k--)
+            // Заполняем СНИЗУ, но в том же порядке: первая фишка — самая верхняя, поэтому она должна быть выше остальных
+            // То есть: размещаем их, начиная с row = 3 - columnData.Count
+            int startRow = 3 - columnData.Count;
+            for (int idx = 0; idx < columnData.Count; idx++)
             {
-                Cell oldCell = columnCells[k];
-                Cell targetCell = buttons[fillRow, j];
-                targetCell.Fill(oldCell.IndexPlayer);
-                fillRow--;
+                var (oldCell, playerID, setTurn, lifetime) = columnData[idx];
+                Cell targetCell = buttons[startRow + idx, j];
+                targetCell.Fill(playerID);
+                targetCell.SetCell(setTurn);
+                targetCell.SetCellLifetime(lifetime);
             }
         }
 
-        // 5. Обновляем CellHistory *после* Fill/Clear, но до CheckCellHistory
+        // 5. Обновляем CellHistory
         var cellHistory = GameManager.Singletone.cellHistoryManager.CellHistory;
         foreach (var playerEntry in cellHistory)
         {
@@ -509,10 +513,10 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        // 6. *Только после обновления ссылок* вызываем CheckCellHistory
+        // 6. Используем АКТУАЛЬНЫЙ TurnIndex при проверке
         GameManager.Singletone.cellHistoryManager.CheckCellHistory(GameManager.Singletone.TurnIndex);
 
-        // 7. Проверка рядов и урон (как у тебя есть)
+        // 7. Проверка побед и урона
         List<int> victims = new List<int>();
         HashSet<int> winners = new HashSet<int>();
         foreach (var (oldCell, newCell) in cellRemap)
@@ -523,9 +527,8 @@ public class BoardManager : MonoBehaviour
                 if (!winners.Contains(ownerOfWinningRow))
                 {
                     winners.Add(ownerOfWinningRow);
-                    int opponentID = 1 - ownerOfWinningRow;
-                    victims.Add(opponentID);
-                    Debug.Log($"Игрок {ownerOfWinningRow} собрал ряд после гравитации! Игроку {opponentID} будет нанесён урон!");
+                    victims.Add(1 - ownerOfWinningRow);
+                    Debug.Log($"Игрок {ownerOfWinningRow} собрал ряд после гравитации! Игроку {1 - ownerOfWinningRow} будет нанесён урон!");
                 }
             }
         }
@@ -536,8 +539,7 @@ public class BoardManager : MonoBehaviour
             {
                 if (NetworkPlayer.Singletone.IsServer)
                 {
-                    int[] victimsArray = victims.ToArray();
-                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victimsArray);
+                    NetworkPlayer.Singletone.TriggerMultipleDamageRpc(victims.ToArray());
                 }
             }
             else

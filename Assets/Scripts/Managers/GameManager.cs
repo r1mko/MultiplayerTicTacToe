@@ -518,7 +518,7 @@ public class GameManager : MonoBehaviour
         List<WinLineType> winTypes = BoardManager.Singltone.GetAllWinLines();
         if (winTypes.Count == 0)
         {
-            Debug.Log("<color=red>Обрываем метод, не найдена нужная линия</color>");
+            Debug.Log("<color=red>Обрываем метод, не найдена нужная линия</color>"); //тут не находит иногда TO DO
             return;
         }
 
